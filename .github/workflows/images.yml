@@ -1,0 +1,82 @@
+name: Container images
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: images-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [frontend, backend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Authenticate to GHCR
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./${{ matrix.service }}
+          platforms: linux/amd64
+          push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+          tags: ghcr.io/minguj/outsourcing-site-${{ matrix.service }}:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/minguj/outsourcing-site
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.service }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.service }}
+      - name: Release instructions
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        run: echo 'Image published. Wait for the smoke job before deploying.' >> "$GITHUB_STEP_SUMMARY"
+
+  smoke:
+    needs: build
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: read
+    env:
+      IMAGE_TAG: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Test published images and Caddy routes
+        run: |
+          cp backend.env.example backend.env
+          bash scripts/deploy.sh "$IMAGE_TAG"
+      - name: Container logs
+        if: always()
+        run: docker compose logs --tail=100
+      - name: Clean up runner containers
+        if: always()
+        run: docker compose down
+      - name: Release instructions
+        run: echo 'Verified release. On EC2 run bash scripts/deploy.sh ${{ github.sha }}' >> "$GITHUB_STEP_SUMMARY"
