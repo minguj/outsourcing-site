@@ -58,7 +58,7 @@ test ! -f Caddyfile || cp -p Caddyfile Caddyfile.before-apps
 더 확실한 백업은 새 파일 전송 전에 PC PowerShell에서 아래를 실행한다. 실제 실행 중인 Caddyfile과 볼륨 마운트 정보도 권한 제한된 서버 백업 폴더에 저장한다. 이 명령이 성공하기 전에는 새 Compose/Caddyfile을 전송하지 않는다.
 
 ```powershell
-Get-Content -Raw scripts/backup-caddy.sh | ssh -i <SSH_KEY> ubuntu@16.176.219.121 'bash -s -- /home/ubuntu/outsourcing-site'
+Get-Content -Raw scripts/backup-caddy.sh | ssh -i <SSH_KEY> ubuntu@16.176.219.121 'sudo -n env HOME=/home/ubuntu bash -s -- /home/ubuntu/outsourcing-site web'
 ```
 
 기존 Caddyfile 경로가 다르면 실제 마운트된 파일을 백업한다. 새 compose.yaml과 기존 프로젝트명, Caddy 서비스명, 볼륨, 마운트, 포트를 비교한다. 새 파일은 caddy 서비스와 caddy_data/caddy_config 볼륨을 사용한다. 기존 볼륨 이름이 다르면 새 파일에 기존 이름을 반영한다. 별도 Compose 프로젝트가 80 포트를 점유 중이면 먼저 구성을 맞춘다. 두 Caddy를 동시에 실행하지 않으며 `down -v`를 실행하지 않는다.
@@ -73,7 +73,7 @@ scp -i <SSH_KEY> scripts/deploy.sh ubuntu@16.176.219.121:~/outsourcing-site/scri
 
 ## EC2 최초 설정
 
-ubuntu 사용자가 sudo 없이 Docker를 실행할 수 있어야 한다. 그룹 권한 변경 시 재로그인한다. Compose v2의 up --wait 및 --wait-timeout 지원을 확인한다. curl, python3, flock(util-linux)이 필요하다.
+현재 EC2의 기존 Caddy 서비스명은 `web`이고 Docker 접근에는 sudo가 필요함을 확인했다. 백업 스크립트의 두 번째 인자로 실제 서비스명을 전달한다. 새 Compose는 `caddy`라는 이름이므로 최초 교체 전 기존 web 서비스의 80 포트 점유를 정리하는 마이그레이션이 필요하다. 아직 교체하지 않았다. 운영 배포 계정은 sudo 없이 Docker를 실행할 수 있게 구성하거나, GHCR 로그인과 배포를 모두 같은 sudo 계정으로 실행해야 한다. Docker 그룹 권한은 호스트 관리자 권한과 동등하므로 배포 계정에만 부여한다. Compose v2의 up --wait 및 --wait-timeout 지원을 확인한다. curl, python3, flock(util-linux)이 필요하다.
 
 ```bash
 cd ~/outsourcing-site
