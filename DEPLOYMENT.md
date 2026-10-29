@@ -1,5 +1,7 @@
 # Docker 배포
 
+EC2 self-hosted runner 전환 절차는 [RUNNER_DEPLOYMENT.md](RUNNER_DEPLOYMENT.md)를 기준으로 한다. 이전 polling 구현은 [AUTODEPLOYMENT.md](AUTODEPLOYMENT.md)에 보존한다. 아래는 최초 이미지 파이프라인 구성 및 수동 배포 참고 기록이다.
+
 ## 배포 흐름
 
 main PR은 Linux amd64 이미지 빌드를 검증한다. main push 또는 main에서 수동 실행하면 Actions가 GHCR에 두 이미지를 게시한다. 태그는 전체 커밋 SHA다. frontend/backend 빌드와 smoke 작업이 모두 성공한 SHA만 배포한다. smoke 작업은 게시된 이미지를 받아 Caddy 및 두 경로를 실제 실행 검증한다.

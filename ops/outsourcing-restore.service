@@ -1,0 +1,16 @@
+[Unit]
+Description=Recover interrupted outsourcing deployment after reboot
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+Environment=RESTORE_ONLY=1
+ExecStart=/usr/bin/python3 /opt/outsourcing-deploy/poller.py
+TimeoutStartSec=10min
+
+[Install]
+WantedBy=multi-user.target

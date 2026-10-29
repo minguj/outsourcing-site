@@ -15,6 +15,19 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  deployment-agent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify deployment eligibility and rollback
+        run: python3 -m unittest discover -s ops -p 'test_*.py' -v
+      - name: Verify rollback with real Docker containers
+        run: |
+          docker pull caddy:2
+          sudo mkdir -p /var/lib/outsourcing-deploy
+          sudo python3 ops/check_rollback_docker.py
+
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -52,7 +65,7 @@ jobs:
         run: echo 'Image published. Wait for the smoke job before deploying.' >> "$GITHUB_STEP_SUMMARY"
 
   smoke:
-    needs: build
+    needs: [build, deployment-agent]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -79,4 +92,21 @@ jobs:
         if: always()
         run: docker compose down
       - name: Release instructions
-        run: echo 'Verified release. On EC2 run bash scripts/deploy.sh ${{ github.sha }}' >> "$GITHUB_STEP_SUMMARY"
+        run: echo 'Images and Caddy routes verified for ${{ github.sha }}.' >> "$GITHUB_STEP_SUMMARY"
+
+  deploy:
+    needs: [deployment-agent, build, smoke]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: [self-hosted, Linux, X64, outsourcing-deploy]
+    timeout-minutes: 30
+    permissions: {}
+    concurrency:
+      group: outsourcing-site-production-deploy
+      cancel-in-progress: false
+    env:
+      DEPLOY_SHA: ${{ github.sha }}
+    steps:
+      # No checkout or repository scripts run with ubuntu/root on EC2.
+      - name: Deploy this workflow commit with backup and rollback
+        shell: bash
+        run: sudo -n /usr/local/sbin/outsourcing-deploy-sha "$DEPLOY_SHA"

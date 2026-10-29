@@ -1,0 +1,2 @@
+# The root-owned entry point rejects extra arguments and non-SHA input.
+ubuntu ALL=(root) NOPASSWD: NOSETENV: /usr/local/sbin/outsourcing-deploy-sha *

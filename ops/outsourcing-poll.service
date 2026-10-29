@@ -1,0 +1,19 @@
+[Unit]
+Description=Deploy verified outsourcing-site main images
+Requires=docker.service
+After=docker.service network-online.target outsourcing-restore.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=root
+UMask=0077
+ExecStart=/usr/bin/python3 /opt/outsourcing-deploy/poller.py
+TimeoutStartSec=15min
+TimeoutStopSec=4min
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=read-only
+ProtectSystem=strict
+ReadWritePaths=/var/lib/outsourcing-deploy
+
