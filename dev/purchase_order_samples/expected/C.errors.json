@@ -1,0 +1,83 @@
+{
+  "schema_version": 2,
+  "demo_notice": "체험용 가상 데이터 — 모든 회사·담당자·연락처는 가상이며 실제 거래에 사용할 수 없습니다.",
+  "intentional_errors": [
+    {
+      "source": {
+        "file": "purchase_order_C.xlsx",
+        "sheet": "구매발주서",
+        "row": 15,
+        "cells": {
+          "vendor_sku": "B15",
+          "name": "C15",
+          "spec": "D15",
+          "unit": "E15",
+          "quantity": "F15",
+          "unit_price": "G15",
+          "stated_amount": "H15",
+          "due": "I15",
+          "note": "J15"
+        }
+      },
+      "code": "UNKNOWN_ITEM",
+      "intentional": true,
+      "expected_decision": "확인 필요",
+      "candidate_item_codes": [],
+      "calculated_amount": 36000,
+      "stated_amount": 36000,
+      "difference": 0
+    },
+    {
+      "source": {
+        "file": "purchase_order_C.xlsx",
+        "sheet": "구매발주서",
+        "row": 21,
+        "cells": {
+          "vendor_sku": "B21",
+          "name": "C21",
+          "spec": "D21",
+          "unit": "E21",
+          "quantity": "F21",
+          "unit_price": "G21",
+          "stated_amount": "H21",
+          "due": "I21",
+          "note": "J21"
+        }
+      },
+      "code": "MISSING_QUANTITY",
+      "intentional": true,
+      "expected_decision": "확인 필요",
+      "candidate_item_codes": [],
+      "calculated_amount": null,
+      "stated_amount": 8400,
+      "difference": null
+    },
+    {
+      "source": {
+        "file": "purchase_order_C.xlsx",
+        "sheet": "구매발주서",
+        "row": 24,
+        "cells": {
+          "vendor_sku": "B24",
+          "name": "C24",
+          "spec": "D24",
+          "unit": "E24",
+          "quantity": "F24",
+          "unit_price": "G24",
+          "stated_amount": "H24",
+          "due": "I24",
+          "note": "J24"
+        }
+      },
+      "code": "AMOUNT_MISMATCH",
+      "intentional": true,
+      "expected_decision": "확인 필요",
+      "candidate_item_codes": [],
+      "calculated_amount": 10800,
+      "stated_amount": 10000,
+      "difference": -800
+    }
+  ],
+  "excluded_orders": [],
+  "generation_errors": []
+}

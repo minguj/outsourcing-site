@@ -1,0 +1,11 @@
+**
+!backend/
+!backend/*.py
+!backend/requirements.txt
+!backend/Dockerfile
+!frontend/
+!frontend/public/
+!frontend/public/samples/
+!frontend/public/samples/purchase-orders/
+!frontend/public/samples/purchase-orders/*.xlsx
+!frontend/public/samples/purchase-orders/*.csv

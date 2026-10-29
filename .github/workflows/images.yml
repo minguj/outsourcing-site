@@ -51,7 +51,9 @@ jobs:
       - name: Build image
         uses: docker/build-push-action@v6
         with:
-          context: ./${{ matrix.service }}
+          # Backend needs the same real XLSX/CSV assets served by the frontend.
+          context: ${{ matrix.service == 'backend' && '.' || './frontend' }}
+          file: ./${{ matrix.service }}/Dockerfile
           platforms: linux/amd64
           push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
           tags: ghcr.io/minguj/outsourcing-site-${{ matrix.service }}:${{ github.sha }}

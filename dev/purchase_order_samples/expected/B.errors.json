@@ -1,0 +1,127 @@
+{
+  "schema_version": 2,
+  "demo_notice": "체험용 가상 데이터 — 모든 회사·담당자·연락처는 가상이며 실제 거래에 사용할 수 없습니다.",
+  "intentional_errors": [
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 9,
+        "cells": {
+          "order_id": "A9",
+          "ordered": "B9",
+          "status": "C9",
+          "vendor_sku": "D9",
+          "name": "E9",
+          "spec": "F9",
+          "quantity": "G9",
+          "unit_price": "H9",
+          "stated_amount": "I9",
+          "unit": "J9"
+        }
+      },
+      "code": "AMBIGUOUS_ITEM",
+      "intentional": true,
+      "expected_decision": "확인 필요",
+      "candidate_item_codes": [
+        "S003",
+        "S004"
+      ],
+      "calculated_amount": 8000,
+      "stated_amount": 8000,
+      "difference": 0
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 13,
+        "cells": {
+          "order_id": "A13",
+          "ordered": "B13",
+          "status": "C13",
+          "vendor_sku": "D13",
+          "name": "E13",
+          "spec": "F13",
+          "quantity": "G13",
+          "unit_price": "H13",
+          "stated_amount": "I13",
+          "unit": "J13"
+        }
+      },
+      "code": "UNKNOWN_ITEM",
+      "intentional": true,
+      "expected_decision": "확인 필요",
+      "candidate_item_codes": [],
+      "calculated_amount": 13800,
+      "stated_amount": 13800,
+      "difference": 0
+    }
+  ],
+  "excluded_orders": [
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 5,
+        "cells": {
+          "order_id": "A5",
+          "ordered": "B5",
+          "status": "C5",
+          "vendor_sku": "D5",
+          "name": "E5",
+          "spec": "F5",
+          "quantity": "G5",
+          "unit_price": "H5",
+          "stated_amount": "I5",
+          "unit": "J5"
+        }
+      },
+      "reason": "취소",
+      "matching_skipped": true
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 11,
+        "cells": {
+          "order_id": "A11",
+          "ordered": "B11",
+          "status": "C11",
+          "vendor_sku": "D11",
+          "name": "E11",
+          "spec": "F11",
+          "quantity": "G11",
+          "unit_price": "H11",
+          "stated_amount": "I11",
+          "unit": "J11"
+        }
+      },
+      "reason": "취소",
+      "matching_skipped": true
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 17,
+        "cells": {
+          "order_id": "A17",
+          "ordered": "B17",
+          "status": "C17",
+          "vendor_sku": "D17",
+          "name": "E17",
+          "spec": "F17",
+          "quantity": "G17",
+          "unit_price": "H17",
+          "stated_amount": "I17",
+          "unit": "J17"
+        }
+      },
+      "reason": "취소완료",
+      "matching_skipped": true
+    }
+  ],
+  "generation_errors": []
+}

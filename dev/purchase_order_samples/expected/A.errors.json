@@ -1,0 +1,54 @@
+{
+  "schema_version": 2,
+  "demo_notice": "체험용 가상 데이터 — 모든 회사·담당자·연락처는 가상이며 실제 거래에 사용할 수 없습니다.",
+  "intentional_errors": [
+    {
+      "source": {
+        "file": "purchase_order_A.xlsx",
+        "sheet": "인쇄발주서",
+        "row": 15,
+        "cells": {
+          "code": "B15",
+          "name": "C15",
+          "spec": "D15",
+          "unit": "E15",
+          "quantity": "F15",
+          "unit_price": "G15",
+          "stated_amount": "H15"
+        }
+      },
+      "code": "MISSING_QUANTITY",
+      "intentional": true,
+      "expected_decision": "확인 필요",
+      "candidate_item_codes": [],
+      "calculated_amount": null,
+      "stated_amount": 9000,
+      "difference": null
+    },
+    {
+      "source": {
+        "file": "purchase_order_A.xlsx",
+        "sheet": "인쇄발주서",
+        "row": 19,
+        "cells": {
+          "code": "B19",
+          "name": "C19",
+          "spec": "D19",
+          "unit": "E19",
+          "quantity": "F19",
+          "unit_price": "G19",
+          "stated_amount": "H19"
+        }
+      },
+      "code": "AMOUNT_MISMATCH",
+      "intentional": true,
+      "expected_decision": "확인 필요",
+      "candidate_item_codes": [],
+      "calculated_amount": 13500,
+      "stated_amount": 13000,
+      "difference": -500
+    }
+  ],
+  "excluded_orders": [],
+  "generation_errors": []
+}
