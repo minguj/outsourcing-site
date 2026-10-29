@@ -1,0 +1,1040 @@
+{
+  "schema_version": 2,
+  "demo_notice": "체험용 가상 데이터 — 모든 회사·담당자·연락처는 가상이며 실제 거래에 사용할 수 없습니다.",
+  "sample": "B",
+  "source_file": "purchase_order_B.xlsx",
+  "source_sheet": "orders_export",
+  "column_mapping": {
+    "order_id": "A",
+    "ordered": "B",
+    "status": "C",
+    "vendor_sku": "D",
+    "name": "E",
+    "spec": "F",
+    "quantity": "G",
+    "unit_price": "H",
+    "stated_amount": "I",
+    "unit": "J"
+  },
+  "layout_rows": [],
+  "processing_rules": {
+    "cancellation_before_matching": true,
+    "aggregate": "item_code+unit+unit_price",
+    "spec_matching": "unique name+spec first, then name; never choose by price",
+    "money": "KRW, Decimal, supply rounded per source row; VAT 10% ROUND_HALF_UP per output line",
+    "review_rows_in_totals": false
+  },
+  "summary": {
+    "order_rows": 18,
+    "accepted_source_rows": 13,
+    "review_rows": 2,
+    "canceled_rows": 3,
+    "output_lines": 6,
+    "supply_amount": 110500,
+    "vat": 11050,
+    "total_amount": 121550,
+    "status": "검수 전 부분 합계 / 최종 발행 보류"
+  },
+  "rows": [
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 2,
+        "cells": {
+          "order_id": "A2",
+          "ordered": "B2",
+          "status": "C2",
+          "vendor_sku": "D2",
+          "name": "E2",
+          "spec": "F2",
+          "quantity": "G2",
+          "unit_price": "H2",
+          "stated_amount": "I2",
+          "unit": "J2"
+        }
+      },
+      "input": {
+        "name": "청소물티슈",
+        "spec": "100매 / 낱팩",
+        "unit": "팩",
+        "quantity": 3,
+        "unit_price": 1800,
+        "stated_amount": 5400,
+        "order_id": "DEMO-SHOP-1001",
+        "ordered": "2026-11-02 08:12:00",
+        "status": "결제완료",
+        "vendor_sku": "SHOP-S009"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 5400,
+      "output_group": "B-01"
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 3,
+        "cells": {
+          "order_id": "A3",
+          "ordered": "B3",
+          "status": "C3",
+          "vendor_sku": "D3",
+          "name": "E3",
+          "spec": "F3",
+          "quantity": "G3",
+          "unit_price": "H3",
+          "stated_amount": "I3",
+          "unit": "J3"
+        }
+      },
+      "input": {
+        "name": "박스테이프",
+        "spec": "48mm",
+        "unit": "롤",
+        "quantity": 2,
+        "unit_price": 1200,
+        "stated_amount": 2400,
+        "order_id": "DEMO-SHOP-1002",
+        "ordered": "2026-11-02 08:24:00",
+        "status": "결제완료",
+        "vendor_sku": "SHOP-S010"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 2400,
+      "output_group": "B-02"
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 4,
+        "cells": {
+          "order_id": "A4",
+          "ordered": "B4",
+          "status": "C4",
+          "vendor_sku": "D4",
+          "name": "E4",
+          "spec": "F4",
+          "quantity": "G4",
+          "unit_price": "H4",
+          "stated_amount": "I4",
+          "unit": "J4"
+        }
+      },
+      "input": {
+        "name": "청소물티슈",
+        "spec": "100매 / 낱팩",
+        "unit": "팩",
+        "quantity": 5,
+        "unit_price": 1800,
+        "stated_amount": 9000,
+        "order_id": "DEMO-SHOP-1003",
+        "ordered": "2026-11-02 08:36:00",
+        "status": "결제완료",
+        "vendor_sku": "SHOP-S009"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 9000,
+      "output_group": "B-01"
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 5,
+        "cells": {
+          "order_id": "A5",
+          "ordered": "B5",
+          "status": "C5",
+          "vendor_sku": "D5",
+          "name": "E5",
+          "spec": "F5",
+          "quantity": "G5",
+          "unit_price": "H5",
+          "stated_amount": "I5",
+          "unit": "J5"
+        }
+      },
+      "input": {
+        "name": "위생장갑",
+        "spec": null,
+        "unit": "박스",
+        "quantity": 2,
+        "unit_price": 8000,
+        "stated_amount": 16000,
+        "order_id": "DEMO-SHOP-1004",
+        "ordered": "2026-11-02 09:00:00",
+        "status": "취소",
+        "vendor_sku": "SHOP-UNLISTED-04"
+      },
+      "decision": "취소 제외",
+      "issue_codes": [],
+      "calculated_amount": 16000,
+      "output_group": null
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 6,
+        "cells": {
+          "order_id": "A6",
+          "ordered": "B6",
+          "status": "C6",
+          "vendor_sku": "D6",
+          "name": "E6",
+          "spec": "F6",
+          "quantity": "G6",
+          "unit_price": "H6",
+          "stated_amount": "I6",
+          "unit": "J6"
+        }
+      },
+      "input": {
+        "name": "손세정제500",
+        "spec": "500ml",
+        "unit": "병",
+        "quantity": 2,
+        "unit_price": 3800,
+        "stated_amount": 7600,
+        "order_id": "DEMO-SHOP-1005",
+        "ordered": "2026-11-02 09:12:00",
+        "status": "결제완료",
+        "vendor_sku": "SHOP-S014"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 7600,
+      "output_group": "B-03"
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 7,
+        "cells": {
+          "order_id": "A7",
+          "ordered": "B7",
+          "status": "C7",
+          "vendor_sku": "D7",
+          "name": "E7",
+          "spec": "F7",
+          "quantity": "G7",
+          "unit_price": "H7",
+          "stated_amount": "I7",
+          "unit": "J7"
+        }
+      },
+      "input": {
+        "name": "위생장갑",
+        "spec": "M",
+        "unit": "박스",
+        "quantity": 2,
+        "unit_price": 8000,
+        "stated_amount": 16000,
+        "order_id": "DEMO-SHOP-1006",
+        "ordered": "2026-11-02 09:24:00",
+        "status": "결제완료",
+        "vendor_sku": "SHOP-S003"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 16000,
+      "output_group": "B-04"
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 8,
+        "cells": {
+          "order_id": "A8",
+          "ordered": "B8",
+          "status": "C8",
+          "vendor_sku": "D8",
+          "name": "E8",
+          "spec": "F8",
+          "quantity": "G8",
+          "unit_price": "H8",
+          "stated_amount": "I8",
+          "unit": "J8"
+        }
+      },
+      "input": {
+        "name": "청소물티슈",
+        "spec": "100매 / 낱팩",
+        "unit": "팩",
+        "quantity": 4,
+        "unit_price": 1800,
+        "stated_amount": 7200,
+        "order_id": "DEMO-SHOP-1007",
+        "ordered": "2026-11-02 09:36:00",
+        "status": "결제완료",
+        "vendor_sku": "SHOP-S009"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 7200,
+      "output_group": "B-01"
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 9,
+        "cells": {
+          "order_id": "A9",
+          "ordered": "B9",
+          "status": "C9",
+          "vendor_sku": "D9",
+          "name": "E9",
+          "spec": "F9",
+          "quantity": "G9",
+          "unit_price": "H9",
+          "stated_amount": "I9",
+          "unit": "J9"
+        }
+      },
+      "input": {
+        "name": "위생장갑",
+        "spec": null,
+        "unit": "박스",
+        "quantity": 1,
+        "unit_price": 8000,
+        "stated_amount": 8000,
+        "order_id": "DEMO-SHOP-1008",
+        "ordered": "2026-11-02 10:00:00",
+        "status": "결제완료",
+        "vendor_sku": "SHOP-UNLISTED-08"
+      },
+      "decision": "확인 필요",
+      "issue_codes": [
+        "AMBIGUOUS_ITEM"
+      ],
+      "calculated_amount": 8000,
+      "output_group": null
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 10,
+        "cells": {
+          "order_id": "A10",
+          "ordered": "B10",
+          "status": "C10",
+          "vendor_sku": "D10",
+          "name": "E10",
+          "spec": "F10",
+          "quantity": "G10",
+          "unit_price": "H10",
+          "stated_amount": "I10",
+          "unit": "J10"
+        }
+      },
+      "input": {
+        "name": "박스테이프",
+        "spec": "48mm",
+        "unit": "롤",
+        "quantity": 3,
+        "unit_price": 1200,
+        "stated_amount": 3600,
+        "order_id": "DEMO-SHOP-1009",
+        "ordered": "2026-11-02 10:12:00",
+        "status": "결제완료",
+        "vendor_sku": "SHOP-S010"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 3600,
+      "output_group": "B-02"
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 11,
+        "cells": {
+          "order_id": "A11",
+          "ordered": "B11",
+          "status": "C11",
+          "vendor_sku": "D11",
+          "name": "E11",
+          "spec": "F11",
+          "quantity": "G11",
+          "unit_price": "H11",
+          "stated_amount": "I11",
+          "unit": "J11"
+        }
+      },
+      "input": {
+        "name": "가상 포장필름",
+        "spec": null,
+        "unit": "개",
+        "quantity": 1,
+        "unit_price": 9900,
+        "stated_amount": 9900,
+        "order_id": "DEMO-SHOP-1010",
+        "ordered": "2026-11-02 10:24:00",
+        "status": "취소",
+        "vendor_sku": "SHOP-UNLISTED-10"
+      },
+      "decision": "취소 제외",
+      "issue_codes": [],
+      "calculated_amount": 9900,
+      "output_group": null
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 12,
+        "cells": {
+          "order_id": "A12",
+          "ordered": "B12",
+          "status": "C12",
+          "vendor_sku": "D12",
+          "name": "E12",
+          "spec": "F12",
+          "quantity": "G12",
+          "unit_price": "H12",
+          "stated_amount": "I12",
+          "unit": "J12"
+        }
+      },
+      "input": {
+        "name": "소독솜100",
+        "spec": "100매",
+        "unit": "박스",
+        "quantity": 6,
+        "unit_price": 2800,
+        "stated_amount": 16800,
+        "order_id": "DEMO-SHOP-1011",
+        "ordered": "2026-11-02 10:36:00",
+        "status": "결제완료",
+        "vendor_sku": "SHOP-S013"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 16800,
+      "output_group": "B-05"
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 13,
+        "cells": {
+          "order_id": "A13",
+          "ordered": "B13",
+          "status": "C13",
+          "vendor_sku": "D13",
+          "name": "E13",
+          "spec": "F13",
+          "quantity": "G13",
+          "unit_price": "H13",
+          "stated_amount": "I13",
+          "unit": "J13"
+        }
+      },
+      "input": {
+        "name": "가상 정전기제거패드",
+        "spec": null,
+        "unit": "개",
+        "quantity": 2,
+        "unit_price": 6900,
+        "stated_amount": 13800,
+        "order_id": "DEMO-SHOP-1012",
+        "ordered": "2026-11-02 11:00:00",
+        "status": "결제완료",
+        "vendor_sku": "SHOP-UNLISTED-12"
+      },
+      "decision": "확인 필요",
+      "issue_codes": [
+        "UNKNOWN_ITEM"
+      ],
+      "calculated_amount": 13800,
+      "output_group": null
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 14,
+        "cells": {
+          "order_id": "A14",
+          "ordered": "B14",
+          "status": "C14",
+          "vendor_sku": "D14",
+          "name": "E14",
+          "spec": "F14",
+          "quantity": "G14",
+          "unit_price": "H14",
+          "stated_amount": "I14",
+          "unit": "J14"
+        }
+      },
+      "input": {
+        "name": "손세정제500",
+        "spec": "500ml",
+        "unit": "병",
+        "quantity": 3,
+        "unit_price": 3800,
+        "stated_amount": 11400,
+        "order_id": "DEMO-SHOP-1013",
+        "ordered": "2026-11-02 11:12:00",
+        "status": "결제완료",
+        "vendor_sku": "SHOP-S014"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 11400,
+      "output_group": "B-03"
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 15,
+        "cells": {
+          "order_id": "A15",
+          "ordered": "B15",
+          "status": "C15",
+          "vendor_sku": "D15",
+          "name": "E15",
+          "spec": "F15",
+          "quantity": "G15",
+          "unit_price": "H15",
+          "stated_amount": "I15",
+          "unit": "J15"
+        }
+      },
+      "input": {
+        "name": "중형지퍼백",
+        "spec": "중형",
+        "unit": "팩",
+        "quantity": 4,
+        "unit_price": 3500,
+        "stated_amount": 14000,
+        "order_id": "DEMO-SHOP-1014",
+        "ordered": "2026-11-02 11:24:00",
+        "status": "결제완료",
+        "vendor_sku": "SHOP-S011"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 14000,
+      "output_group": "B-06"
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 16,
+        "cells": {
+          "order_id": "A16",
+          "ordered": "B16",
+          "status": "C16",
+          "vendor_sku": "D16",
+          "name": "E16",
+          "spec": "F16",
+          "quantity": "G16",
+          "unit_price": "H16",
+          "stated_amount": "I16",
+          "unit": "J16"
+        }
+      },
+      "input": {
+        "name": "소독솜100",
+        "spec": "100매",
+        "unit": "박스",
+        "quantity": 2,
+        "unit_price": 2800,
+        "stated_amount": 5600,
+        "order_id": "DEMO-SHOP-1015",
+        "ordered": "2026-11-02 11:36:00",
+        "status": "결제완료",
+        "vendor_sku": "SHOP-S013"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 5600,
+      "output_group": "B-05"
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 17,
+        "cells": {
+          "order_id": "A17",
+          "ordered": "B17",
+          "status": "C17",
+          "vendor_sku": "D17",
+          "name": "E17",
+          "spec": "F17",
+          "quantity": "G17",
+          "unit_price": "H17",
+          "stated_amount": "I17",
+          "unit": "J17"
+        }
+      },
+      "input": {
+        "name": "청소물티슈",
+        "spec": null,
+        "unit": "팩",
+        "quantity": 10,
+        "unit_price": 1800,
+        "stated_amount": 18000,
+        "order_id": "DEMO-SHOP-1016",
+        "ordered": "2026-11-02 12:00:00",
+        "status": "취소완료",
+        "vendor_sku": "SHOP-S009"
+      },
+      "decision": "취소 제외",
+      "issue_codes": [],
+      "calculated_amount": 18000,
+      "output_group": null
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 18,
+        "cells": {
+          "order_id": "A18",
+          "ordered": "B18",
+          "status": "C18",
+          "vendor_sku": "D18",
+          "name": "E18",
+          "spec": "F18",
+          "quantity": "G18",
+          "unit_price": "H18",
+          "stated_amount": "I18",
+          "unit": "J18"
+        }
+      },
+      "input": {
+        "name": "중형지퍼백",
+        "spec": "중형",
+        "unit": "팩",
+        "quantity": 1,
+        "unit_price": 3500,
+        "stated_amount": 3500,
+        "order_id": "DEMO-SHOP-1017",
+        "ordered": "2026-11-02 12:12:00",
+        "status": "결제완료",
+        "vendor_sku": "SHOP-S011"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 3500,
+      "output_group": "B-06"
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 19,
+        "cells": {
+          "order_id": "A19",
+          "ordered": "B19",
+          "status": "C19",
+          "vendor_sku": "D19",
+          "name": "E19",
+          "spec": "F19",
+          "quantity": "G19",
+          "unit_price": "H19",
+          "stated_amount": "I19",
+          "unit": "J19"
+        }
+      },
+      "input": {
+        "name": "위생장갑",
+        "spec": "M",
+        "unit": "박스",
+        "quantity": 1,
+        "unit_price": 8000,
+        "stated_amount": 8000,
+        "order_id": "DEMO-SHOP-1018",
+        "ordered": "2026-11-02 12:24:00",
+        "status": "결제완료",
+        "vendor_sku": "SHOP-S003"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 8000,
+      "output_group": "B-04"
+    }
+  ],
+  "accepted_output_lines": [
+    {
+      "group_id": "B-01",
+      "item_code": "S009",
+      "standard_name": "물티슈 100매",
+      "unit": "팩",
+      "quantity": 12,
+      "unit_price": 1800,
+      "supply_amount": 21600,
+      "sources": [
+        {
+          "file": "purchase_order_B.xlsx",
+          "sheet": "orders_export",
+          "row": 2,
+          "cells": {
+            "order_id": "A2",
+            "ordered": "B2",
+            "status": "C2",
+            "vendor_sku": "D2",
+            "name": "E2",
+            "spec": "F2",
+            "quantity": "G2",
+            "unit_price": "H2",
+            "stated_amount": "I2",
+            "unit": "J2"
+          }
+        },
+        {
+          "file": "purchase_order_B.xlsx",
+          "sheet": "orders_export",
+          "row": 4,
+          "cells": {
+            "order_id": "A4",
+            "ordered": "B4",
+            "status": "C4",
+            "vendor_sku": "D4",
+            "name": "E4",
+            "spec": "F4",
+            "quantity": "G4",
+            "unit_price": "H4",
+            "stated_amount": "I4",
+            "unit": "J4"
+          }
+        },
+        {
+          "file": "purchase_order_B.xlsx",
+          "sheet": "orders_export",
+          "row": 8,
+          "cells": {
+            "order_id": "A8",
+            "ordered": "B8",
+            "status": "C8",
+            "vendor_sku": "D8",
+            "name": "E8",
+            "spec": "F8",
+            "quantity": "G8",
+            "unit_price": "H8",
+            "stated_amount": "I8",
+            "unit": "J8"
+          }
+        }
+      ],
+      "vat": 2160,
+      "total_amount": 23760
+    },
+    {
+      "group_id": "B-02",
+      "item_code": "S010",
+      "standard_name": "포장테이프 48mm",
+      "unit": "롤",
+      "quantity": 5,
+      "unit_price": 1200,
+      "supply_amount": 6000,
+      "sources": [
+        {
+          "file": "purchase_order_B.xlsx",
+          "sheet": "orders_export",
+          "row": 3,
+          "cells": {
+            "order_id": "A3",
+            "ordered": "B3",
+            "status": "C3",
+            "vendor_sku": "D3",
+            "name": "E3",
+            "spec": "F3",
+            "quantity": "G3",
+            "unit_price": "H3",
+            "stated_amount": "I3",
+            "unit": "J3"
+          }
+        },
+        {
+          "file": "purchase_order_B.xlsx",
+          "sheet": "orders_export",
+          "row": 10,
+          "cells": {
+            "order_id": "A10",
+            "ordered": "B10",
+            "status": "C10",
+            "vendor_sku": "D10",
+            "name": "E10",
+            "spec": "F10",
+            "quantity": "G10",
+            "unit_price": "H10",
+            "stated_amount": "I10",
+            "unit": "J10"
+          }
+        }
+      ],
+      "vat": 600,
+      "total_amount": 6600
+    },
+    {
+      "group_id": "B-03",
+      "item_code": "S014",
+      "standard_name": "핸드워시 500ml",
+      "unit": "병",
+      "quantity": 5,
+      "unit_price": 3800,
+      "supply_amount": 19000,
+      "sources": [
+        {
+          "file": "purchase_order_B.xlsx",
+          "sheet": "orders_export",
+          "row": 6,
+          "cells": {
+            "order_id": "A6",
+            "ordered": "B6",
+            "status": "C6",
+            "vendor_sku": "D6",
+            "name": "E6",
+            "spec": "F6",
+            "quantity": "G6",
+            "unit_price": "H6",
+            "stated_amount": "I6",
+            "unit": "J6"
+          }
+        },
+        {
+          "file": "purchase_order_B.xlsx",
+          "sheet": "orders_export",
+          "row": 14,
+          "cells": {
+            "order_id": "A14",
+            "ordered": "B14",
+            "status": "C14",
+            "vendor_sku": "D14",
+            "name": "E14",
+            "spec": "F14",
+            "quantity": "G14",
+            "unit_price": "H14",
+            "stated_amount": "I14",
+            "unit": "J14"
+          }
+        }
+      ],
+      "vat": 1900,
+      "total_amount": 20900
+    },
+    {
+      "group_id": "B-04",
+      "item_code": "S003",
+      "standard_name": "니트릴장갑 M",
+      "unit": "박스",
+      "quantity": 3,
+      "unit_price": 8000,
+      "supply_amount": 24000,
+      "sources": [
+        {
+          "file": "purchase_order_B.xlsx",
+          "sheet": "orders_export",
+          "row": 7,
+          "cells": {
+            "order_id": "A7",
+            "ordered": "B7",
+            "status": "C7",
+            "vendor_sku": "D7",
+            "name": "E7",
+            "spec": "F7",
+            "quantity": "G7",
+            "unit_price": "H7",
+            "stated_amount": "I7",
+            "unit": "J7"
+          }
+        },
+        {
+          "file": "purchase_order_B.xlsx",
+          "sheet": "orders_export",
+          "row": 19,
+          "cells": {
+            "order_id": "A19",
+            "ordered": "B19",
+            "status": "C19",
+            "vendor_sku": "D19",
+            "name": "E19",
+            "spec": "F19",
+            "quantity": "G19",
+            "unit_price": "H19",
+            "stated_amount": "I19",
+            "unit": "J19"
+          }
+        }
+      ],
+      "vat": 2400,
+      "total_amount": 26400
+    },
+    {
+      "group_id": "B-05",
+      "item_code": "S013",
+      "standard_name": "알코올솜 100매",
+      "unit": "박스",
+      "quantity": 8,
+      "unit_price": 2800,
+      "supply_amount": 22400,
+      "sources": [
+        {
+          "file": "purchase_order_B.xlsx",
+          "sheet": "orders_export",
+          "row": 12,
+          "cells": {
+            "order_id": "A12",
+            "ordered": "B12",
+            "status": "C12",
+            "vendor_sku": "D12",
+            "name": "E12",
+            "spec": "F12",
+            "quantity": "G12",
+            "unit_price": "H12",
+            "stated_amount": "I12",
+            "unit": "J12"
+          }
+        },
+        {
+          "file": "purchase_order_B.xlsx",
+          "sheet": "orders_export",
+          "row": 16,
+          "cells": {
+            "order_id": "A16",
+            "ordered": "B16",
+            "status": "C16",
+            "vendor_sku": "D16",
+            "name": "E16",
+            "spec": "F16",
+            "quantity": "G16",
+            "unit_price": "H16",
+            "stated_amount": "I16",
+            "unit": "J16"
+          }
+        }
+      ],
+      "vat": 2240,
+      "total_amount": 24640
+    },
+    {
+      "group_id": "B-06",
+      "item_code": "S011",
+      "standard_name": "지퍼백 중형",
+      "unit": "팩",
+      "quantity": 5,
+      "unit_price": 3500,
+      "supply_amount": 17500,
+      "sources": [
+        {
+          "file": "purchase_order_B.xlsx",
+          "sheet": "orders_export",
+          "row": 15,
+          "cells": {
+            "order_id": "A15",
+            "ordered": "B15",
+            "status": "C15",
+            "vendor_sku": "D15",
+            "name": "E15",
+            "spec": "F15",
+            "quantity": "G15",
+            "unit_price": "H15",
+            "stated_amount": "I15",
+            "unit": "J15"
+          }
+        },
+        {
+          "file": "purchase_order_B.xlsx",
+          "sheet": "orders_export",
+          "row": 18,
+          "cells": {
+            "order_id": "A18",
+            "ordered": "B18",
+            "status": "C18",
+            "vendor_sku": "D18",
+            "name": "E18",
+            "spec": "F18",
+            "quantity": "G18",
+            "unit_price": "H18",
+            "stated_amount": "I18",
+            "unit": "J18"
+          }
+        }
+      ],
+      "vat": 1750,
+      "total_amount": 19250
+    }
+  ],
+  "excluded_orders": [
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 5,
+        "cells": {
+          "order_id": "A5",
+          "ordered": "B5",
+          "status": "C5",
+          "vendor_sku": "D5",
+          "name": "E5",
+          "spec": "F5",
+          "quantity": "G5",
+          "unit_price": "H5",
+          "stated_amount": "I5",
+          "unit": "J5"
+        }
+      },
+      "reason": "취소",
+      "matching_skipped": true
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 11,
+        "cells": {
+          "order_id": "A11",
+          "ordered": "B11",
+          "status": "C11",
+          "vendor_sku": "D11",
+          "name": "E11",
+          "spec": "F11",
+          "quantity": "G11",
+          "unit_price": "H11",
+          "stated_amount": "I11",
+          "unit": "J11"
+        }
+      },
+      "reason": "취소",
+      "matching_skipped": true
+    },
+    {
+      "source": {
+        "file": "purchase_order_B.xlsx",
+        "sheet": "orders_export",
+        "row": 17,
+        "cells": {
+          "order_id": "A17",
+          "ordered": "B17",
+          "status": "C17",
+          "vendor_sku": "D17",
+          "name": "E17",
+          "spec": "F17",
+          "quantity": "G17",
+          "unit_price": "H17",
+          "stated_amount": "I17",
+          "unit": "J17"
+        }
+      },
+      "reason": "취소완료",
+      "matching_skipped": true
+    }
+  ]
+}

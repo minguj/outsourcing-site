@@ -1,0 +1,97 @@
+{
+  "demo_notice": "체험용 가상 데이터 검증 보고서",
+  "status": "passed",
+  "generation_errors": [],
+  "samples": [
+    {
+      "sample": "A",
+      "summary": {
+        "order_rows": 10,
+        "accepted_source_rows": 8,
+        "review_rows": 2,
+        "canceled_rows": 0,
+        "output_lines": 8,
+        "supply_amount": 122400,
+        "vat": 12240,
+        "total_amount": 134640,
+        "status": "검수 전 부분 합계 / 최종 발행 보류"
+      },
+      "intentional_errors": [
+        {
+          "row": 15,
+          "code": "MISSING_QUANTITY"
+        },
+        {
+          "row": 19,
+          "code": "AMOUNT_MISMATCH"
+        }
+      ]
+    },
+    {
+      "sample": "B",
+      "summary": {
+        "order_rows": 18,
+        "accepted_source_rows": 13,
+        "review_rows": 2,
+        "canceled_rows": 3,
+        "output_lines": 6,
+        "supply_amount": 110500,
+        "vat": 11050,
+        "total_amount": 121550,
+        "status": "검수 전 부분 합계 / 최종 발행 보류"
+      },
+      "intentional_errors": [
+        {
+          "row": 9,
+          "code": "AMBIGUOUS_ITEM"
+        },
+        {
+          "row": 13,
+          "code": "UNKNOWN_ITEM"
+        }
+      ]
+    },
+    {
+      "sample": "C",
+      "summary": {
+        "order_rows": 11,
+        "accepted_source_rows": 8,
+        "review_rows": 3,
+        "canceled_rows": 0,
+        "output_lines": 8,
+        "supply_amount": 126000,
+        "vat": 12600,
+        "total_amount": 138600,
+        "status": "검수 전 부분 합계 / 최종 발행 보류"
+      },
+      "intentional_errors": [
+        {
+          "row": 15,
+          "code": "UNKNOWN_ITEM"
+        },
+        {
+          "row": 21,
+          "code": "MISSING_QUANTITY"
+        },
+        {
+          "row": 24,
+          "code": "AMOUNT_MISMATCH"
+        }
+      ]
+    }
+  ],
+  "sha256": {
+    "frontend/public/samples/purchase-orders/common_delivery_statement_template.xlsx": "94d67d4c075d5ba76be129f8e9635ecd77a0faf6cde778f86c628ea526c1e15f",
+    "frontend/public/samples/purchase-orders/item_master.csv": "d829f387c833f07e76388f0b1318823bb567798af6efe2bb928daf4440a2742b",
+    "frontend/public/samples/purchase-orders/purchase_order_A.xlsx": "2651d35d9bbad5c87c447071d99da985947d47fcf43223c667d4028d800d65e5",
+    "frontend/public/samples/purchase-orders/purchase_order_B.xlsx": "0ba7e676872a9efbeb43d3c8c7635cf125336204d616bc24f840ad8706bb9e6f",
+    "frontend/public/samples/purchase-orders/purchase_order_C.xlsx": "f89250fed8d6fe57b668b7fd241fd61318977acbbb1cd17437cbf57384cdb554",
+    "frontend/public/samples/purchase-orders/README.txt": "02bd64dcb7d2609525ebea58ee752e6715fa9f723156b285920b7effd0ce0aa6",
+    "dev/purchase_order_samples/expected/A.errors.json": "7c2f5d48c13b81836ddacc248b1bb44eb1e264d5d56a0094b6830937a124d013",
+    "dev/purchase_order_samples/expected/A.expected.json": "497e58e21c20e7955cb11f3f4a21e1fb38a6762c0e3ff57abe7b96a3149277b1",
+    "dev/purchase_order_samples/expected/B.errors.json": "c03459ffaca3c0321ff94332261cd6297dec8ee1c1e715bcd4abe0f638cfe02d",
+    "dev/purchase_order_samples/expected/B.expected.json": "a9af11bdcbe82b4af2d5fb5dd1959334fbe8da533fceff946fe7b270334ae9a0",
+    "dev/purchase_order_samples/expected/C.errors.json": "53487e62992e1efc24f777222024e95da64fcda1cfeb3f3b9adf8d77623e204f",
+    "dev/purchase_order_samples/expected/C.expected.json": "a90670caf483269c77fbf84a988cebf9b894b2025938629df0fce560c1cf6e17"
+  }
+}

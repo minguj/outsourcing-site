@@ -1,0 +1,550 @@
+{
+  "schema_version": 2,
+  "demo_notice": "체험용 가상 데이터 — 모든 회사·담당자·연락처는 가상이며 실제 거래에 사용할 수 없습니다.",
+  "sample": "A",
+  "source_file": "purchase_order_A.xlsx",
+  "source_sheet": "인쇄발주서",
+  "column_mapping": {
+    "code": "B",
+    "name": "C",
+    "spec": "D",
+    "unit": "E",
+    "quantity": "F",
+    "unit_price": "G",
+    "stated_amount": "H"
+  },
+  "layout_rows": [],
+  "processing_rules": {
+    "cancellation_before_matching": false,
+    "aggregate": "none",
+    "spec_matching": "unique name+spec first, then name; never choose by price",
+    "money": "KRW, Decimal, supply rounded per source row; VAT 10% ROUND_HALF_UP per output line",
+    "review_rows_in_totals": false
+  },
+  "summary": {
+    "order_rows": 10,
+    "accepted_source_rows": 8,
+    "review_rows": 2,
+    "canceled_rows": 0,
+    "output_lines": 8,
+    "supply_amount": 122400,
+    "vat": 12240,
+    "total_amount": 134640,
+    "status": "검수 전 부분 합계 / 최종 발행 보류"
+  },
+  "rows": [
+    {
+      "source": {
+        "file": "purchase_order_A.xlsx",
+        "sheet": "인쇄발주서",
+        "row": 12,
+        "cells": {
+          "code": "B12",
+          "name": "C12",
+          "spec": "D12",
+          "unit": "E12",
+          "quantity": "F12",
+          "unit_price": "G12",
+          "stated_amount": "H12"
+        }
+      },
+      "input": {
+        "name": "A4 복사용지 80g",
+        "spec": "80g / 2,500매",
+        "unit": "박스",
+        "quantity": 2,
+        "unit_price": 25000,
+        "stated_amount": 50000,
+        "code": "S001"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 50000,
+      "output_group": "A-01"
+    },
+    {
+      "source": {
+        "file": "purchase_order_A.xlsx",
+        "sheet": "인쇄발주서",
+        "row": 13,
+        "cells": {
+          "code": "B13",
+          "name": "C13",
+          "spec": "D13",
+          "unit": "E13",
+          "quantity": "F13",
+          "unit_price": "G13",
+          "stated_amount": "H13"
+        }
+      },
+      "input": {
+        "name": "종이컵 180ml",
+        "spec": "180ml",
+        "unit": "박스",
+        "quantity": 1,
+        "unit_price": 13000,
+        "stated_amount": 13000,
+        "code": "S002"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 13000,
+      "output_group": "A-02"
+    },
+    {
+      "source": {
+        "file": "purchase_order_A.xlsx",
+        "sheet": "인쇄발주서",
+        "row": 14,
+        "cells": {
+          "code": "B14",
+          "name": "C14",
+          "spec": "D14",
+          "unit": "E14",
+          "quantity": "F14",
+          "unit_price": "G14",
+          "stated_amount": "H14"
+        }
+      },
+      "input": {
+        "name": "포장테이프 48mm",
+        "spec": "48mm",
+        "unit": "롤",
+        "quantity": 10,
+        "unit_price": 1200,
+        "stated_amount": 12000,
+        "code": "S010"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 12000,
+      "output_group": "A-03"
+    },
+    {
+      "source": {
+        "file": "purchase_order_A.xlsx",
+        "sheet": "인쇄발주서",
+        "row": 15,
+        "cells": {
+          "code": "B15",
+          "name": "C15",
+          "spec": "D15",
+          "unit": "E15",
+          "quantity": "F15",
+          "unit_price": "G15",
+          "stated_amount": "H15"
+        }
+      },
+      "input": {
+        "name": "물티슈 100매",
+        "spec": "100매",
+        "unit": "팩",
+        "quantity": null,
+        "unit_price": 1800,
+        "stated_amount": 9000,
+        "code": "S009"
+      },
+      "decision": "확인 필요",
+      "issue_codes": [
+        "MISSING_QUANTITY"
+      ],
+      "calculated_amount": null,
+      "output_group": null
+    },
+    {
+      "source": {
+        "file": "purchase_order_A.xlsx",
+        "sheet": "인쇄발주서",
+        "row": 16,
+        "cells": {
+          "code": "B16",
+          "name": "C16",
+          "spec": "D16",
+          "unit": "E16",
+          "quantity": "F16",
+          "unit_price": "G16",
+          "stated_amount": "H16"
+        }
+      },
+      "input": {
+        "name": "키친타월 6롤",
+        "spec": "6롤",
+        "unit": "팩",
+        "quantity": 2,
+        "unit_price": 6000,
+        "stated_amount": 12000,
+        "code": "S007"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 12000,
+      "output_group": "A-04"
+    },
+    {
+      "source": {
+        "file": "purchase_order_A.xlsx",
+        "sheet": "인쇄발주서",
+        "row": 17,
+        "cells": {
+          "code": "B17",
+          "name": "C17",
+          "spec": "D17",
+          "unit": "E17",
+          "quantity": "F17",
+          "unit_price": "G17",
+          "stated_amount": "H17"
+        }
+      },
+      "input": {
+        "name": "행주 10매",
+        "spec": "10매",
+        "unit": "팩",
+        "quantity": 3,
+        "unit_price": 4000,
+        "stated_amount": 12000,
+        "code": "S012"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 12000,
+      "output_group": "A-05"
+    },
+    {
+      "source": {
+        "file": "purchase_order_A.xlsx",
+        "sheet": "인쇄발주서",
+        "row": 18,
+        "cells": {
+          "code": "B18",
+          "name": "C18",
+          "spec": "D18",
+          "unit": "E18",
+          "quantity": "F18",
+          "unit_price": "G18",
+          "stated_amount": "H18"
+        }
+      },
+      "input": {
+        "name": "핸드워시 500ml",
+        "spec": "500ml",
+        "unit": "병",
+        "quantity": 2,
+        "unit_price": 3800,
+        "stated_amount": 7600,
+        "code": "S014"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 7600,
+      "output_group": "A-06"
+    },
+    {
+      "source": {
+        "file": "purchase_order_A.xlsx",
+        "sheet": "인쇄발주서",
+        "row": 19,
+        "cells": {
+          "code": "B19",
+          "name": "C19",
+          "spec": "D19",
+          "unit": "E19",
+          "quantity": "F19",
+          "unit_price": "G19",
+          "stated_amount": "H19"
+        }
+      },
+      "input": {
+        "name": "주방세제 1L",
+        "spec": "1L",
+        "unit": "병",
+        "quantity": 3,
+        "unit_price": 4500,
+        "stated_amount": 13000,
+        "code": "S006"
+      },
+      "decision": "확인 필요",
+      "issue_codes": [
+        "AMOUNT_MISMATCH"
+      ],
+      "calculated_amount": 13500,
+      "output_group": null
+    },
+    {
+      "source": {
+        "file": "purchase_order_A.xlsx",
+        "sheet": "인쇄발주서",
+        "row": 20,
+        "cells": {
+          "code": "B20",
+          "name": "C20",
+          "spec": "D20",
+          "unit": "E20",
+          "quantity": "F20",
+          "unit_price": "G20",
+          "stated_amount": "H20"
+        }
+      },
+      "input": {
+        "name": "지퍼백 중형",
+        "spec": "중형",
+        "unit": "팩",
+        "quantity": 2,
+        "unit_price": 3500,
+        "stated_amount": 7000,
+        "code": "S011"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 7000,
+      "output_group": "A-07"
+    },
+    {
+      "source": {
+        "file": "purchase_order_A.xlsx",
+        "sheet": "인쇄발주서",
+        "row": 21,
+        "cells": {
+          "code": "B21",
+          "name": "C21",
+          "spec": "D21",
+          "unit": "E21",
+          "quantity": "F21",
+          "unit_price": "G21",
+          "stated_amount": "H21"
+        }
+      },
+      "input": {
+        "name": "스펀지 수세미 5개",
+        "spec": "5개",
+        "unit": "팩",
+        "quantity": 4,
+        "unit_price": 2200,
+        "stated_amount": 8800,
+        "code": "S015"
+      },
+      "decision": "확정 가능",
+      "issue_codes": [],
+      "calculated_amount": 8800,
+      "output_group": "A-08"
+    }
+  ],
+  "accepted_output_lines": [
+    {
+      "group_id": "A-01",
+      "item_code": "S001",
+      "standard_name": "A4 복사용지 80g",
+      "unit": "박스",
+      "quantity": 2,
+      "unit_price": 25000,
+      "supply_amount": 50000,
+      "sources": [
+        {
+          "file": "purchase_order_A.xlsx",
+          "sheet": "인쇄발주서",
+          "row": 12,
+          "cells": {
+            "code": "B12",
+            "name": "C12",
+            "spec": "D12",
+            "unit": "E12",
+            "quantity": "F12",
+            "unit_price": "G12",
+            "stated_amount": "H12"
+          }
+        }
+      ],
+      "vat": 5000,
+      "total_amount": 55000
+    },
+    {
+      "group_id": "A-02",
+      "item_code": "S002",
+      "standard_name": "종이컵 180ml",
+      "unit": "박스",
+      "quantity": 1,
+      "unit_price": 13000,
+      "supply_amount": 13000,
+      "sources": [
+        {
+          "file": "purchase_order_A.xlsx",
+          "sheet": "인쇄발주서",
+          "row": 13,
+          "cells": {
+            "code": "B13",
+            "name": "C13",
+            "spec": "D13",
+            "unit": "E13",
+            "quantity": "F13",
+            "unit_price": "G13",
+            "stated_amount": "H13"
+          }
+        }
+      ],
+      "vat": 1300,
+      "total_amount": 14300
+    },
+    {
+      "group_id": "A-03",
+      "item_code": "S010",
+      "standard_name": "포장테이프 48mm",
+      "unit": "롤",
+      "quantity": 10,
+      "unit_price": 1200,
+      "supply_amount": 12000,
+      "sources": [
+        {
+          "file": "purchase_order_A.xlsx",
+          "sheet": "인쇄발주서",
+          "row": 14,
+          "cells": {
+            "code": "B14",
+            "name": "C14",
+            "spec": "D14",
+            "unit": "E14",
+            "quantity": "F14",
+            "unit_price": "G14",
+            "stated_amount": "H14"
+          }
+        }
+      ],
+      "vat": 1200,
+      "total_amount": 13200
+    },
+    {
+      "group_id": "A-04",
+      "item_code": "S007",
+      "standard_name": "키친타월 6롤",
+      "unit": "팩",
+      "quantity": 2,
+      "unit_price": 6000,
+      "supply_amount": 12000,
+      "sources": [
+        {
+          "file": "purchase_order_A.xlsx",
+          "sheet": "인쇄발주서",
+          "row": 16,
+          "cells": {
+            "code": "B16",
+            "name": "C16",
+            "spec": "D16",
+            "unit": "E16",
+            "quantity": "F16",
+            "unit_price": "G16",
+            "stated_amount": "H16"
+          }
+        }
+      ],
+      "vat": 1200,
+      "total_amount": 13200
+    },
+    {
+      "group_id": "A-05",
+      "item_code": "S012",
+      "standard_name": "행주 10매",
+      "unit": "팩",
+      "quantity": 3,
+      "unit_price": 4000,
+      "supply_amount": 12000,
+      "sources": [
+        {
+          "file": "purchase_order_A.xlsx",
+          "sheet": "인쇄발주서",
+          "row": 17,
+          "cells": {
+            "code": "B17",
+            "name": "C17",
+            "spec": "D17",
+            "unit": "E17",
+            "quantity": "F17",
+            "unit_price": "G17",
+            "stated_amount": "H17"
+          }
+        }
+      ],
+      "vat": 1200,
+      "total_amount": 13200
+    },
+    {
+      "group_id": "A-06",
+      "item_code": "S014",
+      "standard_name": "핸드워시 500ml",
+      "unit": "병",
+      "quantity": 2,
+      "unit_price": 3800,
+      "supply_amount": 7600,
+      "sources": [
+        {
+          "file": "purchase_order_A.xlsx",
+          "sheet": "인쇄발주서",
+          "row": 18,
+          "cells": {
+            "code": "B18",
+            "name": "C18",
+            "spec": "D18",
+            "unit": "E18",
+            "quantity": "F18",
+            "unit_price": "G18",
+            "stated_amount": "H18"
+          }
+        }
+      ],
+      "vat": 760,
+      "total_amount": 8360
+    },
+    {
+      "group_id": "A-07",
+      "item_code": "S011",
+      "standard_name": "지퍼백 중형",
+      "unit": "팩",
+      "quantity": 2,
+      "unit_price": 3500,
+      "supply_amount": 7000,
+      "sources": [
+        {
+          "file": "purchase_order_A.xlsx",
+          "sheet": "인쇄발주서",
+          "row": 20,
+          "cells": {
+            "code": "B20",
+            "name": "C20",
+            "spec": "D20",
+            "unit": "E20",
+            "quantity": "F20",
+            "unit_price": "G20",
+            "stated_amount": "H20"
+          }
+        }
+      ],
+      "vat": 700,
+      "total_amount": 7700
+    },
+    {
+      "group_id": "A-08",
+      "item_code": "S015",
+      "standard_name": "스펀지 수세미 5개",
+      "unit": "팩",
+      "quantity": 4,
+      "unit_price": 2200,
+      "supply_amount": 8800,
+      "sources": [
+        {
+          "file": "purchase_order_A.xlsx",
+          "sheet": "인쇄발주서",
+          "row": 21,
+          "cells": {
+            "code": "B21",
+            "name": "C21",
+            "spec": "D21",
+            "unit": "E21",
+            "quantity": "F21",
+            "unit_price": "G21",
+            "stated_amount": "H21"
+          }
+        }
+      ],
+      "vat": 880,
+      "total_amount": 9680
+    }
+  ],
+  "excluded_orders": []
+}

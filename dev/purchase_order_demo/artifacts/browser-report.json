@@ -1,0 +1,47 @@
+{
+  "status": "passed",
+  "initial": {
+    "source_rows": 39,
+    "accepted": 29,
+    "review": 7,
+    "canceled": 3
+  },
+  "b_preview": {
+    "scroll": 2600,
+    "client": 278,
+    "font": "14px"
+  },
+  "statement_columns": [
+    "순번",
+    "품목코드",
+    "표준품명",
+    "단위",
+    "수량",
+    "단가",
+    "공급가액",
+    "부가세",
+    "합계"
+  ],
+  "downloads": [
+    "C:\\wz\\outsourcing-site\\dev\\purchase_order_demo\\artifacts\\download-1793250664792989900\\statement_A.xlsx",
+    "C:\\wz\\outsourcing-site\\dev\\purchase_order_demo\\artifacts\\download-1793250664792989900\\statement_B.xlsx",
+    "C:\\wz\\outsourcing-site\\dev\\purchase_order_demo\\artifacts\\download-1793250664792989900\\statement_C.xlsx"
+  ],
+  "checks": [
+    "source thumbnails to common format",
+    "desktop side-by-side",
+    "same nine XLSX columns for A/B/C",
+    "pending rows stay in result",
+    "problem cells and status text/icons",
+    "inline quantity/master/amount/exclusion",
+    "immediate server totals",
+    "all/review/excluded filters",
+    "all B source cells",
+    "separate customer downloads",
+    "390px source/result tabs and compact cards",
+    "mobile inline quantity edit",
+    "collapsed source and enlarged dialog",
+    "Korean aggregated provenance",
+    "isolated browser context"
+  ]
+}

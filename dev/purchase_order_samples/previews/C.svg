@@ -1,0 +1,503 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1246" height="1104" viewBox="0 0 1246 1104">
+<rect width="100%" height="100%" fill="#fff"/>
+<text x="24" y="28" font-family="Malgun Gothic, sans-serif" font-size="20" font-weight="700">purchase_order_C.xlsx</text>
+<text x="24" y="53" font-family="Malgun Gothic, sans-serif" font-size="12" fill="#596778">체험용 가상 데이터 · XLSX 셀/병합/스타일 미리보기 (Excel 인쇄 렌더링 아님)</text>
+<rect x="46.0" y="100.0" width="504.0" height="77.33333333333331" fill="#ffffff" stroke="#ffffff" stroke-width="0.6"/>
+<clipPath id="clip-A1"><rect x="48.0" y="101.0" width="500.0" height="75.33333333333331"/></clipPath>
+<text x="51.0" y="143.89333333333332" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="18.666666666666668" font-weight="700" fill="#16324F" clip-path="url(#clip-A1)">(가상)모듈제조</text>
+<rect x="550.0" y="100.0" width="672.0" height="42.66666666666666" fill="#16324F" stroke="#16324F" stroke-width="0.6"/>
+<clipPath id="clip-E1"><rect x="552.0" y="101.0" width="668.0" height="40.66666666666666"/></clipPath>
+<text x="555.0" y="128.05333333333334" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="24.0" font-weight="700" fill="#FFFFFF" clip-path="url(#clip-E1)">구매 발주서</text>
+<rect x="550.0" y="142.66666666666666" width="672.0" height="34.66666666666666" fill="#ffffff" stroke="#ffffff" stroke-width="0.6"/>
+<clipPath id="clip-E2"><rect x="552.0" y="143.66666666666666" width="668.0" height="32.66666666666666"/></clipPath>
+<text x="555.0" y="164.10666666666665" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-E2)">PURCHASE ORDER / 체험용 가상 데이터</text>
+<rect x="46.0" y="209.33333333333331" width="84.0" height="32.0" fill="#EEEEEE" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-A4"><rect x="48.0" y="210.33333333333331" width="80.0" height="30.0"/></clipPath>
+<text x="51.0" y="229.43999999999997" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-A4)">발주번호</text>
+<rect x="130.0" y="209.33333333333331" width="476.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-B4"><rect x="132.0" y="210.33333333333331" width="472.0" height="30.0"/></clipPath>
+<text x="135.0" y="229.43999999999997" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-B4)">DEMO-MFG-C-1102</text>
+<rect x="606.0" y="209.33333333333331" width="77.0" height="32.0" fill="#EEEEEE" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-F4"><rect x="608.0" y="210.33333333333331" width="73.0" height="30.0"/></clipPath>
+<text x="611.0" y="229.43999999999997" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-F4)">구매담당</text>
+<rect x="683.0" y="209.33333333333331" width="539.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-G4"><rect x="685.0" y="210.33333333333331" width="535.0" height="30.0"/></clipPath>
+<text x="688.0" y="229.43999999999997" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-G4)">가상구매C</text>
+<rect x="46.0" y="241.33333333333331" width="84.0" height="32.0" fill="#EEEEEE" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-A5"><rect x="48.0" y="242.33333333333331" width="80.0" height="30.0"/></clipPath>
+<text x="51.0" y="261.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-A5)">발주일</text>
+<rect x="130.0" y="241.33333333333331" width="476.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-B5"><rect x="132.0" y="242.33333333333331" width="472.0" height="30.0"/></clipPath>
+<text x="135.0" y="261.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-B5)">2026-11-02</text>
+<rect x="606.0" y="241.33333333333331" width="77.0" height="32.0" fill="#EEEEEE" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-F5"><rect x="608.0" y="242.33333333333331" width="73.0" height="30.0"/></clipPath>
+<text x="611.0" y="261.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-F5)">회신주소</text>
+<rect x="683.0" y="241.33333333333331" width="539.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-G5"><rect x="685.0" y="242.33333333333331" width="535.0" height="30.0"/></clipPath>
+<text x="688.0" y="261.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-G5)">buyer-c@example.invalid</text>
+<rect x="46.0" y="273.3333333333333" width="84.0" height="32.0" fill="#EEEEEE" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-A6"><rect x="48.0" y="274.3333333333333" width="80.0" height="30.0"/></clipPath>
+<text x="51.0" y="293.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-A6)">공급업체</text>
+<rect x="130.0" y="273.3333333333333" width="476.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-B6"><rect x="132.0" y="274.3333333333333" width="472.0" height="30.0"/></clipPath>
+<text x="135.0" y="293.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-B6)">(가상)모아소모품 도매</text>
+<rect x="606.0" y="273.3333333333333" width="77.0" height="32.0" fill="#EEEEEE" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-F6"><rect x="608.0" y="274.3333333333333" width="73.0" height="30.0"/></clipPath>
+<text x="611.0" y="293.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-F6)">납품 장소</text>
+<rect x="683.0" y="273.3333333333333" width="539.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-G6"><rect x="685.0" y="274.3333333333333" width="535.0" height="30.0"/></clipPath>
+<text x="688.0" y="293.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-G6)">가상 생산동 자재 입고장</text>
+<rect x="46.0" y="337.3333333333333" width="84.0" height="32.0" fill="#ffffff" stroke="#ffffff" stroke-width="0.6"/>
+<clipPath id="clip-A8"><rect x="48.0" y="338.3333333333333" width="80.0" height="30.0"/></clipPath>
+<text x="51.0" y="357.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-A8)">입고 조건</text>
+<rect x="130.0" y="337.3333333333333" width="1092.0" height="32.0" fill="#ffffff" stroke="#ffffff" stroke-width="0.6"/>
+<clipPath id="clip-B8"><rect x="132.0" y="338.3333333333333" width="1088.0" height="30.0"/></clipPath>
+<text x="135.0" y="357.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-B8)">품목별 요청 납기 준수 / 단위·규격 확인 후 입고 (가상)</text>
+<rect x="46.0" y="401.3333333333333" width="84.0" height="32.0" fill="#276C83" stroke="#276C83" stroke-width="0.6"/>
+<clipPath id="clip-A10"><rect x="48.0" y="402.3333333333333" width="80.0" height="30.0"/></clipPath>
+<text x="51.0" y="421.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="700" fill="#FFFFFF" clip-path="url(#clip-A10)">번호</text>
+<rect x="130.0" y="401.3333333333333" width="140.0" height="32.0" fill="#276C83" stroke="#276C83" stroke-width="0.6"/>
+<clipPath id="clip-B10"><rect x="132.0" y="402.3333333333333" width="136.0" height="30.0"/></clipPath>
+<text x="135.0" y="421.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="700" fill="#FFFFFF" clip-path="url(#clip-B10)">구매품번</text>
+<rect x="270.0" y="401.3333333333333" width="168.0" height="32.0" fill="#276C83" stroke="#276C83" stroke-width="0.6"/>
+<clipPath id="clip-C10"><rect x="272.0" y="402.3333333333333" width="164.0" height="30.0"/></clipPath>
+<text x="275.0" y="421.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="700" fill="#FFFFFF" clip-path="url(#clip-C10)">품목명</text>
+<rect x="438.0" y="401.3333333333333" width="112.0" height="32.0" fill="#276C83" stroke="#276C83" stroke-width="0.6"/>
+<clipPath id="clip-D10"><rect x="440.0" y="402.3333333333333" width="108.0" height="30.0"/></clipPath>
+<text x="443.0" y="421.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="700" fill="#FFFFFF" clip-path="url(#clip-D10)">규격</text>
+<rect x="550.0" y="401.3333333333333" width="56.0" height="32.0" fill="#276C83" stroke="#276C83" stroke-width="0.6"/>
+<clipPath id="clip-E10"><rect x="552.0" y="402.3333333333333" width="52.0" height="30.0"/></clipPath>
+<text x="555.0" y="421.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="700" fill="#FFFFFF" clip-path="url(#clip-E10)">단위</text>
+<rect x="606.0" y="401.3333333333333" width="77.0" height="32.0" fill="#276C83" stroke="#276C83" stroke-width="0.6"/>
+<clipPath id="clip-F10"><rect x="608.0" y="402.3333333333333" width="73.0" height="30.0"/></clipPath>
+<text x="611.0" y="421.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="700" fill="#FFFFFF" clip-path="url(#clip-F10)">수량</text>
+<rect x="683.0" y="401.3333333333333" width="91.0" height="32.0" fill="#276C83" stroke="#276C83" stroke-width="0.6"/>
+<clipPath id="clip-G10"><rect x="685.0" y="402.3333333333333" width="87.0" height="30.0"/></clipPath>
+<text x="688.0" y="421.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="700" fill="#FFFFFF" clip-path="url(#clip-G10)">단가</text>
+<rect x="774.0" y="401.3333333333333" width="119.0" height="32.0" fill="#276C83" stroke="#276C83" stroke-width="0.6"/>
+<clipPath id="clip-H10"><rect x="776.0" y="402.3333333333333" width="115.0" height="30.0"/></clipPath>
+<text x="779.0" y="421.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="700" fill="#FFFFFF" clip-path="url(#clip-H10)">공급가액</text>
+<rect x="893.0" y="401.3333333333333" width="126.0" height="32.0" fill="#276C83" stroke="#276C83" stroke-width="0.6"/>
+<clipPath id="clip-I10"><rect x="895.0" y="402.3333333333333" width="122.0" height="30.0"/></clipPath>
+<text x="898.0" y="421.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="700" fill="#FFFFFF" clip-path="url(#clip-I10)">요청납기</text>
+<rect x="1019.0" y="401.3333333333333" width="203.0" height="32.0" fill="#276C83" stroke="#276C83" stroke-width="0.6"/>
+<clipPath id="clip-J10"><rect x="1021.0" y="402.3333333333333" width="199.0" height="30.0"/></clipPath>
+<text x="1024.0" y="421.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="700" fill="#FFFFFF" clip-path="url(#clip-J10)">비고</text>
+<rect x="46.0" y="433.3333333333333" width="1176.0" height="36.0" fill="#276C83" stroke="#276C83" stroke-width="0.6"/>
+<clipPath id="clip-A11"><rect x="48.0" y="434.3333333333333" width="1172.0" height="34.0"/></clipPath>
+<text x="51.0" y="455.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="700" fill="#FFFFFF" clip-path="url(#clip-A11)">01 / 생산라인 청소·포장</text>
+<rect x="46.0" y="469.3333333333333" width="84.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-A12"><rect x="48.0" y="470.3333333333333" width="80.0" height="30.0"/></clipPath>
+<text x="125.0" y="489.44" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-A12)">1</text>
+<rect x="130.0" y="469.3333333333333" width="140.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-B12"><rect x="132.0" y="470.3333333333333" width="136.0" height="30.0"/></clipPath>
+<text x="135.0" y="489.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-B12)">RM-DEMO-001</text>
+<rect x="270.0" y="469.3333333333333" width="168.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-C12"><rect x="272.0" y="470.3333333333333" width="164.0" height="30.0"/></clipPath>
+<text x="275.0" y="489.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-C12)">다목적세정제</text>
+<rect x="438.0" y="469.3333333333333" width="112.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-D12"><rect x="440.0" y="470.3333333333333" width="108.0" height="30.0"/></clipPath>
+<text x="443.0" y="489.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-D12)">원액</text>
+<rect x="550.0" y="469.3333333333333" width="56.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-E12"><rect x="552.0" y="470.3333333333333" width="52.0" height="30.0"/></clipPath>
+<text x="555.0" y="489.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-E12)">L</text>
+<rect x="606.0" y="469.3333333333333" width="77.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-F12"><rect x="608.0" y="470.3333333333333" width="73.0" height="30.0"/></clipPath>
+<text x="678.0" y="489.44" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-F12)">2.75</text>
+<rect x="683.0" y="469.3333333333333" width="91.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-G12"><rect x="685.0" y="470.3333333333333" width="87.0" height="30.0"/></clipPath>
+<text x="769.0" y="489.44" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-G12)">3,200</text>
+<rect x="774.0" y="469.3333333333333" width="119.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-H12"><rect x="776.0" y="470.3333333333333" width="115.0" height="30.0"/></clipPath>
+<text x="888.0" y="489.44" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-H12)">8,800</text>
+<rect x="893.0" y="469.3333333333333" width="126.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-I12"><rect x="895.0" y="470.3333333333333" width="122.0" height="30.0"/></clipPath>
+<text x="898.0" y="489.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-I12)">2026-11-09</text>
+<rect x="1019.0" y="469.3333333333333" width="203.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-J12"><rect x="1021.0" y="470.3333333333333" width="199.0" height="30.0"/></clipPath>
+<text x="1024.0" y="489.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-J12)">원액 기준 계량</text>
+<rect x="46.0" y="501.3333333333333" width="84.0" height="31.999999999999943" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-A13"><rect x="48.0" y="502.3333333333333" width="80.0" height="29.999999999999943"/></clipPath>
+<text x="125.0" y="521.4399999999999" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-A13)">2</text>
+<rect x="130.0" y="501.3333333333333" width="140.0" height="31.999999999999943" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-B13"><rect x="132.0" y="502.3333333333333" width="136.0" height="29.999999999999943"/></clipPath>
+<text x="135.0" y="521.4399999999999" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-B13)">RM-DEMO-002</text>
+<rect x="270.0" y="501.3333333333333" width="168.0" height="31.999999999999943" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-C13"><rect x="272.0" y="502.3333333333333" width="164.0" height="29.999999999999943"/></clipPath>
+<text x="275.0" y="521.4399999999999" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-C13)">주방세제</text>
+<rect x="438.0" y="501.3333333333333" width="112.0" height="31.999999999999943" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-D13"><rect x="440.0" y="502.3333333333333" width="108.0" height="29.999999999999943"/></clipPath>
+<text x="443.0" y="521.4399999999999" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-D13)">1L</text>
+<rect x="550.0" y="501.3333333333333" width="56.0" height="31.999999999999943" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-E13"><rect x="552.0" y="502.3333333333333" width="52.0" height="29.999999999999943"/></clipPath>
+<text x="555.0" y="521.4399999999999" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-E13)">병</text>
+<rect x="606.0" y="501.3333333333333" width="77.0" height="31.999999999999943" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-F13"><rect x="608.0" y="502.3333333333333" width="73.0" height="29.999999999999943"/></clipPath>
+<text x="678.0" y="521.4399999999999" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-F13)">6</text>
+<rect x="683.0" y="501.3333333333333" width="91.0" height="31.999999999999943" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-G13"><rect x="685.0" y="502.3333333333333" width="87.0" height="29.999999999999943"/></clipPath>
+<text x="769.0" y="521.4399999999999" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-G13)">4,500</text>
+<rect x="774.0" y="501.3333333333333" width="119.0" height="31.999999999999943" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-H13"><rect x="776.0" y="502.3333333333333" width="115.0" height="29.999999999999943"/></clipPath>
+<text x="888.0" y="521.4399999999999" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-H13)">27,000</text>
+<rect x="893.0" y="501.3333333333333" width="126.0" height="31.999999999999943" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-I13"><rect x="895.0" y="502.3333333333333" width="122.0" height="29.999999999999943"/></clipPath>
+<text x="898.0" y="521.4399999999999" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-I13)">2026-11-09</text>
+<rect x="1019.0" y="501.3333333333333" width="203.0" height="31.999999999999943" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-J13"><rect x="1021.0" y="502.3333333333333" width="199.0" height="29.999999999999943"/></clipPath>
+<text x="1024.0" y="521.4399999999999" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-J13)">생산동 입고 / 가상</text>
+<rect x="46.0" y="533.3333333333333" width="84.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="130.0" y="533.3333333333333" width="140.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="270.0" y="533.3333333333333" width="168.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="438.0" y="533.3333333333333" width="112.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="550.0" y="533.3333333333333" width="56.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="606.0" y="533.3333333333333" width="77.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="683.0" y="533.3333333333333" width="91.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="774.0" y="533.3333333333333" width="119.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="893.0" y="533.3333333333333" width="126.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="1019.0" y="533.3333333333333" width="203.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="46.0" y="546.6666666666666" width="84.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-A15"><rect x="48.0" y="547.6666666666666" width="80.0" height="30.0"/></clipPath>
+<text x="125.0" y="566.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-A15)">3</text>
+<rect x="130.0" y="546.6666666666666" width="140.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-B15"><rect x="132.0" y="547.6666666666666" width="136.0" height="30.0"/></clipPath>
+<text x="135.0" y="566.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-B15)">RM-DEMO-003</text>
+<rect x="270.0" y="546.6666666666666" width="168.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-C15"><rect x="272.0" y="547.6666666666666" width="164.0" height="30.0"/></clipPath>
+<text x="275.0" y="566.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-C15)">가상 내열필터</text>
+<rect x="438.0" y="546.6666666666666" width="112.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-D15"><rect x="440.0" y="547.6666666666666" width="108.0" height="30.0"/></clipPath>
+<text x="443.0" y="566.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-D15)">HT-01</text>
+<rect x="550.0" y="546.6666666666666" width="56.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-E15"><rect x="552.0" y="547.6666666666666" width="52.0" height="30.0"/></clipPath>
+<text x="555.0" y="566.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-E15)">개</text>
+<rect x="606.0" y="546.6666666666666" width="77.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-F15"><rect x="608.0" y="547.6666666666666" width="73.0" height="30.0"/></clipPath>
+<text x="678.0" y="566.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-F15)">2</text>
+<rect x="683.0" y="546.6666666666666" width="91.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-G15"><rect x="685.0" y="547.6666666666666" width="87.0" height="30.0"/></clipPath>
+<text x="769.0" y="566.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-G15)">18,000</text>
+<rect x="774.0" y="546.6666666666666" width="119.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-H15"><rect x="776.0" y="547.6666666666666" width="115.0" height="30.0"/></clipPath>
+<text x="888.0" y="566.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-H15)">36,000</text>
+<rect x="893.0" y="546.6666666666666" width="126.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-I15"><rect x="895.0" y="547.6666666666666" width="122.0" height="30.0"/></clipPath>
+<text x="898.0" y="566.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-I15)">2026-11-09</text>
+<rect x="1019.0" y="546.6666666666666" width="203.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-J15"><rect x="1021.0" y="547.6666666666666" width="199.0" height="30.0"/></clipPath>
+<text x="1024.0" y="566.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-J15)">생산동 입고 / 가상</text>
+<rect x="46.0" y="578.6666666666666" width="84.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-A16"><rect x="48.0" y="579.6666666666666" width="80.0" height="30.0"/></clipPath>
+<text x="125.0" y="598.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-A16)">4</text>
+<rect x="130.0" y="578.6666666666666" width="140.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-B16"><rect x="132.0" y="579.6666666666666" width="136.0" height="30.0"/></clipPath>
+<text x="135.0" y="598.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-B16)">RM-DEMO-004</text>
+<rect x="270.0" y="578.6666666666666" width="168.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-C16"><rect x="272.0" y="579.6666666666666" width="164.0" height="30.0"/></clipPath>
+<text x="275.0" y="598.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-C16)">행주</text>
+<rect x="438.0" y="578.6666666666666" width="112.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-D16"><rect x="440.0" y="579.6666666666666" width="108.0" height="30.0"/></clipPath>
+<text x="443.0" y="598.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-D16)">10매</text>
+<rect x="550.0" y="578.6666666666666" width="56.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-E16"><rect x="552.0" y="579.6666666666666" width="52.0" height="30.0"/></clipPath>
+<text x="555.0" y="598.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-E16)">팩</text>
+<rect x="606.0" y="578.6666666666666" width="77.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-F16"><rect x="608.0" y="579.6666666666666" width="73.0" height="30.0"/></clipPath>
+<text x="678.0" y="598.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-F16)">2</text>
+<rect x="683.0" y="578.6666666666666" width="91.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-G16"><rect x="685.0" y="579.6666666666666" width="87.0" height="30.0"/></clipPath>
+<text x="769.0" y="598.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-G16)">4,000</text>
+<rect x="774.0" y="578.6666666666666" width="119.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-H16"><rect x="776.0" y="579.6666666666666" width="115.0" height="30.0"/></clipPath>
+<text x="888.0" y="598.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-H16)">8,000</text>
+<rect x="893.0" y="578.6666666666666" width="126.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-I16"><rect x="895.0" y="579.6666666666666" width="122.0" height="30.0"/></clipPath>
+<text x="898.0" y="598.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-I16)">2026-11-09</text>
+<rect x="1019.0" y="578.6666666666666" width="203.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-J16"><rect x="1021.0" y="579.6666666666666" width="199.0" height="30.0"/></clipPath>
+<text x="1024.0" y="598.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-J16)">생산동 입고 / 가상</text>
+<rect x="46.0" y="610.6666666666666" width="84.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-A17"><rect x="48.0" y="611.6666666666666" width="80.0" height="30.0"/></clipPath>
+<text x="125.0" y="630.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-A17)">5</text>
+<rect x="130.0" y="610.6666666666666" width="140.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-B17"><rect x="132.0" y="611.6666666666666" width="136.0" height="30.0"/></clipPath>
+<text x="135.0" y="630.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-B17)">RM-DEMO-005</text>
+<rect x="270.0" y="610.6666666666666" width="168.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-C17"><rect x="272.0" y="611.6666666666666" width="164.0" height="30.0"/></clipPath>
+<text x="275.0" y="630.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-C17)">스펀지 수세미</text>
+<rect x="438.0" y="610.6666666666666" width="112.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-D17"><rect x="440.0" y="611.6666666666666" width="108.0" height="30.0"/></clipPath>
+<text x="443.0" y="630.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-D17)">5개</text>
+<rect x="550.0" y="610.6666666666666" width="56.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-E17"><rect x="552.0" y="611.6666666666666" width="52.0" height="30.0"/></clipPath>
+<text x="555.0" y="630.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-E17)">팩</text>
+<rect x="606.0" y="610.6666666666666" width="77.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-F17"><rect x="608.0" y="611.6666666666666" width="73.0" height="30.0"/></clipPath>
+<text x="678.0" y="630.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-F17)">5</text>
+<rect x="683.0" y="610.6666666666666" width="91.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-G17"><rect x="685.0" y="611.6666666666666" width="87.0" height="30.0"/></clipPath>
+<text x="769.0" y="630.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-G17)">2,200</text>
+<rect x="774.0" y="610.6666666666666" width="119.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-H17"><rect x="776.0" y="611.6666666666666" width="115.0" height="30.0"/></clipPath>
+<text x="888.0" y="630.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-H17)">11,000</text>
+<rect x="893.0" y="610.6666666666666" width="126.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-I17"><rect x="895.0" y="611.6666666666666" width="122.0" height="30.0"/></clipPath>
+<text x="898.0" y="630.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-I17)">2026-11-09</text>
+<rect x="1019.0" y="610.6666666666666" width="203.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-J17"><rect x="1021.0" y="611.6666666666666" width="199.0" height="30.0"/></clipPath>
+<text x="1024.0" y="630.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-J17)">생산동 입고 / 가상</text>
+<rect x="46.0" y="642.6666666666666" width="1176.0" height="36.0" fill="#276C83" stroke="#276C83" stroke-width="0.6"/>
+<clipPath id="clip-A18"><rect x="48.0" y="643.6666666666666" width="1172.0" height="34.0"/></clipPath>
+<text x="51.0" y="664.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="700" fill="#FFFFFF" clip-path="url(#clip-A18)">02 / 작업자 위생·소모품</text>
+<rect x="46.0" y="678.6666666666666" width="84.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-A19"><rect x="48.0" y="679.6666666666666" width="80.0" height="30.0"/></clipPath>
+<text x="125.0" y="698.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-A19)">6</text>
+<rect x="130.0" y="678.6666666666666" width="140.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-B19"><rect x="132.0" y="679.6666666666666" width="136.0" height="30.0"/></clipPath>
+<text x="135.0" y="698.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-B19)">RM-DEMO-006</text>
+<rect x="270.0" y="678.6666666666666" width="168.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-C19"><rect x="272.0" y="679.6666666666666" width="164.0" height="30.0"/></clipPath>
+<text x="275.0" y="698.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-C19)">니트릴장갑</text>
+<rect x="438.0" y="678.6666666666666" width="112.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-D19"><rect x="440.0" y="679.6666666666666" width="108.0" height="30.0"/></clipPath>
+<text x="443.0" y="698.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-D19)">M</text>
+<rect x="550.0" y="678.6666666666666" width="56.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-E19"><rect x="552.0" y="679.6666666666666" width="52.0" height="30.0"/></clipPath>
+<text x="555.0" y="698.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-E19)">박스</text>
+<rect x="606.0" y="678.6666666666666" width="77.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-F19"><rect x="608.0" y="679.6666666666666" width="73.0" height="30.0"/></clipPath>
+<text x="678.0" y="698.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-F19)">3</text>
+<rect x="683.0" y="678.6666666666666" width="91.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-G19"><rect x="685.0" y="679.6666666666666" width="87.0" height="30.0"/></clipPath>
+<text x="769.0" y="698.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-G19)">8,000</text>
+<rect x="774.0" y="678.6666666666666" width="119.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-H19"><rect x="776.0" y="679.6666666666666" width="115.0" height="30.0"/></clipPath>
+<text x="888.0" y="698.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-H19)">24,000</text>
+<rect x="893.0" y="678.6666666666666" width="126.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-I19"><rect x="895.0" y="679.6666666666666" width="122.0" height="30.0"/></clipPath>
+<text x="898.0" y="698.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-I19)">2026-11-12</text>
+<rect x="1019.0" y="678.6666666666666" width="203.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-J19"><rect x="1021.0" y="679.6666666666666" width="199.0" height="30.0"/></clipPath>
+<text x="1024.0" y="698.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-J19)">생산동 입고 / 가상</text>
+<rect x="46.0" y="710.6666666666666" width="84.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-A20"><rect x="48.0" y="711.6666666666666" width="80.0" height="30.0"/></clipPath>
+<text x="125.0" y="730.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-A20)">7</text>
+<rect x="130.0" y="710.6666666666666" width="140.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-B20"><rect x="132.0" y="711.6666666666666" width="136.0" height="30.0"/></clipPath>
+<text x="135.0" y="730.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-B20)">RM-DEMO-007</text>
+<rect x="270.0" y="710.6666666666666" width="168.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-C20"><rect x="272.0" y="711.6666666666666" width="164.0" height="30.0"/></clipPath>
+<text x="275.0" y="730.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-C20)">니트릴장갑</text>
+<rect x="438.0" y="710.6666666666666" width="112.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-D20"><rect x="440.0" y="711.6666666666666" width="108.0" height="30.0"/></clipPath>
+<text x="443.0" y="730.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-D20)">L</text>
+<rect x="550.0" y="710.6666666666666" width="56.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-E20"><rect x="552.0" y="711.6666666666666" width="52.0" height="30.0"/></clipPath>
+<text x="555.0" y="730.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-E20)">박스</text>
+<rect x="606.0" y="710.6666666666666" width="77.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-F20"><rect x="608.0" y="711.6666666666666" width="73.0" height="30.0"/></clipPath>
+<text x="678.0" y="730.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-F20)">2</text>
+<rect x="683.0" y="710.6666666666666" width="91.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-G20"><rect x="685.0" y="711.6666666666666" width="87.0" height="30.0"/></clipPath>
+<text x="769.0" y="730.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-G20)">8,500</text>
+<rect x="774.0" y="710.6666666666666" width="119.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-H20"><rect x="776.0" y="711.6666666666666" width="115.0" height="30.0"/></clipPath>
+<text x="888.0" y="730.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-H20)">17,000</text>
+<rect x="893.0" y="710.6666666666666" width="126.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-I20"><rect x="895.0" y="711.6666666666666" width="122.0" height="30.0"/></clipPath>
+<text x="898.0" y="730.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-I20)">2026-11-12</text>
+<rect x="1019.0" y="710.6666666666666" width="203.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-J20"><rect x="1021.0" y="711.6666666666666" width="199.0" height="30.0"/></clipPath>
+<text x="1024.0" y="730.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-J20)">생산동 입고 / 가상</text>
+<rect x="46.0" y="742.6666666666666" width="84.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-A21"><rect x="48.0" y="743.6666666666666" width="80.0" height="30.0"/></clipPath>
+<text x="125.0" y="762.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-A21)">8</text>
+<rect x="130.0" y="742.6666666666666" width="140.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-B21"><rect x="132.0" y="743.6666666666666" width="136.0" height="30.0"/></clipPath>
+<text x="135.0" y="762.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-B21)">RM-DEMO-008</text>
+<rect x="270.0" y="742.6666666666666" width="168.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-C21"><rect x="272.0" y="743.6666666666666" width="164.0" height="30.0"/></clipPath>
+<text x="275.0" y="762.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-C21)">알코올솜</text>
+<rect x="438.0" y="742.6666666666666" width="112.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-D21"><rect x="440.0" y="743.6666666666666" width="108.0" height="30.0"/></clipPath>
+<text x="443.0" y="762.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-D21)">100매</text>
+<rect x="550.0" y="742.6666666666666" width="56.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-E21"><rect x="552.0" y="743.6666666666666" width="52.0" height="30.0"/></clipPath>
+<text x="555.0" y="762.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-E21)">박스</text>
+<rect x="606.0" y="742.6666666666666" width="77.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="683.0" y="742.6666666666666" width="91.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-G21"><rect x="685.0" y="743.6666666666666" width="87.0" height="30.0"/></clipPath>
+<text x="769.0" y="762.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-G21)">2,800</text>
+<rect x="774.0" y="742.6666666666666" width="119.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-H21"><rect x="776.0" y="743.6666666666666" width="115.0" height="30.0"/></clipPath>
+<text x="888.0" y="762.7733333333333" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-H21)">8,400</text>
+<rect x="893.0" y="742.6666666666666" width="126.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-I21"><rect x="895.0" y="743.6666666666666" width="122.0" height="30.0"/></clipPath>
+<text x="898.0" y="762.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-I21)">2026-11-12</text>
+<rect x="1019.0" y="742.6666666666666" width="203.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-J21"><rect x="1021.0" y="743.6666666666666" width="199.0" height="30.0"/></clipPath>
+<text x="1024.0" y="762.7733333333333" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-J21)">생산동 입고 / 가상</text>
+<rect x="46.0" y="774.6666666666666" width="84.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="130.0" y="774.6666666666666" width="140.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="270.0" y="774.6666666666666" width="168.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="438.0" y="774.6666666666666" width="112.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="550.0" y="774.6666666666666" width="56.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="606.0" y="774.6666666666666" width="77.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="683.0" y="774.6666666666666" width="91.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="774.0" y="774.6666666666666" width="119.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="893.0" y="774.6666666666666" width="126.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="1019.0" y="774.6666666666666" width="203.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="46.0" y="788.0" width="84.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-A23"><rect x="48.0" y="789.0" width="80.0" height="30.0"/></clipPath>
+<text x="125.0" y="808.1066666666667" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-A23)">9</text>
+<rect x="130.0" y="788.0" width="140.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-B23"><rect x="132.0" y="789.0" width="136.0" height="30.0"/></clipPath>
+<text x="135.0" y="808.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-B23)">RM-DEMO-009</text>
+<rect x="270.0" y="788.0" width="168.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-C23"><rect x="272.0" y="789.0" width="164.0" height="30.0"/></clipPath>
+<text x="275.0" y="808.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-C23)">핸드워시</text>
+<rect x="438.0" y="788.0" width="112.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-D23"><rect x="440.0" y="789.0" width="108.0" height="30.0"/></clipPath>
+<text x="443.0" y="808.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-D23)">500ml</text>
+<rect x="550.0" y="788.0" width="56.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-E23"><rect x="552.0" y="789.0" width="52.0" height="30.0"/></clipPath>
+<text x="555.0" y="808.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-E23)">병</text>
+<rect x="606.0" y="788.0" width="77.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-F23"><rect x="608.0" y="789.0" width="73.0" height="30.0"/></clipPath>
+<text x="678.0" y="808.1066666666667" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-F23)">4</text>
+<rect x="683.0" y="788.0" width="91.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-G23"><rect x="685.0" y="789.0" width="87.0" height="30.0"/></clipPath>
+<text x="769.0" y="808.1066666666667" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-G23)">3,800</text>
+<rect x="774.0" y="788.0" width="119.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-H23"><rect x="776.0" y="789.0" width="115.0" height="30.0"/></clipPath>
+<text x="888.0" y="808.1066666666667" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-H23)">15,200</text>
+<rect x="893.0" y="788.0" width="126.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-I23"><rect x="895.0" y="789.0" width="122.0" height="30.0"/></clipPath>
+<text x="898.0" y="808.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-I23)">2026-11-12</text>
+<rect x="1019.0" y="788.0" width="203.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-J23"><rect x="1021.0" y="789.0" width="199.0" height="30.0"/></clipPath>
+<text x="1024.0" y="808.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-J23)">생산동 입고 / 가상</text>
+<rect x="46.0" y="820.0" width="84.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-A24"><rect x="48.0" y="821.0" width="80.0" height="30.0"/></clipPath>
+<text x="125.0" y="840.1066666666667" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-A24)">10</text>
+<rect x="130.0" y="820.0" width="140.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-B24"><rect x="132.0" y="821.0" width="136.0" height="30.0"/></clipPath>
+<text x="135.0" y="840.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-B24)">RM-DEMO-010</text>
+<rect x="270.0" y="820.0" width="168.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-C24"><rect x="272.0" y="821.0" width="164.0" height="30.0"/></clipPath>
+<text x="275.0" y="840.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-C24)">물티슈</text>
+<rect x="438.0" y="820.0" width="112.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-D24"><rect x="440.0" y="821.0" width="108.0" height="30.0"/></clipPath>
+<text x="443.0" y="840.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-D24)">100매</text>
+<rect x="550.0" y="820.0" width="56.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-E24"><rect x="552.0" y="821.0" width="52.0" height="30.0"/></clipPath>
+<text x="555.0" y="840.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-E24)">팩</text>
+<rect x="606.0" y="820.0" width="77.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-F24"><rect x="608.0" y="821.0" width="73.0" height="30.0"/></clipPath>
+<text x="678.0" y="840.1066666666667" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-F24)">6</text>
+<rect x="683.0" y="820.0" width="91.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-G24"><rect x="685.0" y="821.0" width="87.0" height="30.0"/></clipPath>
+<text x="769.0" y="840.1066666666667" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-G24)">1,800</text>
+<rect x="774.0" y="820.0" width="119.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-H24"><rect x="776.0" y="821.0" width="115.0" height="30.0"/></clipPath>
+<text x="888.0" y="840.1066666666667" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-H24)">10,000</text>
+<rect x="893.0" y="820.0" width="126.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-I24"><rect x="895.0" y="821.0" width="122.0" height="30.0"/></clipPath>
+<text x="898.0" y="840.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-I24)">2026-11-12</text>
+<rect x="1019.0" y="820.0" width="203.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-J24"><rect x="1021.0" y="821.0" width="199.0" height="30.0"/></clipPath>
+<text x="1024.0" y="840.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-J24)">생산동 입고 / 가상</text>
+<rect x="46.0" y="852.0" width="84.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-A25"><rect x="48.0" y="853.0" width="80.0" height="30.0"/></clipPath>
+<text x="125.0" y="872.1066666666667" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-A25)">11</text>
+<rect x="130.0" y="852.0" width="140.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-B25"><rect x="132.0" y="853.0" width="136.0" height="30.0"/></clipPath>
+<text x="135.0" y="872.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-B25)">RM-DEMO-011</text>
+<rect x="270.0" y="852.0" width="168.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-C25"><rect x="272.0" y="853.0" width="164.0" height="30.0"/></clipPath>
+<text x="275.0" y="872.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-C25)">마스크</text>
+<rect x="438.0" y="852.0" width="112.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-D25"><rect x="440.0" y="853.0" width="108.0" height="30.0"/></clipPath>
+<text x="443.0" y="872.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-D25)">KF94 50매</text>
+<rect x="550.0" y="852.0" width="56.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-E25"><rect x="552.0" y="853.0" width="52.0" height="30.0"/></clipPath>
+<text x="555.0" y="872.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-E25)">박스</text>
+<rect x="606.0" y="852.0" width="77.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-F25"><rect x="608.0" y="853.0" width="73.0" height="30.0"/></clipPath>
+<text x="678.0" y="872.1066666666667" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-F25)">1</text>
+<rect x="683.0" y="852.0" width="91.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-G25"><rect x="685.0" y="853.0" width="87.0" height="30.0"/></clipPath>
+<text x="769.0" y="872.1066666666667" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-G25)">15,000</text>
+<rect x="774.0" y="852.0" width="119.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-H25"><rect x="776.0" y="853.0" width="115.0" height="30.0"/></clipPath>
+<text x="888.0" y="872.1066666666667" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-H25)">15,000</text>
+<rect x="893.0" y="852.0" width="126.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-I25"><rect x="895.0" y="853.0" width="122.0" height="30.0"/></clipPath>
+<text x="898.0" y="872.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-I25)">2026-11-12</text>
+<rect x="1019.0" y="852.0" width="203.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-J25"><rect x="1021.0" y="853.0" width="199.0" height="30.0"/></clipPath>
+<text x="1024.0" y="872.1066666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-J25)">생산동 입고 / 가상</text>
+<rect x="46.0" y="884.0" width="728.0" height="32.0" fill="#E2EEF3" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-A26"><rect x="48.0" y="885.0" width="724.0" height="30.0"/></clipPath>
+<text x="51.0" y="905.2266666666667" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="18.666666666666668" font-weight="700" fill="#16324F" clip-path="url(#clip-A26)">소계 (기재 공급가액)</text>
+<rect x="774.0" y="884.0" width="119.0" height="32.0" fill="#E2EEF3" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-H26"><rect x="776.0" y="885.0" width="115.0" height="30.0"/></clipPath>
+<text x="888.0" y="905.2266666666667" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="18.666666666666668" font-weight="700" fill="#16324F" clip-path="url(#clip-H26)">180,400</text>
+<rect x="893.0" y="884.0" width="126.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="1019.0" y="884.0" width="203.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="46.0" y="916.0" width="84.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="130.0" y="916.0" width="140.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="270.0" y="916.0" width="168.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="438.0" y="916.0" width="112.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="550.0" y="916.0" width="56.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="606.0" y="916.0" width="77.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="683.0" y="916.0" width="91.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="774.0" y="916.0" width="119.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="893.0" y="916.0" width="126.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="1019.0" y="916.0" width="203.0" height="13.333333333333371" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="46.0" y="929.3333333333334" width="728.0" height="32.0" fill="#E2EEF3" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-A28"><rect x="48.0" y="930.3333333333334" width="724.0" height="30.0"/></clipPath>
+<text x="51.0" y="950.5600000000001" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="18.666666666666668" font-weight="700" fill="#16324F" clip-path="url(#clip-A28)">총 발주 기재액 (검수 전)</text>
+<rect x="774.0" y="929.3333333333334" width="119.0" height="32.0" fill="#E2EEF3" stroke="#d2d8df" stroke-width="0.6"/>
+<clipPath id="clip-H28"><rect x="776.0" y="930.3333333333334" width="115.0" height="30.0"/></clipPath>
+<text x="888.0" y="950.5600000000001" text-anchor="end" font-family="Malgun Gothic, sans-serif" font-size="18.666666666666668" font-weight="700" fill="#16324F" clip-path="url(#clip-H28)">180,400</text>
+<rect x="893.0" y="929.3333333333334" width="126.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="1019.0" y="929.3333333333334" width="203.0" height="32.0" fill="#ffffff" stroke="#d2d8df" stroke-width="0.6"/>
+<rect x="46.0" y="961.3333333333334" width="1176.0" height="40.0" fill="#ffffff" stroke="#ffffff" stroke-width="0.6"/>
+<clipPath id="clip-A29"><rect x="48.0" y="962.3333333333334" width="1172.0" height="38.0"/></clipPath>
+<text x="51.0" y="985.44" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#172331" clip-path="url(#clip-A29)">구분행·빈 행·합계행은 품목이 아닙니다. 검수 전 합계는 최종 정산 금액이 아닙니다.</text>
+<rect x="46.0" y="1033.3333333333335" width="1176.0" height="46.66666666666674" fill="#FEF3C7" stroke="#FEF3C7" stroke-width="0.6"/>
+<clipPath id="clip-A31"><rect x="48.0" y="1034.3333333333335" width="1172.0" height="44.66666666666674"/></clipPath>
+<text x="51.0" y="1060.7733333333335" text-anchor="start" font-family="Malgun Gothic, sans-serif" font-size="14.666666666666666" font-weight="400" fill="#92400E" clip-path="url(#clip-A31)">체험용 가상 데이터 — 모든 회사·담당자·연락처는 가상이며 실제 거래에 사용할 수 없습니다.</text>
+<text x="12" y="125.33333333333333" font-size="11" fill="#7b8795">1</text>
+<text x="12" y="164.0" font-size="11" fill="#7b8795">2</text>
+<text x="12" y="197.33333333333331" font-size="11" fill="#7b8795">3</text>
+<text x="12" y="229.33333333333331" font-size="11" fill="#7b8795">4</text>
+<text x="12" y="261.3333333333333" font-size="11" fill="#7b8795">5</text>
+<text x="12" y="293.3333333333333" font-size="11" fill="#7b8795">6</text>
+<text x="12" y="325.3333333333333" font-size="11" fill="#7b8795">7</text>
+<text x="12" y="357.3333333333333" font-size="11" fill="#7b8795">8</text>
+<text x="12" y="389.3333333333333" font-size="11" fill="#7b8795">9</text>
+<text x="12" y="421.3333333333333" font-size="11" fill="#7b8795">10</text>
+<text x="12" y="455.3333333333333" font-size="11" fill="#7b8795">11</text>
+<text x="12" y="489.3333333333333" font-size="11" fill="#7b8795">12</text>
+<text x="12" y="521.3333333333333" font-size="11" fill="#7b8795">13</text>
+<text x="12" y="543.9999999999999" font-size="11" fill="#7b8795">14</text>
+<text x="12" y="566.6666666666666" font-size="11" fill="#7b8795">15</text>
+<text x="12" y="598.6666666666666" font-size="11" fill="#7b8795">16</text>
+<text x="12" y="630.6666666666666" font-size="11" fill="#7b8795">17</text>
+<text x="12" y="664.6666666666666" font-size="11" fill="#7b8795">18</text>
+<text x="12" y="698.6666666666666" font-size="11" fill="#7b8795">19</text>
+<text x="12" y="730.6666666666666" font-size="11" fill="#7b8795">20</text>
+<text x="12" y="762.6666666666666" font-size="11" fill="#7b8795">21</text>
+<text x="12" y="785.3333333333333" font-size="11" fill="#7b8795">22</text>
+<text x="12" y="808.0" font-size="11" fill="#7b8795">23</text>
+<text x="12" y="840.0" font-size="11" fill="#7b8795">24</text>
+<text x="12" y="872.0" font-size="11" fill="#7b8795">25</text>
+<text x="12" y="904.0" font-size="11" fill="#7b8795">26</text>
+<text x="12" y="926.6666666666666" font-size="11" fill="#7b8795">27</text>
+<text x="12" y="949.3333333333334" font-size="11" fill="#7b8795">28</text>
+<text x="12" y="985.3333333333334" font-size="11" fill="#7b8795">29</text>
+<text x="12" y="1021.3333333333334" font-size="11" fill="#7b8795">30</text>
+<text x="12" y="1060.6666666666667" font-size="11" fill="#7b8795">31</text>
+</svg>
