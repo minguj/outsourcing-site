@@ -2,17 +2,20 @@
 
 if __package__:
     from .demo_api import router
+    from .site_api import router as site_router
 else:
     from demo_api import router
+    from site_api import router as site_router
 
 app = FastAPI(title="Outsourcing Site API")
 app.include_router(router)
+app.include_router(site_router)
 
 
 @app.middleware("http")
 async def demo_no_cache(request, call_next):
     response = await call_next(request)
-    if request.url.path.startswith("/api/demo/"):
+    if request.url.path.startswith(("/api/demo/", "/api/admin/", "/api/quotes/", "/api/consult/")):
         response.headers["Cache-Control"] = "no-store"
     return response
 

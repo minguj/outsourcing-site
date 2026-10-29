@@ -3,7 +3,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
 WORKDIR /app
 COPY backend/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt \
-    && useradd --create-home --uid 10001 app
+    && useradd --create-home --uid 10001 app \
+    && mkdir -p /app/data && chown app:app /app/data
 COPY --chown=app:app backend/*.py ./backend/
 COPY --chown=app:app frontend/public/samples/purchase-orders/ ./samples/purchase-orders/
 USER app

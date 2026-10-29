@@ -37,6 +37,11 @@ services:
     init: true
     env_file:
       - ./backend.env
+    environment:
+      DATA_DIR: /app/data
+    volumes:
+      # 상담·견적·결제 기록(SQLite). 배포·롤백과 무관하게 유지된다.
+      - backend_data:/app/data
     mem_limit: 256m
     healthcheck:
       test: ["CMD", "python", "-c", "import json,urllib.request; assert json.load(urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)) == {'status':'ok'}"]
@@ -49,3 +54,4 @@ services:
 volumes:
   caddy_data:
   caddy_config:
+  backend_data:
