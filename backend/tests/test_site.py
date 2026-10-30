@@ -1,4 +1,5 @@
 """AI 상담 / 문의 접수 / 견적·결제 / 관리자 API checks. External services are mocked."""
+import json
 import os
 import tempfile
 import unittest
@@ -6,13 +7,15 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from backend import consult, notify, site_api, site_store
+from pathlib import Path
+
+from backend import consult, notify, site_api, site_store, uploads
 from backend.main import app
 
 ADMIN = {"X-Admin-Client": "1"}
 ENV = {"ADMIN_PASSWORD": "test-admin-pass", "TOSS_CLIENT_KEY": "test_ck_x", "TOSS_SECRET_KEY": "test_sk_x",
        "ANTHROPIC_API_KEY": "sk-test", "SMTP_HOST": "", "NOTIFY_EMAIL": "", "PUBLIC_BASE_URL": "https://site.example",
-       "PAYMENT_MOCK": ""}
+       "PAYMENT_MOCK": "", "DATA_DIR": ""}
 
 
 class SiteTests(unittest.TestCase):
@@ -23,11 +26,11 @@ class SiteTests(unittest.TestCase):
         site_api.HITS.clear()
         site_api.ADMIN_SESSIONS.clear()
         site_api.DAILY.update(day="", count=0)
-        env = patch.dict(os.environ, ENV)
+        env = patch.dict(os.environ, {**ENV, "DATA_DIR": self.folder.name})
         env.start()
         self.addCleanup(env.stop)
         self.sent = []
-        mail = patch.object(notify, "send", side_effect=lambda subject, body: self.sent.append((subject, body)) or True)
+        mail = patch.object(notify, "send", side_effect=lambda subject, body, reply_to=None: self.sent.append((subject, body, reply_to)) or True)
         mail.start()
         self.addCleanup(mail.stop)
         self.customer = []
@@ -128,7 +131,7 @@ class SiteTests(unittest.TestCase):
         toss.assert_called_once_with("pk", order["order_id"], 1500000)
         self.assertEqual(self.client.post(f"/api/quotes/{token}/checkout").status_code, 409)
         self.assertEqual(site_store.get_inquiry(inquiry_id)["status"], "deposit_paid")
-        self.assertTrue(any("착수금 결제 완료" in subject for subject, _ in self.sent))
+        self.assertTrue(any("착수금 결제 완료" in sent[0] for sent in self.sent))
 
     def test_mock_payment_only_without_real_keys(self):
         inquiry_id = self.inquiry().json()["id"]
@@ -166,12 +169,64 @@ class SiteTests(unittest.TestCase):
         to, subject, body = self.customer[-1]
         self.assertIn("착수금 결제 완료", subject)
         self.assertIn("착수 미팅 일정 조율", body)
+        # The owner's payment notice carries the customer's contact details and replies go to the customer.
+        subject, body, reply_to = self.sent[-1]
+        self.assertIn(f"착수금 결제 완료 #{inquiry_id}", subject)
+        for expected in ("이메일: buyer@example.com", "회사: (가상)테스트상사", "전화: -", "착수금: 1,500,000원", f"/admin?inquiry={inquiry_id}"):
+            self.assertIn(expected, body)
+        self.assertEqual(reply_to, "buyer@example.com")
+        self.assertEqual(self.sent[0][2], "buyer@example.com")
         # Without a public site address the quote can still be created as a link only.
         with patch.dict(os.environ, {"PUBLIC_BASE_URL": ""}):
             quote = {"title": "링크만", "items": [{"name": "개발", "amount": 1000000}], "deposit": 300000}
             self.assertEqual(self.client.post(f"/api/admin/inquiries/{inquiry_id}/quotes", headers=ADMIN, json=quote).status_code, 422)
             created = self.client.post(f"/api/admin/inquiries/{inquiry_id}/quotes", headers=ADMIN, json={**quote, "send_email": False}).json()
             self.assertFalse(created["emailed"])
+
+    def multipart(self, files, **extra):
+        payload = {"name": "홍길동", "email": "buyer@example.com", "consent": True, "message": "기획서 첨부합니다", **extra}
+        return self.client.post("/api/inquiries", data={"payload": json.dumps(payload, ensure_ascii=False)}, files=files)
+
+    def test_inquiry_attachments_are_stored_and_admin_only(self):
+        files = [("files", ("회사 기획서 v2.pdf", b"%PDF-1.4 plan", "application/pdf")),
+                 ("files", ("../../화면.png", b"\x89PNG data", "image/png"))]
+        response = self.multipart(files)
+        self.assertEqual(response.status_code, 200, response.text)
+        inquiry_id = response.json()["id"]
+        self.assertIn("회사 기획서 v2.pdf", self.sent[-1][1])
+        self.assertIn("회사 기획서 v2.pdf", self.customer[-1][2])
+        stored = site_store.get_inquiry(inquiry_id)["files"]
+        self.assertEqual([f["original_name"] for f in stored], ["회사 기획서 v2.pdf", "화면.png"])
+        # Stored inside DATA_DIR/uploads with server-generated names, never the client's path.
+        on_disk = list(Path(self.folder.name, "uploads", str(inquiry_id)).iterdir())
+        self.assertEqual(len(on_disk), 2)
+        self.assertTrue(all(".." not in f.name and "기획서" not in f.name for f in on_disk))
+        file_id = stored[0]["id"]
+        self.assertEqual(self.client.get(f"/api/admin/files/{file_id}").status_code, 401)
+        self.login()
+        download = self.client.get(f"/api/admin/files/{file_id}")
+        self.assertEqual(download.status_code, 200)
+        self.assertEqual(download.content, b"%PDF-1.4 plan")
+        self.assertEqual(download.headers["content-type"], "application/octet-stream")
+        self.assertTrue(download.headers["content-disposition"].startswith("attachment"))
+        self.assertEqual(self.client.get("/api/admin/files/999").status_code, 404)
+        self.assertEqual(self.client.get("/api/admin/inquiries").json()["inquiries"][0]["file_count"], 2)
+
+    def test_inquiry_attachment_limits_roll_back(self):
+        bad_type = self.multipart([("files", ("run.exe", b"MZ", "application/octet-stream"))])
+        self.assertEqual(bad_type.status_code, 422)
+        self.assertIn("올릴 수 없는 형식", bad_type.json()["detail"])
+        too_many = self.multipart([("files", (f"{i}.pdf", b"x", "application/pdf")) for i in range(4)])
+        self.assertEqual(too_many.status_code, 422)
+        with patch.object(uploads, "MAX_FILE_BYTES", 10):
+            too_big = self.multipart([("files", ("ok.pdf", b"x", "application/pdf")), ("files", ("big.pdf", b"x" * 11, "application/pdf"))])
+        self.assertEqual(too_big.status_code, 422)
+        self.assertIn("10MB", too_big.json()["detail"])
+        # A failed upload leaves no inquiry and no files behind.
+        self.assertEqual(site_store.list_inquiries(), [])
+        self.assertEqual([f for f in Path(self.folder.name, "uploads").rglob("*") if f.is_file()], [])
+        # Plain JSON submissions still work without attachments.
+        self.assertEqual(self.inquiry().status_code, 200)
 
     def test_demo_quote_is_self_serve_and_never_charged(self):
         created = self.client.post("/api/quotes/demo", json={"title": "쇼핑몰 상담봇"})

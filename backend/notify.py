@@ -38,12 +38,12 @@ def _send(subject, body, to=None, reply_to=None):
         log.exception("notification e-mail failed")
 
 
-def send(subject, body):
-    """Notify the site owner in the background. Returns False when SMTP is not configured."""
+def send(subject, body, reply_to=None):
+    """Notify the site owner in the background (reply goes to the customer when given)."""
     if not configured():
         log.warning("SMTP not configured; skipped notification: %s", subject)
         return False
-    Thread(target=_send, args=(subject, body), daemon=True).start()
+    Thread(target=_send, args=(subject, body, None, reply_to), daemon=True).start()
     return True
 
 

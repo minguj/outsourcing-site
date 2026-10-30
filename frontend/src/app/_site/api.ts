@@ -7,7 +7,9 @@ export type ChatMessage = { role: "user" | "assistant"; content: string };
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(path, { ...init, headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) } });
+    // FormData (file uploads) sets its own multipart boundary header.
+    const json = !(init?.body instanceof FormData);
+    response = await fetch(path, { ...init, headers: { ...(json ? { "Content-Type": "application/json" } : {}), ...(init?.headers ?? {}) } });
   } catch {
     throw new Error("서버에 연결하지 못했습니다. 인터넷 연결을 확인하고 다시 시도해 주세요.");
   }
@@ -15,7 +17,8 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
   if (!response.ok) {
     const detail = typeof body.detail === "string" ? body.detail
       : Array.isArray(body.detail) ? "입력값을 확인해 주세요." : "요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.";
-    throw Object.assign(new Error(detail), { status: response.status });
+    const message = response.status === 413 ? "파일이 너무 큽니다. 10MB 이하로 줄여 주세요." : detail;
+    throw Object.assign(new Error(message), { status: response.status });
   }
   return body as T;
 }

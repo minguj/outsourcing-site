@@ -20,6 +20,12 @@
 - 상담 접수 시 고객에게 접수 확인 메일, 관리 화면에서 견적서를 만들 때 "메일로 보내기"를 켜 두면 견적서 링크 메일, 착수금 결제가 끝나면 결제 완료와 진행 안내 메일이 간다. 고객 메일의 회신 주소는 `NOTIFY_EMAIL`이다. 견적서 메일에는 `PUBLIC_BASE_URL`이 필요하다.
 - 메인과 상담 기록지의 "견적·결제 흐름 체험"은 체험용 견적서를 서버 메모리에만 2시간 만들어 둔다. 관리 화면·DB·메일에 남지 않고, 결제는 토스 테스트 키가 있으면 테스트 결제창, 없거나 실결제(live) 키면 모의 결제로만 진행되어 어떤 경우에도 청구되지 않는다. IP당 시간당 10회로 제한한다.
 
+## 상담 접수 첨부 파일
+
+- 상담 접수 양식에서 기획서·참고 자료를 파일당 10MB, 최대 3개까지 받는다. 허용 형식: PDF, 워드, 파워포인트, 엑셀, CSV, 한글(hwp/hwpx), 텍스트, PNG/JPG, ZIP.
+- 파일은 `DATA_DIR/uploads/<상담번호>/`에 서버가 정한 이름으로 저장되고(운영: 데이터 볼륨의 `/app/data/uploads`), 관리 화면에서 로그인한 관리자만 내려받는다. 항상 다운로드로만 내려가고 브라우저에서 바로 열리지 않는다.
+- 저장 실패(형식·크기·개수 초과) 시 상담 접수 자체를 되돌린다. 전체 첨부 용량 상한은 `UPLOADS_MAX_TOTAL_MB`(기본 2048MB).
+
 ## 서버 비밀값
 
 EC2의 `/etc/outsourcing-deploy/backend.env`에 넣는다(`backend.env.example` 참고, `chmod 600`). 모든 값은 선택이며 없으면 해당 기능만 꺼진다.
@@ -33,10 +39,11 @@ EC2의 `/etc/outsourcing-deploy/backend.env`에 넣는다(`backend.env.example` 
 
 ## 데이터
 
-상담·견적·결제 기록은 backend 컨테이너의 `/app/data/site.db`(SQLite)에 저장되고, Compose 볼륨 `outsourcing-site_backend_data`로 배포·롤백과 무관하게 유지된다. 백업은 EC2에서 다음과 같이 한다.
+상담·견적·결제 기록은 backend 컨테이너의 `/app/data/site.db`(SQLite), 첨부 파일은 `/app/data/uploads`에 저장되고, Compose 볼륨 `outsourcing-site_backend_data`로 배포·롤백과 무관하게 유지된다. 백업은 EC2에서 다음과 같이 한다.
 
 ```bash
-sudo docker run --rm -v outsourcing-site_backend_data:/data -v "$PWD":/backup alpine cp /data/site.db /backup/site-$(date +%F).db
+# 상담 기록(DB)과 첨부 파일을 함께 백업
+sudo docker run --rm -v outsourcing-site_backend_data:/data -v "$PWD":/backup alpine tar czf /backup/site-data-$(date +%F).tgz -C /data .
 ```
 
 개인정보 보유 기간 안내(상담 종료 후 1년)는 `site-config.ts`의 문구와 실제 운영을 맞춘다.

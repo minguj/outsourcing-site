@@ -5,9 +5,9 @@ import { useCallback, useEffect, useState } from "react";
 import { api, BRIEF_FIELDS, won, type Brief, type ChatMessage } from "../_site/api";
 import { SITE } from "../site-config";
 
-type Row = { id: number; created_at: number; status: string; name: string; company: string; email: string; brief: Brief; quote_status: string | null };
+type Row = { id: number; created_at: number; status: string; name: string; company: string; email: string; brief: Brief; quote_status: string | null; file_count?: number };
 type QuoteRow = { id: number; token: string; title: string; total: number; deposit: number; status: string; created_at: number; paid_at: number | null; payment_method: string | null };
-type Detail = Row & { phone: string; message: string; transcript: ChatMessage[]; admin_note: string; quotes: QuoteRow[] };
+type Detail = Row & { phone: string; message: string; transcript: ChatMessage[]; admin_note: string; quotes: QuoteRow[]; files: { id: number; original_name: string; size: number }[] };
 type Listing = { inquiries: Row[]; smtp: boolean; consult: boolean; payments: "toss" | "mock" | "off" };
 
 const ADMIN = { "X-Admin-Client": "1" };
@@ -87,6 +87,17 @@ export default function AdminApp() {
       const id = Number(new URLSearchParams(window.location.search).get("inquiry")); if (id) await open(id); }
     catch (err) { setError(err instanceof Error ? err.message : "로그인하지 못했습니다."); }
   }
+  async function downloadFile(id: number, name: string) {
+    setError("");
+    try {
+      const response = await fetch(`/api/admin/files/${id}`);
+      if (!response.ok) throw new Error(response.status === 401 ? "다시 로그인해 주세요." : "파일을 내려받지 못했습니다.");
+      const url = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      link.href = url; link.download = name; link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (err) { setError(err instanceof Error ? err.message : "파일을 내려받지 못했습니다."); }
+  }
   async function update(body: object) {
     if (!detail) return;
     try { setDetail(await api<Detail>(`/api/admin/inquiries/${detail.id}`, { method: "POST", headers: ADMIN, body: JSON.stringify(body) })); await load(); }
@@ -114,7 +125,7 @@ export default function AdminApp() {
             <tbody>{listing.inquiries.length === 0 && <tr><td colSpan={3}>아직 접수된 상담이 없습니다.</td></tr>}
               {listing.inquiries.map(r => <tr key={r.id} onClick={() => void open(r.id)} style={{ cursor: "pointer", background: detail?.id === r.id ? "#eef2ec" : undefined }}>
                 <td style={{ whiteSpace: "nowrap" }}>#{r.id}<br /><small>{when(r.created_at)}</small></td>
-                <td><button type="button" onClick={() => void open(r.id)} style={{ all: "unset", cursor: "pointer" }}><strong>{r.brief.title || r.company || r.name}</strong></button><br /><small>{r.company} {r.name}</small></td>
+                <td><button type="button" onClick={() => void open(r.id)} style={{ all: "unset", cursor: "pointer" }}><strong>{r.brief.title || r.company || r.name}</strong></button><br /><small>{r.company} {r.name}{r.file_count ? ` · 첨부 ${r.file_count}개` : ""}</small></td>
                 <td><span className="st-badge">{STATUS[r.status] ?? r.status}</span></td>
               </tr>)}</tbody></table>
         </section>
@@ -130,6 +141,9 @@ export default function AdminApp() {
                 return <div key={key} style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: 10, borderTop: "1px dashed var(--rule)", paddingTop: 8 }}><dt style={{ color: "var(--muted)" }}>{label}</dt><dd style={{ margin: 0 }}>{Array.isArray(value) ? value.join(", ") : value}</dd></div>;
               })}</dl>
               {detail.message && <p className="st-note"><strong>직접 남긴 내용</strong><br />{detail.message}</p>}
+              {detail.files.length > 0 && <div className="st-note"><strong>첨부 파일</strong>
+                <ul className="st-file-list">{detail.files.map(f => <li key={f.id}><span>{f.original_name}</span><small>{(f.size / 1024 / 1024).toFixed(1)}MB</small>
+                  <button type="button" className="st-text-link" style={{ marginTop: 0 }} onClick={() => void downloadFile(f.id, f.original_name)}>내려받기</button></li>)}</ul></div>}
               {detail.transcript.length > 0 && <details style={{ marginTop: 14 }}><summary>AI 상담 대화 보기 ({detail.transcript.length})</summary>
                 <div style={{ display: "grid", gap: 8, marginTop: 10 }}>{detail.transcript.map((m, i) => <p key={i} className={"st-msg st-msg-" + m.role} style={{ maxWidth: "100%" }}>{m.content}</p>)}</div></details>}
               <label style={{ marginTop: 16 }}>메모<textarea rows={3} value={note} onChange={e => setNote(e.target.value)} /></label>

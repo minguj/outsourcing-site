@@ -41,6 +41,14 @@ CREATE TABLE IF NOT EXISTS quotes (
   paid_at REAL,
   payment_method TEXT
 );
+CREATE TABLE IF NOT EXISTS inquiry_files (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  inquiry_id INTEGER NOT NULL REFERENCES inquiries(id),
+  created_at REAL NOT NULL,
+  original_name TEXT NOT NULL,
+  stored_name TEXT NOT NULL,
+  size INTEGER NOT NULL
+);
 """
 
 
@@ -91,7 +99,8 @@ def list_inquiries():
     with LOCK:
         rows = db().execute(
             "SELECT i.id, i.created_at, i.status, i.name, i.company, i.email, i.brief, "
-            "(SELECT q.status FROM quotes q WHERE q.inquiry_id = i.id ORDER BY q.id DESC LIMIT 1) AS quote_status "
+            "(SELECT q.status FROM quotes q WHERE q.inquiry_id = i.id ORDER BY q.id DESC LIMIT 1) AS quote_status, "
+            "(SELECT COUNT(*) FROM inquiry_files f WHERE f.inquiry_id = i.id) AS file_count "
             "FROM inquiries i ORDER BY i.id DESC LIMIT 200").fetchall()
         return [row_dict(row, ("brief",)) for row in rows]
 
@@ -102,7 +111,29 @@ def get_inquiry(inquiry_id):
         if inquiry:
             inquiry["quotes"] = [row_dict(q, ("items",)) for q in db().execute(
                 "SELECT * FROM quotes WHERE inquiry_id = ? ORDER BY id DESC", (inquiry_id,)).fetchall()]
+            inquiry["files"] = [dict(f) for f in db().execute(
+                "SELECT id, original_name, size, created_at FROM inquiry_files WHERE inquiry_id = ? ORDER BY id", (inquiry_id,)).fetchall()]
         return inquiry
+
+
+def delete_inquiry(inquiry_id):
+    """Used only to roll back an inquiry whose attachments failed to save."""
+    with LOCK:
+        db().execute("DELETE FROM inquiry_files WHERE inquiry_id = ?", (inquiry_id,))
+        db().execute("DELETE FROM inquiries WHERE id = ?", (inquiry_id,))
+        db().commit()
+
+
+def add_file(inquiry_id, original_name, stored_name, size):
+    with LOCK:
+        db().execute("INSERT INTO inquiry_files (inquiry_id, created_at, original_name, stored_name, size) VALUES (?,?,?,?,?)",
+                     (inquiry_id, time.time(), original_name, stored_name, size))
+        db().commit()
+
+
+def get_file(file_id):
+    with LOCK:
+        return row_dict(db().execute("SELECT * FROM inquiry_files WHERE id = ?", (file_id,)).fetchone())
 
 
 def update_inquiry(inquiry_id, status=None, admin_note=None):
@@ -129,7 +160,7 @@ def get_quote(token):
     with LOCK:
         quote = row_dict(db().execute("SELECT * FROM quotes WHERE token = ?", (token,)).fetchone(), ("items",))
         if quote:
-            inquiry = db().execute("SELECT name, company, email FROM inquiries WHERE id = ?", (quote["inquiry_id"],)).fetchone()
+            inquiry = db().execute("SELECT name, company, email, phone FROM inquiries WHERE id = ?", (quote["inquiry_id"],)).fetchone()
             quote["customer"] = dict(inquiry) if inquiry else {}
         return quote
 
