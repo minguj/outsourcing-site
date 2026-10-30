@@ -14,22 +14,23 @@ const ADMIN = { "X-Admin-Client": "1" };
 const STATUS: Record<string, string> = { new: "신규", contacted: "연락함", quoted: "견적 발송", deposit_paid: "착수금 결제", in_progress: "진행 중", closed: "종료" };
 const when = (s: number) => new Intl.DateTimeFormat("ko-KR", { dateStyle: "short", timeStyle: "short" }).format(new Date(s * 1000));
 
-function QuoteForm({ detail, onCreated }: { detail: Detail; onCreated: (d: Detail, path: string) => void }) {
+function QuoteForm({ detail, onCreated }: { detail: Detail; onCreated: (d: Detail, path: string, emailed: boolean, requested: boolean) => void }) {
   const [title, setTitle] = useState(detail.brief.title ?? "");
   const [items, setItems] = useState([{ name: "", amount: "" }]);
   const [deposit, setDeposit] = useState("");
   const [schedule, setSchedule] = useState(detail.brief.timeline ?? "");
   const [note, setNote] = useState("부가세 별도 금액입니다. 잔금은 납품 후 7일 이내에 지급합니다.");
+  const [sendEmail, setSendEmail] = useState(true);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const total = items.reduce((sum, item) => sum + (Number(item.amount.replace(/,/g, "")) || 0), 0);
   async function create(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setError("");
     try {
-      const result = await api<{ path: string; inquiry: Detail }>(`/api/admin/inquiries/${detail.id}/quotes`, { method: "POST", headers: ADMIN, body: JSON.stringify({
+      const result = await api<{ path: string; inquiry: Detail; emailed: boolean }>(`/api/admin/inquiries/${detail.id}/quotes`, { method: "POST", headers: ADMIN, body: JSON.stringify({
         title, items: items.filter(i => i.name.trim()).map(i => ({ name: i.name.trim(), amount: Number(i.amount.replace(/,/g, "")) || 0 })),
-        deposit: Number(deposit.replace(/,/g, "")) || 0, schedule, note }) });
-      onCreated(result.inquiry, result.path);
+        deposit: Number(deposit.replace(/,/g, "")) || 0, schedule, note, send_email: sendEmail }) });
+      onCreated(result.inquiry, result.path, result.emailed, sendEmail);
     } catch (err) { setError(err instanceof Error ? err.message : "견적을 만들지 못했습니다."); } finally { setBusy(false); }
   }
   return <form className="st-form" onSubmit={create}>
@@ -47,7 +48,8 @@ function QuoteForm({ detail, onCreated }: { detail: Detail; onCreated: (d: Detai
     </div>
     <label>안내 문구<textarea rows={3} maxLength={3000} value={note} onChange={e => setNote(e.target.value)} /></label>
     {error && <p className="st-error" role="alert">{error}</p>}
-    <button className="st-button" disabled={busy || total <= 0}>견적서 링크 만들기</button>
+    <label style={{ flexDirection: "row", alignItems: "center", gap: 8, fontWeight: 500 }}><input type="checkbox" checked={sendEmail} onChange={e => setSendEmail(e.target.checked)} style={{ width: 18, height: 18 }} /> 고객({detail.email})에게 견적서 링크를 메일로 보내기</label>
+    <button className="st-button" disabled={busy || total <= 0}>{sendEmail ? "견적서 만들고 메일 보내기" : "견적서 링크만 만들기"}</button>
   </form>;
 }
 
@@ -58,6 +60,7 @@ export default function AdminApp() {
   const [detail, setDetail] = useState<Detail | null>(null);
   const [error, setError] = useState("");
   const [link, setLink] = useState("");
+  const [emailed, setEmailed] = useState<"sent" | "failed" | "off">("off");
   const [note, setNote] = useState("");
 
   const load = useCallback(async () => {
@@ -135,8 +138,8 @@ export default function AdminApp() {
             {detail.quotes.length > 0 && <article className="st-doc"><h3 style={{ fontSize: 16, marginBottom: 10 }}>견적서</h3>
               <table className="st-table"><tbody>{detail.quotes.map(q => <tr key={q.id}><td><a href={`/quote?t=${q.token}`} target="_blank" rel="noreferrer">{q.title}</a><br /><small>{when(q.created_at)}</small></td>
                 <td className="st-num">{won(q.total)}<br /><small>착수금 {won(q.deposit)}</small></td><td><span className="st-badge">{q.status === "paid" ? `결제 완료${q.payment_method ? ` (${q.payment_method})` : ""}` : "발송"}</span></td></tr>)}</tbody></table></article>}
-            {link && <p className="st-badge" role="status" style={{ whiteSpace: "normal" }}>견적서 링크를 만들었습니다. 고객에게 보내 주세요: <a href={link} target="_blank" rel="noreferrer">{window.location.origin}{link}</a></p>}
-            <QuoteForm key={detail.id} detail={detail} onCreated={(d, path) => { setDetail(d); setLink(path); void load(); }} />
+            {link && <p className="st-badge" role="status" style={{ whiteSpace: "normal" }}>{emailed === "sent" ? "견적서를 만들고 고객에게 메일로 보냈습니다. 링크: " : emailed === "failed" ? "견적서를 만들었지만 메일 설정(SMTP)이 없어 메일은 보내지 못했습니다. 링크를 직접 보내 주세요: " : "견적서 링크를 만들었습니다. 고객에게 보내 주세요: "}<a href={link} target="_blank" rel="noreferrer">{window.location.origin}{link}</a></p>}
+            <QuoteForm key={detail.id} detail={detail} onCreated={(d, path, sent, requested) => { setDetail(d); setLink(path); setEmailed(sent ? "sent" : requested ? "failed" : "off"); void load(); }} />
           </div>}
         </section>
       </div>

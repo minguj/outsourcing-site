@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { api, won } from "../_site/api";
 import { SITE } from "../site-config";
@@ -8,6 +9,7 @@ import { SITE } from "../site-config";
 type Quote = {
   title: string; items: { name: string; amount: number }[]; total: number; deposit: number; schedule: string; note: string;
   status: string; created_at: number; paid_at: number | null; customer: { name: string; company: string }; payment_ready: boolean; payment_mode: "toss" | "mock" | "off"; payment_test: boolean;
+  is_demo: boolean; next_steps: { title: string; text: string }[];
 };
 type Checkout = { mock: boolean; client_key: string; order_id: string; amount: number; order_name: string; customer_name: string; customer_email: string };
 type TossFactory = ((clientKey: string) => { payment: (o: { customerKey: string }) => { requestPayment: (o: object) => Promise<void> } }) & { ANONYMOUS?: string };
@@ -36,6 +38,7 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const started = useRef(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (started.current) return;
@@ -50,7 +53,8 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
           setNotice("결제를 확인하고 있습니다.");
           const paid = await api<Quote>(`/api/quotes/${t}/confirm`, { method: "POST", body: JSON.stringify({
             payment_key: params.get("paymentKey") ?? "", order_id: params.get("orderId") ?? "", amount: Number(params.get("amount") ?? 0) }) });
-          setQuote(paid); setNotice("착수금 결제가 완료되었습니다. 담당자가 확인 후 착수 일정을 안내해 드립니다.");
+          setQuote(paid);
+          setNotice(paid.is_demo ? "체험 결제가 완료되었습니다. 실제 계약이라면 아래 진행 안내가 메일로도 발송됩니다." : "착수금 결제가 완료되었습니다. 진행 안내를 메일로도 보내 드렸습니다.");
           window.history.replaceState(null, "", `/quote?t=${encodeURIComponent(t)}`);
         } else {
           setQuote(await api<Quote>(`/api/quotes/${t}`));
@@ -72,7 +76,7 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
       if (order.mock) {
         // Local test: skip the payment window and return the way Toss would, so the same server check runs.
         const query = new URLSearchParams({ t: token, paymentKey: `mock_${order.order_id}`, orderId: order.order_id, amount: String(order.amount) });
-        window.location.assign(`${window.location.origin}/quote/success?${query}`);
+        router.push(`/quote/success?${query}`);
         return;
       }
       const Toss = await loadToss();
@@ -94,6 +98,10 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
     {notice && <p className="st-badge" role="status" style={{ marginBottom: 14 }}>{notice}</p>}
     {error && <p className="st-error" role="alert" style={{ marginBottom: 14 }}>{error}</p>}
     {!quote && !error && <p>견적서를 불러오는 중입니다.</p>}
+    {quote?.is_demo && <div className="st-demo-banner" role="note">
+      <p><strong>체험용 견적서입니다.</strong> 금액은 예시이고 결제해도 청구되지 않습니다. 이 견적서는 2시간 뒤 사라집니다.</p>
+      <Link href="/#inquiry" className="st-button st-button-ghost">실제 상담 접수하기</Link>
+    </div>}
     {quote && <article className="st-doc" aria-label="견적서">
       {paid && <span className="st-stamp st-paid-stamp" aria-label="착수금 결제 완료">결제<br />완료</span>}
       <div className="st-doc-title"><h1>견적서</h1><div className="st-doc-meta">발행 {date(quote.created_at)}<br />{SITE.name}</div></div>
@@ -116,6 +124,11 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
           </div>
           : <p style={{ fontSize: 14, color: "var(--muted)", maxWidth: 280 }}>온라인 결제를 준비하고 있습니다. 결제 방법은 담당자가 따로 안내해 드립니다.</p>}
       </div>
+      {paid && <section className="st-next" aria-label="앞으로의 진행">
+        <h2>앞으로의 진행</h2>
+        <ol>{quote.next_steps.map(step => <li key={step.title}><strong>{step.title}</strong><span>{step.text}</span></li>)}</ol>
+        {quote.is_demo && <p className="st-next-note">실제 계약에서는 결제 직후 이 안내가 고객님 메일로도 발송됩니다. <Link href="/#inquiry">상담 접수하기</Link></p>}
+      </section>}
     </article>}
   </div></div>;
 }

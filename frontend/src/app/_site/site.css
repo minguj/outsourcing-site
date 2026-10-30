@@ -27,7 +27,7 @@
 .st-page p, .st-doc-page p { margin: 0; }
 .st-page a { color: inherit; }
 .st-page a.st-button, .st-doc-page a.st-button { color: #fff; }
-.st-page a.st-button-ghost { color: var(--ink); }
+.st-page a.st-button-ghost, .st-doc-page a.st-button-ghost { color: var(--ink); }
 .st-section h2, .st-doc-title h1, .st-ledger-row h3, .st-steps h3, .st-brief h3 { font-weight: 700; }
 
 /* Buttons */
@@ -61,6 +61,7 @@
 }
 .st-hero-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 48px; align-items: start; }
 .st-hero-copy { padding-top: 18px; max-width: 34em; }
+.st-hero-grid > * { min-width: 0; }
 .st-hero-kicker { font-size: 14px; color: var(--ink-soft); font-weight: 600; margin-bottom: 14px !important; }
 .st-hero h1 { font-size: clamp(30px, 3.6vw, 44px); line-height: 1.25; font-weight: 700; margin-bottom: 22px; }
 .st-lead { font-size: 16.5px; color: #34413b; margin-bottom: 12px !important; max-width: 33em; }
@@ -88,14 +89,15 @@
 .st-typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-soft); animation: st-blink 1.2s infinite ease-in-out; }
 .st-typing span:nth-child(2) { animation-delay: .2s; } .st-typing span:nth-child(3) { animation-delay: .4s; }
 @keyframes st-blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
-.st-starters { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 20px 12px; }
+.st-starters { display: flex; flex-wrap: nowrap; gap: 8px; padding: 10px 20px 12px; overflow-x: auto; scrollbar-width: thin; border-top: 1px solid var(--rule-soft); }
+.st-starters button { flex: none; }
+.st-page .st-starters .st-starter-demo { border-color: var(--stamp); color: var(--stamp); font-weight: 600; }
 .st-starters button { font: inherit; font-size: 13px; padding: 7px 12px; border: 1px solid var(--rule); background: #fff; color: var(--ink); border-radius: 999px; cursor: pointer; }
 .st-starters button:hover:not(:disabled) { border-color: var(--ink); }
 .st-chat-input { display: flex; gap: 8px; padding: 12px 14px; border-top: 1px solid var(--rule); background: #fafbf9; }
 .st-chat-input textarea { flex: 1; resize: none; font: inherit; font-size: 14.5px; padding: 9px 12px; border: 1px solid var(--rule); border-radius: 4px; background: #fff; color: var(--text); min-height: 44px; }
 .st-chat-input .st-button { align-self: stretch; height: auto; }
 .st-chat-error { margin: 0 20px 10px !important; }
-.st-chat-offline .st-chat-log { opacity: .72; }
 .st-chat-offline-note { border-top: 1px solid var(--rule); padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; font-size: 14px; color: #34413b; background: #fafbf9; }
 
 /* 정리된 의뢰 + 도장 */
@@ -138,6 +140,7 @@
 .st-form .st-button { align-self: flex-start; }
 .st-error { color: #9b2c1d; background: #fbeeea; border: 1px solid #ecc7bd; padding: 9px 12px; border-radius: 4px; font-size: 13.5px; }
 .st-received { display: flex; gap: 16px; align-items: center; padding: 20px; background: #fff; border: 1px solid var(--ink); border-radius: 4px; }
+.st-text-link { margin-top: 8px; padding: 0; border: 0; background: none; font: inherit; font-size: 14px; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .st-received strong { color: var(--ink); font-size: 16px; } .st-received p { font-size: 14px; color: #34413b; margin-top: 4px !important; }
 
 /* Sections */
@@ -205,14 +208,25 @@
 .st-note { margin-top: 18px; font-size: 14px; color: #34413b; white-space: pre-wrap; }
 .st-badge { white-space: nowrap; display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600; background: #e7ede6; color: var(--ink); }
 .st-badge-test { background: #fdf1d8; color: #7a5410; }
-.st-paid-stamp { position: absolute; top: 26px; right: 34px; width: 96px; height: 96px; font-size: 16px; }
+.st-paid-stamp { position: absolute; top: 104px; right: 40px; width: 96px; height: 96px; font-size: 16px; }
+
+.st-demo-banner { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; padding: 14px 18px; border: 1px dashed var(--stamp); background: #fdf3f0; border-radius: 4px; font-size: 14px; color: #5a2c22; }
+.st-demo-banner strong { color: var(--stamp); }
+.st-next { margin-top: 28px; padding-top: 22px; border-top: 1px solid var(--rule); }
+.st-next h2 { font-size: 18px; margin-bottom: 12px; }
+.st-next ol { margin: 0; padding: 0; list-style: none; counter-reset: next; display: grid; gap: 10px; }
+.st-next li { counter-increment: next; display: grid; grid-template-columns: 30px 170px minmax(0, 1fr); gap: 10px; align-items: baseline; font-size: 14.5px; }
+.st-next li::before { content: counter(next); font-weight: 300; font-size: 20px; color: var(--ink); }
+.st-next li strong { color: var(--ink); }
+.st-next li span { color: #34413b; }
+.st-next-note { margin-top: 14px !important; font-size: 13.5px; color: var(--muted); }
 
 /* Admin */
 .st-admin-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 24px; align-items: start; }
 
 @media (max-width: 960px) {
   .st-admin-grid { grid-template-columns: 1fr; }
-  .st-hero-grid, .st-demo-grid, .st-inquiry-grid { grid-template-columns: 1fr; gap: 32px; }
+  .st-hero-grid, .st-demo-grid, .st-inquiry-grid { grid-template-columns: minmax(0, 1fr); gap: 32px; }
   .st-hero { padding: 36px 0 44px; }
   .st-hero-copy { padding-top: 0; }
   .st-steps { grid-template-columns: 1fr 1fr; }
@@ -239,8 +253,47 @@
   .st-chat-input .st-button { padding: 0 14px; }
   .st-doc-title h1 { letter-spacing: .15em; }
   .st-table { font-size: 13.5px; }
+  .st-next li { grid-template-columns: 26px minmax(0, 1fr); }
+  .st-next li span { grid-column: 2; }
   .st-paid-stamp { width: 76px; height: 76px; top: 14px; right: 14px; font-size: 14px; }
 }
+
+/* Hero service index */
+.st-hero-services { list-style: none; margin: 4px 0 18px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 8px; }
+.st-hero-services a { display: inline-block; padding: 5px 11px; border: 1px solid var(--rule); border-radius: 999px; background: #fff; color: var(--ink); font-size: 13.5px; font-weight: 500; text-decoration: none; }
+.st-hero-services a:hover { border-color: var(--ink); }
+.st-ledger-row { scroll-margin-top: 80px; }
+
+/* 작업 예시 */
+.st-examples-section { background: var(--sheet); }
+.st-examples { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 2px solid var(--ink); }
+.st-example { padding: 22px 24px 24px; border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.st-example:first-child { padding-left: 0; }
+.st-example:nth-child(2), .st-example:nth-child(3) { border-left: 1px solid var(--rule); }
+.st-example:nth-child(3) { padding-right: 0; }
+.st-example h3 { font-size: 18px; font-weight: 700; }
+.st-example p { color: #34413b; font-size: 14.5px; max-width: 36em; }
+.st-example-wide { grid-column: 1 / -1; flex-direction: row; justify-content: space-between; gap: 28px; padding-left: 0; padding-right: 0; align-items: center; }
+.st-example-wide > div { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.st-example-thumbs { display: flex; gap: 8px; flex: none; padding: 10px; background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; }
+.st-example-thumbs img { width: 96px; height: 70px; object-fit: cover; object-position: top left; border: 1px solid var(--rule-soft); background: #fff; }
+.st-tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.st-tags li { font-size: 12px; font-weight: 600; color: var(--ink-soft); background: #e7ede6; padding: 2px 8px; border-radius: 3px; }
+.st-example .st-text-link { margin-top: 4px; }
+.st-text-link:disabled { opacity: .5; cursor: wait; }
+.st-faq-grid { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 48px; align-items: start; }
+
+@media (max-width: 960px) {
+  .st-faq-grid { grid-template-columns: 1fr; gap: 12px; }
+  .st-examples { grid-template-columns: 1fr; }
+  .st-example, .st-example:first-child, .st-example:nth-child(2), .st-example:nth-child(3) { padding: 20px 0; border-left: 0; }
+}
+@media (max-width: 720px) {
+  .st-example-wide { flex-direction: column; align-items: flex-start; }
+  .st-example-thumbs img { width: 30%; min-width: 0; height: 64px; }
+  .st-example-thumbs { width: 100%; justify-content: space-between; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .st-stamp, .st-typing span { animation: none; }
   .st-chat-log { scroll-behavior: auto; }
