@@ -11,7 +11,8 @@ from backend.main import app
 
 ADMIN = {"X-Admin-Client": "1"}
 ENV = {"ADMIN_PASSWORD": "test-admin-pass", "TOSS_CLIENT_KEY": "test_ck_x", "TOSS_SECRET_KEY": "test_sk_x",
-       "ANTHROPIC_API_KEY": "sk-test", "SMTP_HOST": "", "NOTIFY_EMAIL": ""}
+       "ANTHROPIC_API_KEY": "sk-test", "SMTP_HOST": "", "NOTIFY_EMAIL": "", "PUBLIC_BASE_URL": "https://site.example",
+       "PAYMENT_MOCK": ""}
 
 
 class SiteTests(unittest.TestCase):
@@ -29,6 +30,11 @@ class SiteTests(unittest.TestCase):
         mail = patch.object(notify, "send", side_effect=lambda subject, body: self.sent.append((subject, body)) or True)
         mail.start()
         self.addCleanup(mail.stop)
+        self.customer = []
+        customer = patch.object(notify, "send_customer", side_effect=lambda to, subject, body: self.customer.append((to, subject, body)) or True)
+        customer.start()
+        self.addCleanup(customer.stop)
+        site_api.DEMO_QUOTES.clear()
         self.client = TestClient(app)
         self.addCleanup(self.client.close)
 
@@ -140,6 +146,56 @@ class SiteTests(unittest.TestCase):
         # With real keys present the mock switch is ignored.
         with patch.dict(os.environ, {"PAYMENT_MOCK": "1"}):
             self.assertEqual(self.client.get(f"/api/quotes/{token}").json()["payment_mode"], "toss")
+
+    def test_customer_mails_receipt_quote_and_kickoff(self):
+        inquiry_id = self.inquiry().json()["id"]
+        self.assertEqual(self.customer[0][0], "buyer@example.com")
+        self.assertIn("상담이 접수되었습니다", self.customer[0][1])
+        self.assertIn("발주서 변환", self.customer[0][2])
+        self.login()
+        created = self.client.post(f"/api/admin/inquiries/{inquiry_id}/quotes", headers=ADMIN, json={
+            "title": "변환 툴", "items": [{"name": "개발", "amount": 5000000}], "deposit": 1500000, "schedule": "6주"}).json()
+        self.assertTrue(created["emailed"])
+        to, subject, body = self.customer[-1]
+        self.assertEqual(to, "buyer@example.com")
+        self.assertIn(f"https://site.example/quote?t={created['token']}", body)
+        self.assertIn("착수금 1,500,000원", body)
+        order = self.client.post(f"/api/quotes/{created['token']}/checkout").json()
+        with patch.object(site_api, "toss_confirm", return_value={"method": "카드"}):
+            self.client.post(f"/api/quotes/{created['token']}/confirm", json={"payment_key": "pk", "order_id": order["order_id"], "amount": 1500000})
+        to, subject, body = self.customer[-1]
+        self.assertIn("착수금 결제 완료", subject)
+        self.assertIn("착수 미팅 일정 조율", body)
+        # Without a public site address the quote can still be created as a link only.
+        with patch.dict(os.environ, {"PUBLIC_BASE_URL": ""}):
+            quote = {"title": "링크만", "items": [{"name": "개발", "amount": 1000000}], "deposit": 300000}
+            self.assertEqual(self.client.post(f"/api/admin/inquiries/{inquiry_id}/quotes", headers=ADMIN, json=quote).status_code, 422)
+            created = self.client.post(f"/api/admin/inquiries/{inquiry_id}/quotes", headers=ADMIN, json={**quote, "send_email": False}).json()
+            self.assertFalse(created["emailed"])
+
+    def test_demo_quote_is_self_serve_and_never_charged(self):
+        created = self.client.post("/api/quotes/demo", json={"title": "쇼핑몰 상담봇"})
+        self.assertEqual(created.status_code, 200, created.text)
+        token = created.json()["token"]
+        quote = self.client.get(f"/api/quotes/{token}").json()
+        self.assertTrue(quote["is_demo"] and quote["payment_test"])
+        self.assertIn("쇼핑몰 상담봇 (체험용 견적)", quote["title"])
+        self.assertEqual(quote["payment_mode"], "toss")  # test keys -> real Toss test window
+        # Live keys are never used for demo quotes: they fall back to the mock flow.
+        with patch.dict(os.environ, {"TOSS_CLIENT_KEY": "live_ck_x", "TOSS_SECRET_KEY": "live_sk_x"}):
+            self.assertEqual(self.client.get(f"/api/quotes/{token}").json()["payment_mode"], "mock")
+            order = self.client.post(f"/api/quotes/{token}/checkout").json()
+            self.assertTrue(order["mock"])
+            with patch.object(site_api, "toss_confirm") as toss:
+                paid = self.client.post(f"/api/quotes/{token}/confirm", json={"payment_key": f"mock_{order['order_id']}", "order_id": order["order_id"], "amount": quote["deposit"]})
+            toss.assert_not_called()
+        self.assertEqual(paid.json()["status"], "paid")
+        self.assertEqual(paid.json()["next_steps"][0]["title"], "착수 미팅 일정 조율")
+        # Demo quotes never reach the database, the admin list or anyone's mailbox.
+        self.assertEqual(site_store.list_inquiries(), [])
+        self.assertEqual((self.sent, self.customer), ([], []))
+        statuses = [self.client.post("/api/quotes/demo", json={}, headers={"X-Forwarded-For": "198.51.100.7"}).status_code for _ in range(11)]
+        self.assertEqual(statuses[-1], 429)
 
     def test_payment_and_admin_degrade_without_keys(self):
         inquiry_id = self.inquiry().json()["id"]

@@ -1,7 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { api, type Brief, type ChatMessage } from "./api";
+import { api, createDemoQuote, type Brief, type ChatMessage } from "./api";
 import { SITE } from "../site-config";
 
 type Props = { brief?: Brief | null; transcript?: ChatMessage[]; compact?: boolean; onDone?: () => void };
@@ -19,6 +20,7 @@ export function InquiryForm({ brief, transcript = [], compact = false, onDone }:
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState<number | null>(null);
+  const router = useRouter();
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [key]: e.target.value });
   const needsMessage = !brief;
 
@@ -36,7 +38,8 @@ export function InquiryForm({ brief, transcript = [], compact = false, onDone }:
   if (done !== null) {
     return <div className="st-received" role="status">
       <span className="st-stamp st-stamp-static" aria-hidden="true">접수</span>
-      <div><strong>상담이 접수되었습니다.</strong><p>담당자가 내용을 검토하고 남겨 주신 이메일로 연락드릴게요. 견적이 준비되면 견적서 링크를 함께 보내 드립니다.</p></div>
+      <div><strong>상담이 접수되었습니다.</strong><p>남겨 주신 이메일로 접수 확인 메일을 보냈어요. 담당자가 검토한 뒤 견적서 링크를 메일로 보내 드립니다.</p>
+        <button type="button" className="st-text-link" onClick={() => void createDemoQuote(brief?.title).then(path => router.push(path)).catch(() => undefined)}>견적서와 착수금 결제가 어떻게 진행되는지 미리 보기</button></div>
     </div>;
   }
 

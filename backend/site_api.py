@@ -15,10 +15,12 @@ from pydantic import BaseModel, ConfigDict, Field
 
 if __package__:
     from . import consult, notify, site_store as store
+    from .site_knowledge import KICKOFF, PROCESS, kickoff_text
 else:
     import consult
     import notify
     import site_store as store
+    from site_knowledge import KICKOFF, PROCESS, kickoff_text
 
 router = APIRouter(prefix="/api")
 LOCK = RLock()
@@ -29,6 +31,9 @@ ADMIN_COOKIE = "site_admin"
 ADMIN_TTL = 12 * 3600
 EMAIL = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,24}$")
 TOSS_CONFIRM = "https://api.tosspayments.com/v1/payments/confirm"
+DEMO_QUOTES = {}
+DEMO_TTL = 2 * 3600
+DEMO_MAX = 500
 
 
 def client_ip(request):
@@ -144,6 +149,11 @@ def submit_inquiry(body: Inquiry, request: Request):
                 f"새 상담이 접수되었습니다.\n\n이름: {body.name}\n회사: {body.company or '-'}\n이메일: {email}\n"
                 f"전화: {body.phone or '-'}\n\n[AI 상담 요약]\n{brief_text(brief)}\n\n[직접 남긴 내용]\n{body.message or '-'}\n\n"
                 f"관리 화면: {link}\n")
+    notify.send_customer(email, f"[{consult.company()}] 상담이 접수되었습니다",
+                         f"{body.name.strip()}님, {consult.company()}에 상담을 남겨 주셔서 감사합니다.\n\n"
+                         f"[접수 내용]\n{brief_text(brief) if brief else body.message.strip()}\n\n"
+                         f"[다음 단계]\n담당자가 내용을 검토한 뒤 이 메일 주소로 연락드립니다. {PROCESS[1][1]}\n\n"
+                         f"덧붙일 내용이나 참고 자료가 있으면 이 메일에 회신해 주세요.\n\n{consult.company()} 드림\n")
     return {"ok": True, "id": inquiry_id}
 
 
@@ -162,20 +172,70 @@ def payment_mode():
     return "toss" if toss_ready() else "mock" if mock_payments() else "off"
 
 
+def quote_payment_mode(quote):
+    """Demo quotes are never charged: Toss only with test keys, otherwise the mock flow."""
+    if quote.get("is_demo"):
+        return "toss" if toss_ready() and os.environ["TOSS_CLIENT_KEY"].startswith("test_") else "mock"
+    return payment_mode()
+
+
+def quote_link(token):
+    return f"{notify.base_url()}/quote?t={token}"
+
+
 def public_quote(quote):
+    mode = quote_payment_mode(quote)
     return {"title": quote["title"], "items": quote["items"], "total": quote["total"], "deposit": quote["deposit"],
             "schedule": quote["schedule"], "note": quote["note"], "status": quote["status"],
             "created_at": quote["created_at"], "paid_at": quote["paid_at"],
             "customer": {"name": quote["customer"].get("name", ""), "company": quote["customer"].get("company", "")},
-            "payment_ready": payment_mode() != "off", "payment_mode": payment_mode(),
-            "payment_test": (os.environ.get("TOSS_CLIENT_KEY") or "").startswith("test_")}
+            "payment_ready": mode != "off", "payment_mode": mode, "is_demo": bool(quote.get("is_demo")),
+            "payment_test": bool(quote.get("is_demo")) or (os.environ.get("TOSS_CLIENT_KEY") or "").startswith("test_"),
+            "next_steps": [{"title": title, "text": text} for title, text in KICKOFF]}
+
+
+def prune_demo():
+    now = time.time()
+    with LOCK:
+        for key in [k for k, v in DEMO_QUOTES.items() if v["created_at"] + DEMO_TTL < now]:
+            del DEMO_QUOTES[key]
 
 
 def quote_or_404(token):
-    quote = store.get_quote(token) if re.fullmatch(r"[A-Za-z0-9_-]{10,64}", token) else None
+    quote = None
+    if re.fullmatch(r"[A-Za-z0-9_-]{10,64}", token):
+        prune_demo()
+        quote = DEMO_QUOTES.get(token) or store.get_quote(token)
     if not quote:
         raise HTTPException(404, "견적서를 찾을 수 없습니다. 받은 링크를 다시 확인해 주세요.")
     return quote
+
+
+class DemoQuote(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    title: str | None = Field(default=None, max_length=80)
+
+
+@router.post("/quotes/demo")
+def create_demo_quote(body: DemoQuote, request: Request):
+    """견적·결제 흐름 체험: a sample quote kept in memory for two hours and never charged."""
+    limit(request, "demo-quote", 10, 3600)
+    prune_demo()
+    with LOCK:
+        if len(DEMO_QUOTES) >= DEMO_MAX:
+            raise HTTPException(429, "지금 체험이 많습니다. 잠시 후 다시 시도해 주세요.")
+        token = "demo-" + secrets.token_urlsafe(18)
+        title = (body.title or "").strip() or "AI 상담 에이전트 구축"
+        items = [{"name": "요구사항 정리와 화면 설계", "amount": 1500000}, {"name": "개발과 중간 시연", "amount": 4500000},
+                 {"name": "운영 서버 배포와 안정화", "amount": 1000000}]
+        total = sum(item["amount"] for item in items)
+        DEMO_QUOTES[token] = {
+            "id": f"D{secrets.token_hex(3)}", "token": token, "is_demo": True, "created_at": time.time(),
+            "title": f"{title} (체험용 견적)", "items": items, "total": total, "deposit": total * 3 // 10,
+            "schedule": "착수 후 약 6주 (예시)", "note": "체험용 견적서입니다. 금액과 일정은 예시이며 실제 견적과 관계없고, 결제해도 청구되지 않습니다.",
+            "status": "sent", "order_id": None, "payment_key": None, "paid_at": None, "payment_method": None,
+            "customer": {"name": "체험 고객", "company": "", "email": ""}}
+    return {"token": token, "path": f"/quote?t={token}"}
 
 
 @router.get("/quotes/{token}")
@@ -189,11 +249,14 @@ def checkout(token: str, request: Request):
     quote = quote_or_404(token)
     if quote["status"] == "paid":
         raise HTTPException(409, "이미 착수금 결제가 완료된 견적입니다.")
-    mode = payment_mode()
+    mode = quote_payment_mode(quote)
     if mode == "off":
         raise HTTPException(503, "온라인 결제를 준비 중입니다. 담당자에게 결제 방법을 문의해 주세요.")
     order_id = f"Q{quote['id']}-{secrets.token_hex(8)}"
-    store.set_order(token, order_id)
+    if quote.get("is_demo"):
+        quote["order_id"] = order_id
+    else:
+        store.set_order(token, order_id)
     return {"mock": mode == "mock", "client_key": os.environ.get("TOSS_CLIENT_KEY") or "", "order_id": order_id, "amount": quote["deposit"],
             "order_name": f"{quote['title'][:60]} 착수금", "customer_name": quote["customer"].get("name", ""),
             "customer_email": quote["customer"].get("email", "")}
@@ -233,7 +296,7 @@ def confirm(token: str, body: Confirm, request: Request):
     # The amount and order must match what this server issued; never trust the redirect alone.
     if not quote["order_id"] or not hmac.compare_digest(quote["order_id"], body.order_id) or body.amount != quote["deposit"]:
         raise HTTPException(400, "결제 정보가 견적과 일치하지 않습니다.")
-    mode = payment_mode()
+    mode = quote_payment_mode(quote)
     if mode == "mock":
         if body.payment_key != f"mock_{body.order_id}":
             raise HTTPException(400, "모의 결제 정보가 올바르지 않습니다.")
@@ -242,7 +305,16 @@ def confirm(token: str, body: Confirm, request: Request):
         data = toss_confirm(body.payment_key, body.order_id, body.amount)
     else:
         raise HTTPException(503, "온라인 결제를 준비 중입니다.")
+    if quote.get("is_demo"):
+        quote.update(status="paid", payment_key=body.payment_key, paid_at=time.time(), payment_method=data.get("method") or "")
+        return public_quote(quote)
     store.mark_paid(token, body.payment_key, data.get("method") or "")
+    customer = quote["customer"]
+    if customer.get("email"):
+        notify.send_customer(customer["email"], f"[{consult.company()}] 착수금 결제 완료와 진행 안내",
+                             f"{customer.get('name')}님, '{quote['title']}' 착수금 {quote['deposit']:,}원 결제가 확인되었습니다. 감사합니다.\n\n"
+                             f"[앞으로의 진행]\n{kickoff_text()}\n\n견적서와 결제 내역: {quote_link(token)}\n\n"
+                             f"궁금한 점은 이 메일에 회신해 주세요.\n\n{consult.company()} 드림\n")
     notify.send(f"[착수금 결제 완료] {quote['title']} · {quote['deposit']:,}원",
                 f"착수금 결제가 완료되었습니다.\n\n견적: {quote['title']}\n고객: {quote['customer'].get('name')} "
                 f"({quote['customer'].get('company') or '-'})\n금액: {quote['deposit']:,}원\n결제수단: {data.get('method') or '-'}\n"
@@ -339,6 +411,7 @@ class QuoteCreate(BaseModel):
     deposit: int = Field(gt=0, le=1_000_000_000)
     schedule: str = Field(default="", max_length=1000)
     note: str = Field(default="", max_length=3000)
+    send_email: bool = True
 
 
 @router.post("/admin/inquiries/{inquiry_id}/quotes")
@@ -351,5 +424,16 @@ def admin_quote(inquiry_id: int, body: QuoteCreate, request: Request):
         raise HTTPException(422, "착수금은 견적 합계보다 클 수 없습니다.")
     token = store.create_quote(inquiry_id, body.title.strip(), [i.model_dump() for i in body.items], total,
                                body.deposit, body.schedule.strip(), body.note.strip())
-    return {"token": token, "path": f"/quote?t={token}", "inquiry": store.get_inquiry(inquiry_id)}
+    inquiry = store.get_inquiry(inquiry_id)
+    emailed = False
+    if body.send_email:
+        if not notify.base_url():
+            raise HTTPException(422, "견적서를 메일로 보내려면 서버에 PUBLIC_BASE_URL(사이트 주소)을 설정해 주세요. 링크만 만들려면 메일 발송을 끄세요.")
+        emailed = notify.send_customer(inquiry["email"], f"[{consult.company()}] 견적서를 보내 드립니다: {body.title.strip()}",
+                                       f"{inquiry['name']}님, 요청하신 '{body.title.strip()}' 견적서를 보내 드립니다.\n\n"
+                                       f"합계 {total:,}원 / 착수금 {body.deposit:,}원\n"
+                                       + (f"일정: {body.schedule.strip()}\n" if body.schedule.strip() else "")
+                                       + f"\n아래 링크에서 견적서를 확인하고 착수금을 결제하시면 개발을 시작합니다.\n{quote_link(token)}\n\n"
+                                       f"범위나 금액을 조정하고 싶으시면 이 메일에 회신해 주세요.\n\n{consult.company()} 드림\n")
+    return {"token": token, "path": f"/quote?t={token}", "emailed": emailed, "inquiry": inquiry}
 

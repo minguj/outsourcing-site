@@ -27,3 +27,9 @@ export const BRIEF_FIELDS: [keyof Brief, string][] = [
   ["data_and_systems", "문서·데이터·시스템"], ["users_and_scale", "사용자·규모"], ["budget", "예산"], ["timeline", "일정"],
   ["open_questions", "추가로 확인할 점"],
 ];
+
+/** Creates a self-serve sample quote (never charged) and returns its page path. */
+export async function createDemoQuote(title?: string) {
+  const result = await api<{ path: string }>("/api/quotes/demo", { method: "POST", body: JSON.stringify(title ? { title } : {}) });
+  return result.path;
+}
