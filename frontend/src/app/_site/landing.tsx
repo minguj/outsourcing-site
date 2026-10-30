@@ -33,7 +33,7 @@ export default function Landing() {
   const goInquiry = () => document.getElementById("inquiry")?.scrollIntoView({ behavior: "smooth", block: "start" });
   return <div className="st-page">
     <header className="st-nav"><div className="st-wrap">
-      <Link href="/" className="st-logo">{SITE.name}<small>{SITE.nameNote}</small></Link>
+      <Link href="/" className="st-logo">{SITE.name}</Link>
       <nav aria-label="주요 메뉴"><a href="#services">서비스</a><a href="#demo">데모</a><a href="#process">진행 방식</a><a href="#inquiry" className="st-nav-cta">상담 접수</a></nav>
     </div></header>
 
@@ -92,7 +92,7 @@ export default function Landing() {
     </main>
 
     <footer className="st-footer"><div className="st-wrap">
-      <strong>{SITE.name} {SITE.nameNote}</strong><p>{SITE.description}</p>
+      <strong>{SITE.name}</strong><p>{SITE.description}</p>
       <p className="st-footer-small">© {SITE.name}. 이 사이트의 데모에 쓰인 회사·거래 정보는 모두 가상입니다.</p>
     </div></footer>
   </div>;

@@ -7,9 +7,9 @@ import { SITE } from "../site-config";
 
 type Quote = {
   title: string; items: { name: string; amount: number }[]; total: number; deposit: number; schedule: string; note: string;
-  status: string; created_at: number; paid_at: number | null; customer: { name: string; company: string }; payment_ready: boolean; payment_test: boolean;
+  status: string; created_at: number; paid_at: number | null; customer: { name: string; company: string }; payment_ready: boolean; payment_mode: "toss" | "mock" | "off"; payment_test: boolean;
 };
-type Checkout = { client_key: string; order_id: string; amount: number; order_name: string; customer_name: string; customer_email: string };
+type Checkout = { mock: boolean; client_key: string; order_id: string; amount: number; order_name: string; customer_name: string; customer_email: string };
 type TossFactory = ((clientKey: string) => { payment: (o: { customerKey: string }) => { requestPayment: (o: object) => Promise<void> } }) & { ANONYMOUS?: string };
 
 const date = (seconds: number) => new Intl.DateTimeFormat("ko-KR", { dateStyle: "long" }).format(new Date(seconds * 1000));
@@ -69,6 +69,12 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
     setBusy(true); setError("");
     try {
       const order = await api<Checkout>(`/api/quotes/${token}/checkout`, { method: "POST" });
+      if (order.mock) {
+        // Local test: skip the payment window and return the way Toss would, so the same server check runs.
+        const query = new URLSearchParams({ t: token, paymentKey: `mock_${order.order_id}`, orderId: order.order_id, amount: String(order.amount) });
+        window.location.assign(`${window.location.origin}/quote/success?${query}`);
+        return;
+      }
       const Toss = await loadToss();
       const base = `${window.location.origin}/quote`;
       await Toss(order.client_key).payment({ customerKey: Toss.ANONYMOUS ?? "ANONYMOUS" }).requestPayment({
@@ -84,13 +90,13 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
 
   const paid = quote?.status === "paid";
   return <div className="st-doc-page"><div className="st-wrap">
-    <p style={{ marginBottom: 16 }}><Link href="/" className="st-logo">{SITE.name}<small>{SITE.nameNote}</small></Link></p>
+    <p style={{ marginBottom: 16 }}><Link href="/" className="st-logo">{SITE.name}</Link></p>
     {notice && <p className="st-badge" role="status" style={{ marginBottom: 14 }}>{notice}</p>}
     {error && <p className="st-error" role="alert" style={{ marginBottom: 14 }}>{error}</p>}
     {!quote && !error && <p>견적서를 불러오는 중입니다.</p>}
     {quote && <article className="st-doc" aria-label="견적서">
       {paid && <span className="st-stamp st-paid-stamp" aria-label="착수금 결제 완료">결제<br />완료</span>}
-      <div className="st-doc-title"><h1>견적서</h1><div className="st-doc-meta">발행 {date(quote.created_at)}<br />{SITE.name} {SITE.nameNote}</div></div>
+      <div className="st-doc-title"><h1>견적서</h1><div className="st-doc-meta">발행 {date(quote.created_at)}<br />{SITE.name}</div></div>
       <p style={{ marginBottom: 6 }}><strong>{quote.customer.company || quote.customer.name}</strong> 귀하{quote.customer.company && quote.customer.name ? ` (${quote.customer.name} 님)` : ""}</p>
       <h2 style={{ fontSize: 20, margin: "14px 0 18px" }}>{quote.title}</h2>
       <table className="st-table">
@@ -105,7 +111,8 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
         {paid ? <span className="st-badge">결제 완료</span>
           : quote.payment_ready ? <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
             <button className="st-button" disabled={busy} onClick={() => void pay()}>{busy ? "결제창을 여는 중" : `착수금 ${won(quote.deposit)} 결제`}</button>
-            {quote.payment_test && <span className="st-badge st-badge-test">테스트 결제: 실제로 청구되지 않습니다</span>}
+            {quote.payment_mode === "mock" ? <span className="st-badge st-badge-test">모의 결제: 결제창 없이 결제 완료 흐름만 확인합니다</span>
+              : quote.payment_test && <span className="st-badge st-badge-test">테스트 결제: 실제로 청구되지 않습니다</span>}
           </div>
           : <p style={{ fontSize: 14, color: "var(--muted)", maxWidth: 280 }}>온라인 결제를 준비하고 있습니다. 결제 방법은 담당자가 따로 안내해 드립니다.</p>}
       </div>

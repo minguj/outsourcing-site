@@ -124,6 +124,23 @@ class SiteTests(unittest.TestCase):
         self.assertEqual(site_store.get_inquiry(inquiry_id)["status"], "deposit_paid")
         self.assertTrue(any("착수금 결제 완료" in subject for subject, _ in self.sent))
 
+    def test_mock_payment_only_without_real_keys(self):
+        inquiry_id = self.inquiry().json()["id"]
+        self.login()
+        token = self.client.post(f"/api/admin/inquiries/{inquiry_id}/quotes", headers=ADMIN, json={
+            "title": "모의", "items": [{"name": "개발", "amount": 1000000}], "deposit": 300000}).json()["token"]
+        with patch.dict(os.environ, {"TOSS_CLIENT_KEY": "", "TOSS_SECRET_KEY": "", "PAYMENT_MOCK": "1"}):
+            self.assertEqual(self.client.get(f"/api/quotes/{token}").json()["payment_mode"], "mock")
+            order = self.client.post(f"/api/quotes/{token}/checkout").json()
+            self.assertTrue(order["mock"])
+            self.assertEqual(self.client.post(f"/api/quotes/{token}/confirm", json={"payment_key": "mock_other", "order_id": order["order_id"], "amount": 300000}).status_code, 400)
+            paid = self.client.post(f"/api/quotes/{token}/confirm", json={"payment_key": f"mock_{order['order_id']}", "order_id": order["order_id"], "amount": 300000})
+            self.assertEqual(paid.json()["status"], "paid")
+        self.assertEqual(site_store.get_quote(token)["payment_method"], "모의 결제")
+        # With real keys present the mock switch is ignored.
+        with patch.dict(os.environ, {"PAYMENT_MOCK": "1"}):
+            self.assertEqual(self.client.get(f"/api/quotes/{token}").json()["payment_mode"], "toss")
+
     def test_payment_and_admin_degrade_without_keys(self):
         inquiry_id = self.inquiry().json()["id"]
         self.login()

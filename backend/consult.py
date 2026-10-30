@@ -19,7 +19,7 @@ class ConsultError(Exception):
 
 
 def company():
-    return os.environ.get("COMPANY_NAME") or "핏에이전트(가칭)"
+    return os.environ.get("COMPANY_NAME") or "핏에이전트"
 
 
 def system_prompt():
