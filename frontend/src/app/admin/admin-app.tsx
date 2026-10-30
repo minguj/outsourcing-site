@@ -8,7 +8,7 @@ import { SITE } from "../site-config";
 type Row = { id: number; created_at: number; status: string; name: string; company: string; email: string; brief: Brief; quote_status: string | null };
 type QuoteRow = { id: number; token: string; title: string; total: number; deposit: number; status: string; created_at: number; paid_at: number | null; payment_method: string | null };
 type Detail = Row & { phone: string; message: string; transcript: ChatMessage[]; admin_note: string; quotes: QuoteRow[] };
-type Listing = { inquiries: Row[]; smtp: boolean; consult: boolean; payments: boolean };
+type Listing = { inquiries: Row[]; smtp: boolean; consult: boolean; payments: "toss" | "mock" | "off" };
 
 const ADMIN = { "X-Admin-Client": "1" };
 const STATUS: Record<string, string> = { new: "신규", contacted: "연락함", quoted: "견적 발송", deposit_paid: "착수금 결제", in_progress: "진행 중", closed: "종료" };
@@ -103,7 +103,7 @@ export default function AdminApp() {
     </form>}
     {authed && listing && <>
       <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 14 }}>
-        AI 상담 {listing.consult ? "켜짐" : "꺼짐 (ANTHROPIC_API_KEY 필요)"} / 이메일 알림 {listing.smtp ? "켜짐" : "꺼짐 (SMTP 설정 필요)"} / 온라인 결제 {listing.payments ? "켜짐" : "꺼짐 (TOSS 키 필요)"}
+        AI 상담 {listing.consult ? "켜짐" : "꺼짐 (ANTHROPIC_API_KEY 필요)"} / 이메일 알림 {listing.smtp ? "켜짐" : "꺼짐 (SMTP 설정 필요)"} / 온라인 결제 {listing.payments === "toss" ? "켜짐" : listing.payments === "mock" ? "모의 결제 (로컬 테스트)" : "꺼짐 (TOSS 키 필요)"}
       </p>
       <div className="st-admin-grid">
         <section className="st-doc" style={{ padding: 0, overflow: "auto" }}>

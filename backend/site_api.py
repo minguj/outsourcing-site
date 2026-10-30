@@ -149,12 +149,25 @@ def submit_inquiry(body: Inquiry, request: Request):
 
 # ---------- 견적 확인·착수금 결제 ----------
 
+def toss_ready():
+    return bool(os.environ.get("TOSS_CLIENT_KEY") and os.environ.get("TOSS_SECRET_KEY"))
+
+
+def mock_payments():
+    """Local-only simulated payment (PAYMENT_MOCK=1). Never active when real Toss keys are configured."""
+    return os.environ.get("PAYMENT_MOCK") == "1" and not toss_ready()
+
+
+def payment_mode():
+    return "toss" if toss_ready() else "mock" if mock_payments() else "off"
+
+
 def public_quote(quote):
     return {"title": quote["title"], "items": quote["items"], "total": quote["total"], "deposit": quote["deposit"],
             "schedule": quote["schedule"], "note": quote["note"], "status": quote["status"],
             "created_at": quote["created_at"], "paid_at": quote["paid_at"],
             "customer": {"name": quote["customer"].get("name", ""), "company": quote["customer"].get("company", "")},
-            "payment_ready": bool(os.environ.get("TOSS_CLIENT_KEY") and os.environ.get("TOSS_SECRET_KEY")),
+            "payment_ready": payment_mode() != "off", "payment_mode": payment_mode(),
             "payment_test": (os.environ.get("TOSS_CLIENT_KEY") or "").startswith("test_")}
 
 
@@ -176,12 +189,12 @@ def checkout(token: str, request: Request):
     quote = quote_or_404(token)
     if quote["status"] == "paid":
         raise HTTPException(409, "이미 착수금 결제가 완료된 견적입니다.")
-    client_key = os.environ.get("TOSS_CLIENT_KEY")
-    if not client_key or not os.environ.get("TOSS_SECRET_KEY"):
+    mode = payment_mode()
+    if mode == "off":
         raise HTTPException(503, "온라인 결제를 준비 중입니다. 담당자에게 결제 방법을 문의해 주세요.")
     order_id = f"Q{quote['id']}-{secrets.token_hex(8)}"
     store.set_order(token, order_id)
-    return {"client_key": client_key, "order_id": order_id, "amount": quote["deposit"],
+    return {"mock": mode == "mock", "client_key": os.environ.get("TOSS_CLIENT_KEY") or "", "order_id": order_id, "amount": quote["deposit"],
             "order_name": f"{quote['title'][:60]} 착수금", "customer_name": quote["customer"].get("name", ""),
             "customer_email": quote["customer"].get("email", "")}
 
@@ -220,9 +233,15 @@ def confirm(token: str, body: Confirm, request: Request):
     # The amount and order must match what this server issued; never trust the redirect alone.
     if not quote["order_id"] or not hmac.compare_digest(quote["order_id"], body.order_id) or body.amount != quote["deposit"]:
         raise HTTPException(400, "결제 정보가 견적과 일치하지 않습니다.")
-    if not os.environ.get("TOSS_SECRET_KEY"):
+    mode = payment_mode()
+    if mode == "mock":
+        if body.payment_key != f"mock_{body.order_id}":
+            raise HTTPException(400, "모의 결제 정보가 올바르지 않습니다.")
+        data = {"method": "모의 결제"}
+    elif mode == "toss":
+        data = toss_confirm(body.payment_key, body.order_id, body.amount)
+    else:
         raise HTTPException(503, "온라인 결제를 준비 중입니다.")
-    data = toss_confirm(body.payment_key, body.order_id, body.amount)
     store.mark_paid(token, body.payment_key, data.get("method") or "")
     notify.send(f"[착수금 결제 완료] {quote['title']} · {quote['deposit']:,}원",
                 f"착수금 결제가 완료되었습니다.\n\n견적: {quote['title']}\n고객: {quote['customer'].get('name')} "
@@ -280,7 +299,7 @@ def admin_inquiries(request: Request):
     require_admin(request)
     return {"inquiries": store.list_inquiries(), "smtp": notify.configured(),
             "consult": bool(os.environ.get("ANTHROPIC_API_KEY")),
-            "payments": bool(os.environ.get("TOSS_CLIENT_KEY") and os.environ.get("TOSS_SECRET_KEY"))}
+            "payments": payment_mode()}
 
 
 @router.get("/admin/inquiries/{inquiry_id}")

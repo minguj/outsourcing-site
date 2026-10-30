@@ -1,7 +1,6 @@
 // 회사 정보는 이 파일 한 곳에서 바꿉니다. 백엔드 상담봇 이름은 서버 환경변수 COMPANY_NAME과 맞춰 주세요.
 export const SITE = {
   name: "핏에이전트",
-  nameNote: "(가칭)",
   tagline: "기업 맞춤 AI 상담 에이전트와 문서 변환 툴 개발",
   description: "회사 업무에 맞춘 AI 상담 에이전트와 문서 변환·검수 툴, 사내 시스템 연동을 개발하는 외주 개발사입니다.",
   privacy: {
