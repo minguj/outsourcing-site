@@ -132,6 +132,19 @@
 .st-form input:focus, .st-form textarea:focus, .st-chat-input textarea:focus, .st-doc-page input:focus, .st-doc-page textarea:focus, .st-doc-page select:focus { border-color: var(--ink); outline: none; box-shadow: 0 0 0 3px rgba(47, 111, 176, .18); }
 .st-form .st-consent { flex-direction: row; align-items: center; gap: 8px; font-weight: 500; }
 .st-consent input { width: 18px; height: 18px; accent-color: var(--ink); }
+.st-files { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.st-files-label { font-size: 13.5px; font-weight: 600; color: #34413b; }
+.st-files > small { font-size: 12px; color: var(--muted); }
+.st-form .st-file-pick { position: relative; flex-direction: row; display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border: 1px dashed var(--ink-soft); border-radius: 4px; background: #fafbf9; color: var(--ink); font-weight: 600; cursor: pointer; }
+.st-file-pick:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
+.st-file-pick input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.st-file-pick input:disabled { cursor: not-allowed; }
+.st-file-pick:has(input:disabled) { opacity: .5; cursor: not-allowed; }
+.st-file-list { list-style: none; margin: 2px 0 0; padding: 0; width: 100%; display: grid; gap: 4px; }
+.st-file-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 10px; align-items: center; padding: 6px 10px; background: #f1f4ef; border-radius: 3px; font-size: 13.5px; }
+.st-file-list li span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-file-list li small { color: var(--muted); font-size: 12px; }
+.st-file-list button { border: 0; background: none; font: inherit; font-size: 12.5px; color: var(--stamp); cursor: pointer; padding: 2px 4px; }
 .st-honeypot { position: absolute !important; left: -9999px; width: 1px; height: 1px; opacity: 0; }
 .st-privacy { font-size: 12.5px; color: var(--muted); }
 .st-privacy summary { cursor: pointer; }

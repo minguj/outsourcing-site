@@ -1,25 +1,31 @@
 """Public site API: AI 상담, 문의 접수·알림, 견적 확인·착수금 결제, 관리자."""
 import base64
 from collections import defaultdict, deque
+from datetime import datetime, timedelta, timezone
 import hmac
 import os
+from pathlib import Path
 import re
 import secrets
 from threading import RLock
 import time
 from typing import Literal
+from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi.responses import FileResponse
 import httpx
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from starlette.datastructures import UploadFile
 
 if __package__:
-    from . import consult, notify, site_store as store
+    from . import consult, notify, site_store as store, uploads
     from .site_knowledge import KICKOFF, PROCESS, kickoff_text
 else:
     import consult
     import notify
     import site_store as store
+    import uploads
     from site_knowledge import KICKOFF, PROCESS, kickoff_text
 
 router = APIRouter(prefix="/api")
@@ -31,6 +37,7 @@ ADMIN_COOKIE = "site_admin"
 ADMIN_TTL = 12 * 3600
 EMAIL = re.compile(r"^[^@\s]{1,64}@[^@\s]{1,190}\.[^@\s]{2,24}$")
 TOSS_CONFIRM = "https://api.tosspayments.com/v1/payments/confirm"
+KST = timezone(timedelta(hours=9))  # slim images may lack tzdata
 DEMO_QUOTES = {}
 DEMO_TTL = 2 * 3600
 DEMO_MAX = 500
@@ -128,11 +135,47 @@ def brief_text(brief):
     return "\n".join(lines) or "- (AI 상담 요약 없음)"
 
 
+async def read_inquiry(request, forms):
+    """Accept JSON, or multipart with a JSON 'payload' field plus up to three 'files'."""
+    files = []
+    try:
+        if request.headers.get("content-type", "").startswith("multipart/form-data"):
+            form = await request.form(max_files=uploads.MAX_FILES + 1, max_fields=5, max_part_size=64 * 1024)
+            forms.append(form)
+            raw = form.get("payload")
+            files = [f for f in form.getlist("files") if isinstance(f, UploadFile)]
+            if not isinstance(raw, str):
+                raise HTTPException(422, "접수 내용을 확인해 주세요.")
+        else:
+            raw = await request.body()
+        return Inquiry.model_validate_json(raw), files
+    except ValidationError:
+        raise HTTPException(422, "입력값을 확인해 주세요.") from None
+    except HTTPException:
+        raise
+    except Exception:  # malformed multipart, too many files or fields
+        raise HTTPException(422, f"첨부 파일은 {uploads.MAX_FILES}개까지, 접수 내용은 양식으로 보내 주세요.") from None
+
+
 @router.post("/inquiries")
-def submit_inquiry(body: Inquiry, request: Request):
+async def submit_inquiry(request: Request):
+    forms = []
+    try:
+        return await handle_inquiry(request, forms)
+    finally:
+        for form in forms:
+            await form.close()  # remove spooled upload temp files
+
+
+async def handle_inquiry(request, forms):
+    body, files = await read_inquiry(request, forms)
     if body.website:
         return {"ok": True}  # silently drop bots
     limit(request, "inquiry", 5, 3600)
+    try:
+        files = uploads.check(files)
+    except uploads.UploadError as error:
+        raise HTTPException(422, str(error)) from None
     if not body.consent:
         raise HTTPException(422, "개인정보 수집·이용에 동의해 주세요.")
     email = body.email.strip()
@@ -144,15 +187,24 @@ def submit_inquiry(body: Inquiry, request: Request):
     transcript = [m.model_dump() for m in body.transcript]
     inquiry_id = store.create_inquiry(body.name.strip(), body.company.strip(), email, body.phone.strip(),
                                       body.message.strip(), brief, transcript)
+    try:
+        saved = await uploads.save(inquiry_id, files)
+    except uploads.UploadError as error:
+        store.delete_inquiry(inquiry_id)
+        raise HTTPException(422, str(error)) from None
+    for display, stored, size in saved:
+        store.add_file(inquiry_id, display, stored, size)
+    attached = "\n".join(f"- {display} ({size / 1024 / 1024:.1f}MB)" for display, _, size in saved) or "- 없음"
     link = f"{notify.base_url()}/admin?inquiry={inquiry_id}" if notify.base_url() else f"/admin?inquiry={inquiry_id}"
     notify.send(f"[새 상담 접수 #{inquiry_id}] {brief.get('title') or body.company or body.name}",
                 f"새 상담이 접수되었습니다.\n\n이름: {body.name}\n회사: {body.company or '-'}\n이메일: {email}\n"
                 f"전화: {body.phone or '-'}\n\n[AI 상담 요약]\n{brief_text(brief)}\n\n[직접 남긴 내용]\n{body.message or '-'}\n\n"
-                f"관리 화면: {link}\n")
+                f"[첨부 파일]\n{attached}\n\n관리 화면: {link}\n\n이 메일에 바로 답장하면 고객에게 전달됩니다.\n", reply_to=email)
     notify.send_customer(email, f"[{consult.company()}] 상담이 접수되었습니다",
                          f"{body.name.strip()}님, {consult.company()}에 상담을 남겨 주셔서 감사합니다.\n\n"
                          f"[접수 내용]\n{brief_text(brief) if brief else body.message.strip()}\n\n"
-                         f"[다음 단계]\n담당자가 내용을 검토한 뒤 이 메일 주소로 연락드립니다. {PROCESS[1][1]}\n\n"
+                         + (f"[첨부 파일]\n{attached}\n\n" if saved else "")
+                         + f"[다음 단계]\n담당자가 내용을 검토한 뒤 이 메일 주소로 연락드립니다. {PROCESS[1][1]}\n\n"
                          f"덧붙일 내용이나 참고 자료가 있으면 이 메일에 회신해 주세요.\n\n{consult.company()} 드림\n")
     return {"ok": True, "id": inquiry_id}
 
@@ -315,10 +367,15 @@ def confirm(token: str, body: Confirm, request: Request):
                              f"{customer.get('name')}님, '{quote['title']}' 착수금 {quote['deposit']:,}원 결제가 확인되었습니다. 감사합니다.\n\n"
                              f"[앞으로의 진행]\n{kickoff_text()}\n\n견적서와 결제 내역: {quote_link(token)}\n\n"
                              f"궁금한 점은 이 메일에 회신해 주세요.\n\n{consult.company()} 드림\n")
-    notify.send(f"[착수금 결제 완료] {quote['title']} · {quote['deposit']:,}원",
-                f"착수금 결제가 완료되었습니다.\n\n견적: {quote['title']}\n고객: {quote['customer'].get('name')} "
-                f"({quote['customer'].get('company') or '-'})\n금액: {quote['deposit']:,}원\n결제수단: {data.get('method') or '-'}\n"
-                f"주문번호: {body.order_id}\n")
+    admin = f"{notify.base_url()}/admin?inquiry={quote['inquiry_id']}"
+    notify.send(f"[착수금 결제 완료 #{quote['inquiry_id']}] {quote['title']} · {quote['deposit']:,}원",
+                f"착수금 결제가 완료되었습니다. 고객에게 착수 미팅 일정을 연락해 주세요.\n\n"
+                f"[고객 연락처]\n이름: {customer.get('name') or '-'}\n회사: {customer.get('company') or '-'}\n"
+                f"이메일: {customer.get('email') or '-'}\n전화: {customer.get('phone') or '-'}\n\n"
+                f"[결제 내용]\n견적: {quote['title']}\n견적 합계: {quote['total']:,}원\n착수금: {quote['deposit']:,}원\n"
+                f"결제수단: {data.get('method') or '-'}\n결제 시각: {datetime.now(KST):%Y-%m-%d %H:%M} (한국 시간)\n주문번호: {body.order_id}\n\n"
+                f"견적서: {quote_link(token)}\n관리 화면: {admin}\n\n이 메일에 바로 답장하면 고객에게 전달됩니다.\n",
+                reply_to=customer.get("email") or None)
     return public_quote(store.get_quote(token))
 
 
@@ -381,6 +438,26 @@ def admin_inquiry(inquiry_id: int, request: Request):
     if not inquiry:
         raise HTTPException(404, "문의를 찾을 수 없습니다.")
     return inquiry
+
+
+@router.get("/admin/files/{file_id}")
+def admin_file(file_id: int, request: Request):
+    """Attachments are only ever served to the admin, always as a download (never rendered inline)."""
+    require_admin(request)
+    record = store.get_file(file_id)
+    try:
+        path = uploads.path_of(record["stored_name"]) if record else None
+    except uploads.UploadError:
+        path = None
+    if not path or not path.is_file():
+        raise HTTPException(404, "파일을 찾을 수 없습니다.")
+    name = record["original_name"]
+    fallback = re.sub(r"[^A-Za-z0-9._-]+", "_", name).strip("_.") or "attachment"
+    if not re.search(r"\.[A-Za-z0-9]+$", fallback):
+        fallback += Path(name).suffix.lower()
+    disposition = f"attachment; filename=\"{fallback}\"; filename*=UTF-8''{quote(name)}"
+    return FileResponse(path, media_type="application/octet-stream",
+                        headers={"Content-Disposition": disposition, "X-Content-Type-Options": "nosniff", "Cache-Control": "no-store"})
 
 
 class InquiryUpdate(BaseModel):
