@@ -9,3 +9,17 @@ export const SITE = {
     retention: "상담 종료 후 1년 보관 후 파기 (삭제를 요청하시면 즉시 파기)",
   },
 };
+
+// 영문 사이트(/en)용. 회사명은 영문 표기가 정해지면 name을 바꾼다.
+export const SITE_EN = {
+  name: "FitAgent",
+  tagline: "Custom AI consultation agents and document conversion tools",
+  description: "A development studio building AI consultation agents, document conversion and review tools, and internal system integrations tailored to your business.",
+  privacy: {
+    items: "Name, company, e-mail, phone (optional), consultation and request details, attachments (optional)",
+    purpose: "Consulting on development requests, sending quotes and contacting you",
+    retention: "Kept for one year after the consultation ends, then destroyed (destroyed immediately on request)",
+  },
+};
+
+export const siteFor = (lang: "ko" | "en") => (lang === "en" ? SITE_EN : SITE);
