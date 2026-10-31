@@ -68,6 +68,9 @@ def connect(path=None):
         _connection = sqlite3.connect(target, check_same_thread=False)
         _connection.row_factory = sqlite3.Row
         _connection.executescript(SCHEMA)
+        columns = {row[1] for row in _connection.execute("PRAGMA table_info(inquiries)")}
+        if "lang" not in columns:  # added with the English site; existing rows are Korean
+            _connection.execute("ALTER TABLE inquiries ADD COLUMN lang TEXT NOT NULL DEFAULT 'ko'")
         _connection.commit()
         return _connection
 
@@ -85,12 +88,12 @@ def row_dict(row, json_fields=()):
     return value
 
 
-def create_inquiry(name, company, email, phone, message, brief, transcript):
+def create_inquiry(name, company, email, phone, message, brief, transcript, lang="ko"):
     with LOCK:
         cursor = db().execute(
-            "INSERT INTO inquiries (created_at, name, company, email, phone, message, brief, transcript) VALUES (?,?,?,?,?,?,?,?)",
+            "INSERT INTO inquiries (created_at, name, company, email, phone, message, brief, transcript, lang) VALUES (?,?,?,?,?,?,?,?,?)",
             (time.time(), name, company, email, phone, message, json.dumps(brief, ensure_ascii=False),
-             json.dumps(transcript, ensure_ascii=False)))
+             json.dumps(transcript, ensure_ascii=False), lang))
         db().commit()
         return cursor.lastrowid
 
@@ -98,7 +101,7 @@ def create_inquiry(name, company, email, phone, message, brief, transcript):
 def list_inquiries():
     with LOCK:
         rows = db().execute(
-            "SELECT i.id, i.created_at, i.status, i.name, i.company, i.email, i.brief, "
+            "SELECT i.id, i.created_at, i.status, i.name, i.company, i.email, i.brief, i.lang, "
             "(SELECT q.status FROM quotes q WHERE q.inquiry_id = i.id ORDER BY q.id DESC LIMIT 1) AS quote_status, "
             "(SELECT COUNT(*) FROM inquiry_files f WHERE f.inquiry_id = i.id) AS file_count "
             "FROM inquiries i ORDER BY i.id DESC LIMIT 200").fetchall()
@@ -160,7 +163,7 @@ def get_quote(token):
     with LOCK:
         quote = row_dict(db().execute("SELECT * FROM quotes WHERE token = ?", (token,)).fetchone(), ("items",))
         if quote:
-            inquiry = db().execute("SELECT name, company, email, phone FROM inquiries WHERE id = ?", (quote["inquiry_id"],)).fetchone()
+            inquiry = db().execute("SELECT name, company, email, phone, lang FROM inquiries WHERE id = ?", (quote["inquiry_id"],)).fetchone()
             quote["customer"] = dict(inquiry) if inquiry else {}
         return quote
 

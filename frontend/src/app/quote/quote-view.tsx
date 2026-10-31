@@ -3,20 +3,22 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { api, won } from "../_site/api";
-import { SITE } from "../site-config";
+import { api } from "../_site/api";
+import { COPY, HOME, money, type Lang } from "../_site/i18n";
+import { siteFor } from "../site-config";
 
 type Quote = {
   title: string; items: { name: string; amount: number }[]; total: number; deposit: number; schedule: string; note: string;
   status: string; created_at: number; paid_at: number | null; customer: { name: string; company: string }; payment_ready: boolean; payment_mode: "toss" | "mock" | "off"; payment_test: boolean;
-  is_demo: boolean; next_steps: { title: string; text: string }[];
+  is_demo: boolean; lang: Lang; next_steps: { title: string; text: string }[];
 };
 type Checkout = { mock: boolean; client_key: string; order_id: string; amount: number; order_name: string; customer_name: string; customer_email: string };
 type TossFactory = ((clientKey: string) => { payment: (o: { customerKey: string }) => { requestPayment: (o: object) => Promise<void> } }) & { ANONYMOUS?: string };
 
-const date = (seconds: number) => new Intl.DateTimeFormat("ko-KR", { dateStyle: "long" }).format(new Date(seconds * 1000));
+const date = (lang: Lang, seconds: number) => new Intl.DateTimeFormat(COPY[lang].quote.locale, { dateStyle: "long" }).format(new Date(seconds * 1000));
 
-function loadToss(): Promise<TossFactory> {
+function loadToss(lang: Lang): Promise<TossFactory> {
+  const t = COPY[lang].quote;
   const existing = (window as unknown as { TossPayments?: TossFactory }).TossPayments;
   if (existing) return Promise.resolve(existing);
   return new Promise((resolve, reject) => {
@@ -24,9 +26,9 @@ function loadToss(): Promise<TossFactory> {
     script.src = "https://js.tosspayments.com/v2/standard";
     script.onload = () => {
       const loaded = (window as unknown as { TossPayments?: TossFactory }).TossPayments;
-      if (loaded) resolve(loaded); else reject(new Error("결제창을 불러오지 못했습니다."));
+      if (loaded) resolve(loaded); else reject(new Error(t.tossLoad));
     };
-    script.onerror = () => reject(new Error("결제창을 불러오지 못했습니다. 광고 차단 기능을 끄고 다시 시도해 주세요."));
+    script.onerror = () => reject(new Error(t.tossBlocked));
     document.head.appendChild(script);
   });
 }
@@ -37,6 +39,12 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  // The quote decides its language; ?lang=en is only a hint until it loads.
+  const [hint, setHint] = useState<Lang>("ko");
+  const lang: Lang = quote?.lang ?? hint;
+  const t = COPY[lang].quote;
+  const site = siteFor(lang);
+  const won = (value: number) => money(lang, value);
   const started = useRef(false);
   const router = useRouter();
 
@@ -45,25 +53,31 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
     started.current = true;
     const params = new URLSearchParams(window.location.search);
     const t = params.get("t") ?? "";
+    const guess: Lang = params.get("lang") === "en" ? "en" : "ko";
+    const copy = COPY[guess].quote;
     void (async () => {
-      setToken(t);
-      if (!t) { setError("견적서 링크가 올바르지 않습니다. 받은 링크를 다시 확인해 주세요."); return; }
+      setToken(t); setHint(guess);
+      document.documentElement.lang = guess;
+      if (!t) { setError(copy.badLink); return; }
       try {
         if (mode === "success") {
-          setNotice("결제를 확인하고 있습니다.");
+          setNotice(copy.checking);
           const paid = await api<Quote>(`/api/quotes/${t}/confirm`, { method: "POST", body: JSON.stringify({
-            payment_key: params.get("paymentKey") ?? "", order_id: params.get("orderId") ?? "", amount: Number(params.get("amount") ?? 0) }) });
+            payment_key: params.get("paymentKey") ?? "", order_id: params.get("orderId") ?? "", amount: Number(params.get("amount") ?? 0) }) }, guess);
           setQuote(paid);
-          setNotice(paid.is_demo ? "체험 결제가 완료되었습니다. 실제 계약이라면 아래 진행 안내가 메일로도 발송됩니다." : "착수금 결제가 완료되었습니다. 진행 안내를 메일로도 보내 드렸습니다.");
-          window.history.replaceState(null, "", `/quote?t=${encodeURIComponent(t)}`);
+          const done = COPY[paid.lang].quote;
+          setNotice(paid.is_demo ? done.demoPaid : done.paidNotice);
+          window.history.replaceState(null, "", `/quote?t=${encodeURIComponent(t)}${paid.lang === "en" ? "&lang=en" : ""}`);
         } else {
-          setQuote(await api<Quote>(`/api/quotes/${t}`));
-          if (mode === "fail") setError(params.get("code") === "PAY_PROCESS_CANCELED" ? "결제를 취소하셨습니다. 준비되면 다시 결제해 주세요." : `결제가 완료되지 않았습니다. ${params.get("message") ?? ""}`.trim());
+          const loaded = await api<Quote>(`/api/quotes/${t}`, undefined, guess);
+          setQuote(loaded);
+          const fail = COPY[loaded.lang].quote;
+          if (mode === "fail") setError(params.get("code") === "PAY_PROCESS_CANCELED" ? fail.canceled : `${fail.notDone} ${params.get("message") ?? ""}`.trim());
         }
       } catch (err) {
         setNotice("");
-        setError(err instanceof Error ? err.message : "견적서를 불러오지 못했습니다.");
-        if (mode === "success") api<Quote>(`/api/quotes/${t}`).then(setQuote).catch(() => undefined);
+        setError(err instanceof Error ? err.message : copy.loadFailed);
+        if (mode === "success") api<Quote>(`/api/quotes/${t}`, undefined, guess).then(setQuote).catch(() => undefined);
       }
     })();
   }, [mode]);
@@ -72,62 +86,63 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
     if (!quote) return;
     setBusy(true); setError("");
     try {
-      const order = await api<Checkout>(`/api/quotes/${token}/checkout`, { method: "POST" });
+      const order = await api<Checkout>(`/api/quotes/${token}/checkout`, { method: "POST" }, lang);
+      const suffix = lang === "en" ? "&lang=en" : "";
       if (order.mock) {
         // Local test: skip the payment window and return the way Toss would, so the same server check runs.
         const query = new URLSearchParams({ t: token, paymentKey: `mock_${order.order_id}`, orderId: order.order_id, amount: String(order.amount) });
-        router.push(`/quote/success?${query}`);
+        router.push(`/quote/success?${query}${suffix}`);
         return;
       }
-      const Toss = await loadToss();
+      const Toss = await loadToss(lang);
       const base = `${window.location.origin}/quote`;
       await Toss(order.client_key).payment({ customerKey: Toss.ANONYMOUS ?? "ANONYMOUS" }).requestPayment({
         method: "CARD", amount: { currency: "KRW", value: order.amount }, orderId: order.order_id, orderName: order.order_name,
-        successUrl: `${base}/success?t=${encodeURIComponent(token)}`, failUrl: `${base}/fail?t=${encodeURIComponent(token)}`,
+        successUrl: `${base}/success?t=${encodeURIComponent(token)}${suffix}`, failUrl: `${base}/fail?t=${encodeURIComponent(token)}${suffix}`,
         customerName: order.customer_name || undefined, customerEmail: order.customer_email || undefined,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "결제를 시작하지 못했습니다.";
+      const message = err instanceof Error ? err.message : t.startFailed;
       if (!/취소|cancel/i.test(message)) setError(message);
     } finally { setBusy(false); }
   }
 
   const paid = quote?.status === "paid";
-  return <div className="st-doc-page"><div className="st-wrap">
-    <p style={{ marginBottom: 16 }}><Link href="/" className="st-logo">{SITE.name}</Link></p>
+  return <div className={"st-doc-page" + (lang === "en" ? " st-lang-en" : "")}><div className="st-wrap">
+    <p style={{ marginBottom: 16 }}><Link href={HOME[lang]} className="st-logo">{site.name}</Link></p>
     {notice && <p className="st-badge" role="status" style={{ marginBottom: 14 }}>{notice}</p>}
     {error && <p className="st-error" role="alert" style={{ marginBottom: 14 }}>{error}</p>}
-    {!quote && !error && <p>견적서를 불러오는 중입니다.</p>}
+    {!quote && !error && <p>{t.loading}</p>}
     {quote?.is_demo && <div className="st-demo-banner" role="note">
-      <p><strong>체험용 견적서입니다.</strong> 금액은 예시이고 결제해도 청구되지 않습니다. 이 견적서는 2시간 뒤 사라집니다.</p>
-      <Link href="/#inquiry" className="st-button st-button-ghost">실제 상담 접수하기</Link>
+      <p><strong>{t.demoBanner[0]}</strong> {t.demoBanner[1]}</p>
+      <Link href={`${HOME[lang]}#inquiry`} className="st-button st-button-ghost">{t.realInquiry}</Link>
     </div>}
-    {quote && <article className="st-doc" aria-label="견적서">
-      {paid && <span className="st-stamp st-paid-stamp" aria-label="착수금 결제 완료">결제<br />완료</span>}
-      <div className="st-doc-title"><h1>견적서</h1><div className="st-doc-meta">발행 {date(quote.created_at)}<br />{SITE.name}</div></div>
-      <p style={{ marginBottom: 6 }}><strong>{quote.customer.company || quote.customer.name}</strong> 귀하{quote.customer.company && quote.customer.name ? ` (${quote.customer.name} 님)` : ""}</p>
+    {quote && <article className="st-doc" aria-label={t.label}>
+      {paid && <span className="st-stamp st-paid-stamp" aria-label={t.paidStamp}>{t.stamp[0]}{t.stamp[1] && <><br />{t.stamp[1]}</>}</span>}
+      <div className="st-doc-title"><h1>{t.title}</h1><div className="st-doc-meta">{t.issued} {date(lang, quote.created_at)}<br />{site.name}</div></div>
+      <p style={{ marginBottom: 6 }}>{t.to[0]}<strong>{quote.customer.company || quote.customer.name}</strong>{t.to[1]}{quote.customer.company && quote.customer.name ? t.person(quote.customer.name) : ""}</p>
       <h2 style={{ fontSize: 20, margin: "14px 0 18px" }}>{quote.title}</h2>
       <table className="st-table">
-        <thead><tr><th>항목</th><th className="st-num">금액</th></tr></thead>
+        <thead><tr><th>{t.item}</th><th className="st-num">{t.amount}</th></tr></thead>
         <tbody>{quote.items.map((item, i) => <tr key={i}><td>{item.name}</td><td className="st-num">{won(item.amount)}</td></tr>)}</tbody>
-        <tfoot><tr><td>합계</td><td className="st-num">{won(quote.total)}</td></tr></tfoot>
+        <tfoot><tr><td>{t.total}</td><td className="st-num">{won(quote.total)}</td></tr></tfoot>
       </table>
-      {quote.schedule && <p className="st-note"><strong>일정</strong><br />{quote.schedule}</p>}
-      {quote.note && <p className="st-note"><strong>안내</strong><br />{quote.note}</p>}
+      {quote.schedule && <p className="st-note"><strong>{t.schedule}</strong><br />{quote.schedule}</p>}
+      {quote.note && <p className="st-note"><strong>{t.note}</strong><br />{quote.note}</p>}
       <div className="st-pay-box">
-        <div><small>착수금</small><strong>{won(quote.deposit)}</strong><small>{paid && quote.paid_at ? `${date(quote.paid_at)} 결제 완료` : "결제하시면 개발을 시작합니다."}</small></div>
-        {paid ? <span className="st-badge">결제 완료</span>
+        <div><small>{t.deposit}</small><strong>{won(quote.deposit)}</strong><small>{paid && quote.paid_at ? t.paidOn(date(lang, quote.paid_at)) : t.startsWork}</small></div>
+        {paid ? <span className="st-badge">{t.paid}</span>
           : quote.payment_ready ? <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-            <button className="st-button" disabled={busy} onClick={() => void pay()}>{busy ? "결제창을 여는 중" : `착수금 ${won(quote.deposit)} 결제`}</button>
-            {quote.payment_mode === "mock" ? <span className="st-badge st-badge-test">모의 결제: 결제창 없이 결제 완료 흐름만 확인합니다</span>
-              : quote.payment_test && <span className="st-badge st-badge-test">테스트 결제: 실제로 청구되지 않습니다</span>}
+            <button className="st-button" disabled={busy} onClick={() => void pay()}>{busy ? t.opening : t.pay(won(quote.deposit))}</button>
+            {quote.payment_mode === "mock" ? <span className="st-badge st-badge-test">{t.mock}</span>
+              : quote.payment_test && <span className="st-badge st-badge-test">{t.test}</span>}
           </div>
-          : <p style={{ fontSize: 14, color: "var(--muted)", maxWidth: 280 }}>온라인 결제를 준비하고 있습니다. 결제 방법은 담당자가 따로 안내해 드립니다.</p>}
+          : <p style={{ fontSize: 14, color: "var(--muted)", maxWidth: 280 }}>{t.off}</p>}
       </div>
-      {paid && <section className="st-next" aria-label="앞으로의 진행">
-        <h2>앞으로의 진행</h2>
+      {paid && <section className="st-next" aria-label={t.next}>
+        <h2>{t.next}</h2>
         <ol>{quote.next_steps.map(step => <li key={step.title}><strong>{step.title}</strong><span>{step.text}</span></li>)}</ol>
-        {quote.is_demo && <p className="st-next-note">실제 계약에서는 결제 직후 이 안내가 고객님 메일로도 발송됩니다. <Link href="/#inquiry">상담 접수하기</Link></p>}
+        {quote.is_demo && <p className="st-next-note">{t.demoNext} <Link href={`${HOME[lang]}#inquiry`}>{t.toInquiry}</Link></p>}
       </section>}
     </article>}
   </div></div>;

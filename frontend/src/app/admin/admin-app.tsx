@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api, BRIEF_FIELDS, won, type Brief, type ChatMessage } from "../_site/api";
 import { SITE } from "../site-config";
 
-type Row = { id: number; created_at: number; status: string; name: string; company: string; email: string; brief: Brief; quote_status: string | null; file_count?: number };
+type Row = { id: number; created_at: number; status: string; name: string; company: string; email: string; brief: Brief; quote_status: string | null; file_count?: number; lang?: "ko" | "en" };
 type QuoteRow = { id: number; token: string; title: string; total: number; deposit: number; status: string; created_at: number; paid_at: number | null; payment_method: string | null };
 type Detail = Row & { phone: string; message: string; transcript: ChatMessage[]; admin_note: string; quotes: QuoteRow[]; files: { id: number; original_name: string; size: number }[] };
 type Listing = { inquiries: Row[]; smtp: boolean; consult: boolean; payments: "toss" | "mock" | "off" };
@@ -35,6 +35,7 @@ function QuoteForm({ detail, onCreated }: { detail: Detail; onCreated: (d: Detai
   }
   return <form className="st-form" onSubmit={create}>
     <h3 style={{ fontSize: 16 }}>견적서 만들기</h3>
+    {detail.lang === "en" && <p className="st-badge st-badge-test" style={{ whiteSpace: "normal" }}>영문 사이트 고객입니다. 견적서 화면과 메일이 영어로 나가니 제목·항목·일정·안내 문구를 영어로 적어 주세요. 금액은 원화(KRW)입니다.</p>}
     <label>제목<input required minLength={2} maxLength={120} value={title} onChange={e => setTitle(e.target.value)} /></label>
     {items.map((item, i) => <div key={i} className="st-form-grid">
       <label>항목 {i + 1}<input maxLength={120} value={item.name} onChange={e => setItems(items.map((it, j) => j === i ? { ...it, name: e.target.value } : it))} placeholder="예: 상담 에이전트 개발" /></label>
@@ -125,7 +126,7 @@ export default function AdminApp() {
             <tbody>{listing.inquiries.length === 0 && <tr><td colSpan={3}>아직 접수된 상담이 없습니다.</td></tr>}
               {listing.inquiries.map(r => <tr key={r.id} onClick={() => void open(r.id)} style={{ cursor: "pointer", background: detail?.id === r.id ? "#eef2ec" : undefined }}>
                 <td style={{ whiteSpace: "nowrap" }}>#{r.id}<br /><small>{when(r.created_at)}</small></td>
-                <td><button type="button" onClick={() => void open(r.id)} style={{ all: "unset", cursor: "pointer" }}><strong>{r.brief.title || r.company || r.name}</strong></button><br /><small>{r.company} {r.name}{r.file_count ? ` · 첨부 ${r.file_count}개` : ""}</small></td>
+                <td><button type="button" onClick={() => void open(r.id)} style={{ all: "unset", cursor: "pointer" }}><strong>{r.brief.title || r.company || r.name}</strong></button>{r.lang === "en" && <span className="st-badge" style={{ marginLeft: 6 }}>EN</span>}<br /><small>{r.company} {r.name}{r.file_count ? ` · 첨부 ${r.file_count}개` : ""}</small></td>
                 <td><span className="st-badge">{STATUS[r.status] ?? r.status}</span></td>
               </tr>)}</tbody></table>
         </section>
@@ -133,7 +134,7 @@ export default function AdminApp() {
           {!detail && <p style={{ color: "var(--muted)" }}>왼쪽에서 상담을 선택하세요.</p>}
           {detail && <div style={{ display: "grid", gap: 18 }}>
             <article className="st-doc">
-              <div className="st-doc-title"><h1 style={{ fontSize: 20, letterSpacing: 0 }}>#{detail.id} {detail.brief.title || "상담"}</h1>
+              <div className="st-doc-title"><h1 style={{ fontSize: 20, letterSpacing: 0 }}>#{detail.id} {detail.brief.title || "상담"}{detail.lang === "en" && <span className="st-badge" style={{ marginLeft: 8, verticalAlign: "middle" }}>영문 고객</span>}</h1>
                 <label style={{ flexDirection: "row", alignItems: "center", gap: 8, whiteSpace: "nowrap" }}>상태<select value={detail.status} onChange={e => void update({ status: e.target.value })}>{Object.entries(STATUS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label></div>
               <p><strong>{detail.name}</strong> {detail.company && `(${detail.company})`}<br /><a href={`mailto:${detail.email}`}>{detail.email}</a> {detail.phone}</p>
               <dl style={{ display: "grid", gap: 8, marginTop: 14 }}>{BRIEF_FIELDS.map(([key, label]) => {

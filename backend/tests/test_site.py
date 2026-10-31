@@ -252,6 +252,47 @@ class SiteTests(unittest.TestCase):
         statuses = [self.client.post("/api/quotes/demo", json={}, headers={"X-Forwarded-For": "198.51.100.7"}).status_code for _ in range(11)]
         self.assertEqual(statuses[-1], 429)
 
+    def test_english_site_flow(self):
+        fake = {"content": [{"type": "text", "text": "Got it."}]}
+        with patch.object(consult, "call_claude", return_value=fake) as call:
+            self.client.post("/api/consult/chat", json={"messages": [{"role": "user", "content": "hi"}], "lang": "en"})
+        self.assertEqual(call.call_args.args[1], "en")
+        self.assertIn("English site", consult.system_prompt("en"))
+        self.assertNotIn("English site", consult.system_prompt())
+        self.assertEqual(self.client.post("/api/consult/chat", json={"messages": [{"role": "user", "content": "hi"}], "lang": "fr"}).status_code, 422)
+        inquiry_id = self.inquiry(lang="en", brief={"title": "PO converter", "summary": "Convert orders", "budget": "Undecided", "timeline": "Q1"}).json()["id"]
+        to, subject, body = self.customer[-1]
+        self.assertEqual(subject, "[FitAgent] We received your inquiry")
+        self.assertIn("Title: PO converter", body)
+        self.assertIn("[영문]", self.sent[-1][0])
+        self.login()
+        self.assertEqual(self.client.get("/api/admin/inquiries").json()["inquiries"][0]["lang"], "en")
+        created = self.client.post(f"/api/admin/inquiries/{inquiry_id}/quotes", headers=ADMIN, json={
+            "title": "PO converter", "items": [{"name": "Development", "amount": 5000000}], "deposit": 1500000}).json()
+        self.assertIn("Deposit KRW 1,500,000", self.customer[-1][2])
+        quote = self.client.get(f"/api/quotes/{created['token']}").json()
+        self.assertEqual(quote["lang"], "en")
+        self.assertEqual(quote["next_steps"][0]["title"], "Kickoff meeting")
+        order = self.client.post(f"/api/quotes/{created['token']}/checkout").json()
+        self.assertTrue(order["order_name"].endswith("deposit"))
+        with patch.object(site_api, "toss_confirm", return_value={"method": "card"}):
+            self.client.post(f"/api/quotes/{created['token']}/confirm", json={"payment_key": "pk", "order_id": order["order_id"], "amount": 1500000})
+        self.assertIn("Deposit received", self.customer[-1][1])
+        self.assertIn("[영문]", self.sent[-1][0])
+        demo = self.client.get(self.client.post("/api/quotes/demo", json={"lang": "en"}).json()["path"].replace("/quote?t=", "/api/quotes/")).json()
+        self.assertEqual((demo["lang"], demo["items"][0]["name"]), ("en", "Requirements and screen design"))
+        self.assertIn("(sample quote)", demo["title"])
+
+    def test_existing_database_gains_language_column(self):
+        path = os.path.join(self.folder.name, "old.db")
+        import sqlite3
+        old = sqlite3.connect(path)
+        old.executescript(site_store.SCHEMA.split("CREATE TABLE IF NOT EXISTS quotes")[0])
+        old.execute("INSERT INTO inquiries (created_at, name, email) VALUES (1, 'a', 'a@example.com')")
+        old.commit(); old.close()
+        site_store.connect(path)
+        self.assertEqual(site_store.get_inquiry(1)["lang"], "ko")
+
     def test_payment_and_admin_degrade_without_keys(self):
         inquiry_id = self.inquiry().json()["id"]
         self.login()

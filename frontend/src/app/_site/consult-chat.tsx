@@ -2,17 +2,17 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { api, BRIEF_FIELDS, createDemoQuote, type Brief, type ChatMessage } from "./api";
+import { api, briefFields, createDemoQuote, type Brief, type ChatMessage } from "./api";
+import { COPY, type Lang } from "./i18n";
 import { InquiryForm } from "./inquiry-form";
-import { FAQ } from "../site-content";
+import { content } from "../site-content";
 
-const GREETING: ChatMessage = { role: "assistant", content: "안녕하세요. 외주 개발 상담을 도와드려요. 자주 묻는 질문은 아래 버튼으로 바로 확인하실 수 있고, 만들고 싶은 것을 말씀해 주시면 담당자가 볼 수 있게 정리해 드릴게요." };
-
-function BriefCard({ brief }: { brief: Brief }) {
-  return <section className="st-brief" aria-label="정리된 의뢰 내용">
-    <span className="st-stamp" aria-hidden="true">접수 준비</span>
-    <h3>{brief.title || "의뢰 요약"}</h3>
-    <dl>{BRIEF_FIELDS.map(([key, label]) => {
+function BriefCard({ brief, lang }: { brief: Brief; lang: Lang }) {
+  const t = COPY[lang].chat;
+  return <section className="st-brief" aria-label={t.briefLabel}>
+    <span className="st-stamp" aria-hidden="true">{t.stamp}</span>
+    <h3>{brief.title || t.briefTitle}</h3>
+    <dl>{briefFields(lang).map(([key, label]) => {
       const value = brief[key];
       if (!value || (Array.isArray(value) && value.length === 0)) return null;
       return <div key={key}><dt>{label}</dt><dd>{Array.isArray(value) ? value.join(", ") : value}</dd></div>;
@@ -20,9 +20,11 @@ function BriefCard({ brief }: { brief: Brief }) {
   </section>;
 }
 
-export function ConsultChat({ onFallback }: { onFallback: () => void }) {
+export function ConsultChat({ onFallback, lang = "ko" }: { onFallback: () => void; lang?: Lang }) {
+  const t = COPY[lang].chat;
+  const FAQ = content(lang).FAQ;
   const [ready, setReady] = useState<boolean | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
+  const [messages, setMessages] = useState<ChatMessage[]>([{ role: "assistant", content: t.greeting }]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -50,12 +52,12 @@ export function ConsultChat({ onFallback }: { onFallback: () => void }) {
     const next = [...messages, { role: "user" as const, content }];
     setMessages(next); setInput(""); setBusy(true); setError("");
     try {
-      const result = await api<{ reply: string; brief: Brief | null }>("/api/consult/chat", { method: "POST", body: JSON.stringify({ messages: next }) });
+      const result = await api<{ reply: string; brief: Brief | null }>("/api/consult/chat", { method: "POST", body: JSON.stringify({ messages: next, lang }) }, lang);
       setMessages([...next, { role: "assistant", content: result.reply }]);
       if (result.brief) setBrief(result.brief);
     } catch (err) {
       const status = (err as { status?: number }).status;
-      setError(err instanceof Error ? err.message : "답변을 받지 못했습니다.");
+      setError(err instanceof Error ? err.message : t.replyFailed);
       if (status === 503) setReady(false);
       setMessages(messages); setInput(content);
     } finally { setBusy(false); }
@@ -69,32 +71,32 @@ export function ConsultChat({ onFallback }: { onFallback: () => void }) {
   }
   async function demo() {
     setBusy(true); setError("");
-    try { router.push(await createDemoQuote(brief?.title)); } catch (err) { setError(err instanceof Error ? err.message : "체험을 시작하지 못했습니다."); setBusy(false); }
+    try { router.push(await createDemoQuote(brief?.title, lang)); } catch (err) { setError(err instanceof Error ? err.message : t.demoFailed); setBusy(false); }
   }
-  const remaining = FAQ.filter(f => !asked.includes(f.q));
+  const remaining = FAQ.filter(f => f.chip !== false && !asked.includes(f.q));
   const offline = ready === false;
 
   return <div className="st-chat" aria-busy={busy}>
-    <div className="st-chat-head"><strong>상담 기록지</strong><span>{brief ? "정리 완료" : offline ? "자주 묻는 질문" : "AI 상담 중"}</span></div>
-    <div className="st-chat-log" ref={log} role="log" aria-live="polite" aria-label="AI 상담 대화">
+    <div className="st-chat-head"><strong>{t.head}</strong><span>{brief ? t.done : offline ? t.faqMode : t.live}</span></div>
+    <div className="st-chat-log" ref={log} role="log" aria-live="polite" aria-label={t.log}>
       {messages.map((m, i) => <p key={i} className={"st-msg st-msg-" + m.role}>{m.content}</p>)}
-      {busy && <p className="st-msg st-msg-assistant st-typing" aria-label="답변 작성 중"><span /><span /><span /></p>}
-      {brief && <div ref={briefRef}><BriefCard brief={brief} /></div>}
-      {brief && !submitted && <div className="st-chat-submit"><p>위 내용이 맞으면 연락처를 남겨 주세요. 고칠 부분은 아래에 말씀하셔도 됩니다.</p><InquiryForm compact brief={brief} transcript={messages} onDone={() => setSubmitted(true)} /></div>}
-      {submitted && <p className="st-msg st-msg-assistant">접수되었습니다. 담당자가 검토 후 이메일로 연락드릴게요. 감사합니다.</p>}
+      {busy && <p className="st-msg st-msg-assistant st-typing" aria-label={t.typing}><span /><span /><span /></p>}
+      {brief && <div ref={briefRef}><BriefCard brief={brief} lang={lang} /></div>}
+      {brief && !submitted && <div className="st-chat-submit"><p>{t.confirm}</p><InquiryForm lang={lang} compact brief={brief} transcript={messages} onDone={() => setSubmitted(true)} /></div>}
+      {submitted && <p className="st-msg st-msg-assistant">{t.submitted}</p>}
     </div>
-    {!submitted && <div className="st-starters" aria-label="자주 묻는 질문">
+    {!submitted && <div className="st-starters" aria-label={t.starters}>
       {remaining.map(f => <button key={f.q} type="button" disabled={busy} onClick={() => answer(f.q, f.a)}>{f.q}</button>)}
-      <button type="button" className="st-starter-demo" disabled={busy} onClick={() => void demo()}>견적·결제 흐름 체험</button>
+      <button type="button" className="st-starter-demo" disabled={busy} onClick={() => void demo()}>{t.demo}</button>
     </div>}
     {error && <p className="st-error st-chat-error" role="alert">{error}</p>}
     {!submitted && (offline
-      ? <div className="st-chat-offline-note"><p>AI 자유 상담을 준비하고 있어요. 위 질문을 눌러 보시거나, 문의 양식으로 남겨 주시면 담당자가 정리해 연락드립니다.</p>
-          <button className="st-button" onClick={onFallback}>문의 양식으로 이동</button></div>
+      ? <div className="st-chat-offline-note"><p>{t.offline}</p>
+          <button className="st-button" onClick={onFallback}>{t.toForm}</button></div>
       : <form className="st-chat-input" onSubmit={e => { e.preventDefault(); void send(input); }}>
-          <textarea aria-label="상담 내용 입력" rows={2} maxLength={1500} value={input} disabled={busy || ready === null} placeholder="예: 쇼핑몰 문의에 답하는 상담사와 관리자 페이지가 필요해요"
+          <textarea aria-label={t.input} rows={2} maxLength={1500} value={input} disabled={busy || ready === null} placeholder={t.placeholder}
             onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(input); } }} />
-          <button className="st-button" disabled={busy || !input.trim()}>보내기</button>
+          <button className="st-button" disabled={busy || !input.trim()}>{t.send}</button>
         </form>)}
   </div>;
 }

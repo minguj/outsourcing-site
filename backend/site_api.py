@@ -20,13 +20,13 @@ from starlette.datastructures import UploadFile
 
 if __package__:
     from . import consult, notify, site_store as store, uploads
-    from .site_knowledge import KICKOFF, PROCESS, kickoff_text
+    from .site_knowledge import QUOTE_STEP, kickoff_steps, kickoff_text
 else:
     import consult
     import notify
     import site_store as store
     import uploads
-    from site_knowledge import KICKOFF, PROCESS, kickoff_text
+    from site_knowledge import QUOTE_STEP, kickoff_steps, kickoff_text
 
 router = APIRouter(prefix="/api")
 LOCK = RLock()
@@ -69,9 +69,13 @@ class ChatMessage(BaseModel):
     content: str = Field(max_length=6000)
 
 
+Lang = Literal["ko", "en"]
+
+
 class Chat(BaseModel):
     model_config = ConfigDict(extra="forbid")
     messages: list[ChatMessage] = Field(min_length=1, max_length=50)
+    lang: Lang = "ko"
 
 
 @router.post("/consult/chat")
@@ -85,7 +89,7 @@ def chat(body: Chat, request: Request):
             raise HTTPException(503, "오늘 AI 상담 이용량이 많아 잠시 쉬고 있어요. 아래 양식으로 문의를 남겨 주세요.")
         DAILY["count"] += 1
     try:
-        return consult.reply([m.model_dump() for m in body.messages])
+        return consult.reply([m.model_dump() for m in body.messages], body.lang)
     except consult.ConsultError as error:
         raise HTTPException(error.status, str(error)) from None
 
@@ -107,6 +111,7 @@ class Inquiry(BaseModel):
     brief: dict | None = None
     transcript: list[ChatMessage] = Field(default_factory=list, max_length=50)
     consent: bool
+    lang: Lang = "ko"
     website: str = Field(default="", max_length=200)  # honeypot: humans never fill this
 
 
@@ -123,16 +128,24 @@ def clean_brief(brief):
     return keep
 
 
-def brief_text(brief):
-    labels = [("project_type", "유형"), ("title", "제목"), ("summary", "요약"), ("current_process", "현재 업무"),
-              ("goals", "목표"), ("data_and_systems", "문서·데이터·시스템"), ("users_and_scale", "사용자·규모"),
-              ("budget", "예산"), ("timeline", "일정"), ("open_questions", "추가 확인")]
+BRIEF_LABELS = {
+    "ko": [("project_type", "유형"), ("title", "제목"), ("summary", "요약"), ("current_process", "현재 업무"),
+           ("goals", "목표"), ("data_and_systems", "문서·데이터·시스템"), ("users_and_scale", "사용자·규모"),
+           ("budget", "예산"), ("timeline", "일정"), ("open_questions", "추가 확인")],
+    "en": [("project_type", "Type"), ("title", "Title"), ("summary", "Summary"), ("current_process", "Current process"),
+           ("goals", "Goals"), ("data_and_systems", "Documents, data and systems"), ("users_and_scale", "Users and scale"),
+           ("budget", "Budget"), ("timeline", "Timeline"), ("open_questions", "Open questions")],
+}
+
+
+def brief_text(brief, lang="ko"):
+    labels = BRIEF_LABELS["en" if lang == "en" else "ko"]
     lines = []
     for key, label in labels:
         value = brief.get(key)
         if value:
             lines.append(f"- {label}: {', '.join(value) if isinstance(value, list) else value}")
-    return "\n".join(lines) or "- (AI 상담 요약 없음)"
+    return "\n".join(lines) or ("- (no AI summary)" if lang == "en" else "- (AI 상담 요약 없음)")
 
 
 async def read_inquiry(request, forms):
@@ -186,7 +199,7 @@ async def handle_inquiry(request, forms):
         raise HTTPException(422, "의뢰 내용을 조금만 더 적어 주세요.")
     transcript = [m.model_dump() for m in body.transcript]
     inquiry_id = store.create_inquiry(body.name.strip(), body.company.strip(), email, body.phone.strip(),
-                                      body.message.strip(), brief, transcript)
+                                      body.message.strip(), brief, transcript, body.lang)
     try:
         saved = await uploads.save(inquiry_id, files)
     except uploads.UploadError as error:
@@ -196,16 +209,27 @@ async def handle_inquiry(request, forms):
         store.add_file(inquiry_id, display, stored, size)
     attached = "\n".join(f"- {display} ({size / 1024 / 1024:.1f}MB)" for display, _, size in saved) or "- 없음"
     link = f"{notify.base_url()}/admin?inquiry={inquiry_id}" if notify.base_url() else f"/admin?inquiry={inquiry_id}"
-    notify.send(f"[새 상담 접수 #{inquiry_id}] {brief.get('title') or body.company or body.name}",
-                f"새 상담이 접수되었습니다.\n\n이름: {body.name}\n회사: {body.company or '-'}\n이메일: {email}\n"
+    english = body.lang == "en"
+    notify.send(f"[새 상담 접수 #{inquiry_id}]{' [영문]' if english else ''} {brief.get('title') or body.company or body.name}",
+                f"새 상담이 접수되었습니다.{' 영문 사이트에서 접수되어 고객 메일은 영어로 보냈습니다. 답장도 영어로 해 주세요.' if english else ''}\n\n"
+                f"이름: {body.name}\n회사: {body.company or '-'}\n이메일: {email}\n"
                 f"전화: {body.phone or '-'}\n\n[AI 상담 요약]\n{brief_text(brief)}\n\n[직접 남긴 내용]\n{body.message or '-'}\n\n"
                 f"[첨부 파일]\n{attached}\n\n관리 화면: {link}\n\n이 메일에 바로 답장하면 고객에게 전달됩니다.\n", reply_to=email)
-    notify.send_customer(email, f"[{consult.company()}] 상담이 접수되었습니다",
-                         f"{body.name.strip()}님, {consult.company()}에 상담을 남겨 주셔서 감사합니다.\n\n"
-                         f"[접수 내용]\n{brief_text(brief) if brief else body.message.strip()}\n\n"
-                         + (f"[첨부 파일]\n{attached}\n\n" if saved else "")
-                         + f"[다음 단계]\n담당자가 내용을 검토한 뒤 이 메일 주소로 연락드립니다. {PROCESS[1][1]}\n\n"
-                         f"덧붙일 내용이나 참고 자료가 있으면 이 메일에 회신해 주세요.\n\n{consult.company()} 드림\n")
+    name, company = body.name.strip(), consult.company(body.lang)
+    if english:
+        files_part = f"[Attachments]\n{attached}\n\n" if saved else ""
+        notify.send_customer(email, f"[{company}] We received your inquiry",
+                             f"Hi {name},\n\nThank you for contacting {company}.\n\n"
+                             f"[Your request]\n{brief_text(brief, 'en') if brief else body.message.strip()}\n\n{files_part}"
+                             f"[Next step]\n{QUOTE_STEP['en']}\n\n"
+                             f"If you have anything to add or reference materials to share, just reply to this e-mail.\n\nBest regards,\n{company}\n")
+    else:
+        notify.send_customer(email, f"[{company}] 상담이 접수되었습니다",
+                             f"{name}님, {company}에 상담을 남겨 주셔서 감사합니다.\n\n"
+                             f"[접수 내용]\n{brief_text(brief) if brief else body.message.strip()}\n\n"
+                             + (f"[첨부 파일]\n{attached}\n\n" if saved else "")
+                             + f"[다음 단계]\n담당자가 내용을 검토한 뒤 이 메일 주소로 연락드립니다. {QUOTE_STEP['ko']}\n\n"
+                             f"덧붙일 내용이나 참고 자료가 있으면 이 메일에 회신해 주세요.\n\n{company} 드림\n")
     return {"ok": True, "id": inquiry_id}
 
 
@@ -235,6 +259,10 @@ def quote_link(token):
     return f"{notify.base_url()}/quote?t={token}"
 
 
+def quote_lang(quote):
+    return "en" if (quote.get("lang") or quote["customer"].get("lang")) == "en" else "ko"
+
+
 def public_quote(quote):
     mode = quote_payment_mode(quote)
     return {"title": quote["title"], "items": quote["items"], "total": quote["total"], "deposit": quote["deposit"],
@@ -243,7 +271,8 @@ def public_quote(quote):
             "customer": {"name": quote["customer"].get("name", ""), "company": quote["customer"].get("company", "")},
             "payment_ready": mode != "off", "payment_mode": mode, "is_demo": bool(quote.get("is_demo")),
             "payment_test": bool(quote.get("is_demo")) or (os.environ.get("TOSS_CLIENT_KEY") or "").startswith("test_"),
-            "next_steps": [{"title": title, "text": text} for title, text in KICKOFF]}
+            "lang": quote_lang(quote),
+            "next_steps": [{"title": title, "text": text} for title, text in kickoff_steps(quote_lang(quote))]}
 
 
 def prune_demo():
@@ -266,6 +295,19 @@ def quote_or_404(token):
 class DemoQuote(BaseModel):
     model_config = ConfigDict(extra="forbid")
     title: str | None = Field(default=None, max_length=80)
+    lang: Lang = "ko"
+
+
+DEMO_COPY = {
+    "ko": {"title": "AI 상담 에이전트 구축", "suffix": "체험용 견적",
+           "items": ["요구사항 정리와 화면 설계", "개발과 중간 시연", "운영 서버 배포와 안정화"],
+           "schedule": "착수 후 약 6주 (예시)", "customer": "체험 고객",
+           "note": "체험용 견적서입니다. 금액과 일정은 예시이며 실제 견적과 관계없고, 결제해도 청구되지 않습니다."},
+    "en": {"title": "AI consultation agent", "suffix": "sample quote",
+           "items": ["Requirements and screen design", "Development and interim demo", "Production deployment and stabilization"],
+           "schedule": "About 6 weeks from kickoff (example)", "customer": "Demo customer",
+           "note": "This is a sample quote. Amounts and schedule are examples unrelated to a real quote, and paying does not charge you."},
+}
 
 
 @router.post("/quotes/demo")
@@ -277,16 +319,16 @@ def create_demo_quote(body: DemoQuote, request: Request):
         if len(DEMO_QUOTES) >= DEMO_MAX:
             raise HTTPException(429, "지금 체험이 많습니다. 잠시 후 다시 시도해 주세요.")
         token = "demo-" + secrets.token_urlsafe(18)
-        title = (body.title or "").strip() or "AI 상담 에이전트 구축"
-        items = [{"name": "요구사항 정리와 화면 설계", "amount": 1500000}, {"name": "개발과 중간 시연", "amount": 4500000},
-                 {"name": "운영 서버 배포와 안정화", "amount": 1000000}]
+        copy = DEMO_COPY[body.lang]
+        title = (body.title or "").strip() or copy["title"]
+        items = [{"name": name, "amount": amount} for name, amount in zip(copy["items"], (1500000, 4500000, 1000000))]
         total = sum(item["amount"] for item in items)
         DEMO_QUOTES[token] = {
-            "id": f"D{secrets.token_hex(3)}", "token": token, "is_demo": True, "created_at": time.time(),
-            "title": f"{title} (체험용 견적)", "items": items, "total": total, "deposit": total * 3 // 10,
-            "schedule": "착수 후 약 6주 (예시)", "note": "체험용 견적서입니다. 금액과 일정은 예시이며 실제 견적과 관계없고, 결제해도 청구되지 않습니다.",
+            "id": f"D{secrets.token_hex(3)}", "token": token, "is_demo": True, "created_at": time.time(), "lang": body.lang,
+            "title": f"{title} ({copy['suffix']})", "items": items, "total": total, "deposit": total * 3 // 10,
+            "schedule": copy["schedule"], "note": copy["note"],
             "status": "sent", "order_id": None, "payment_key": None, "paid_at": None, "payment_method": None,
-            "customer": {"name": "체험 고객", "company": "", "email": ""}}
+            "customer": {"name": copy["customer"], "company": "", "email": ""}}
     return {"token": token, "path": f"/quote?t={token}"}
 
 
@@ -310,7 +352,7 @@ def checkout(token: str, request: Request):
     else:
         store.set_order(token, order_id)
     return {"mock": mode == "mock", "client_key": os.environ.get("TOSS_CLIENT_KEY") or "", "order_id": order_id, "amount": quote["deposit"],
-            "order_name": f"{quote['title'][:60]} 착수금", "customer_name": quote["customer"].get("name", ""),
+            "order_name": f"{quote['title'][:60]} {'deposit' if quote_lang(quote) == 'en' else '착수금'}", "customer_name": quote["customer"].get("name", ""),
             "customer_email": quote["customer"].get("email", "")}
 
 
@@ -362,14 +404,20 @@ def confirm(token: str, body: Confirm, request: Request):
         return public_quote(quote)
     store.mark_paid(token, body.payment_key, data.get("method") or "")
     customer = quote["customer"]
-    if customer.get("email"):
+    english = quote_lang(quote) == "en"
+    if customer.get("email") and english:
+        notify.send_customer(customer["email"], f"[{consult.company('en')}] Deposit received: next steps",
+                             f"Hi {customer.get('name')},\n\nWe received your deposit of KRW {quote['deposit']:,} for '{quote['title']}'. Thank you.\n\n"
+                             f"[Next steps]\n{kickoff_text('en')}\n\nQuote and payment record: {quote_link(token)}\n\n"
+                             f"If you have any questions, just reply to this e-mail.\n\nBest regards,\n{consult.company('en')}\n")
+    elif customer.get("email"):
         notify.send_customer(customer["email"], f"[{consult.company()}] 착수금 결제 완료와 진행 안내",
                              f"{customer.get('name')}님, '{quote['title']}' 착수금 {quote['deposit']:,}원 결제가 확인되었습니다. 감사합니다.\n\n"
                              f"[앞으로의 진행]\n{kickoff_text()}\n\n견적서와 결제 내역: {quote_link(token)}\n\n"
                              f"궁금한 점은 이 메일에 회신해 주세요.\n\n{consult.company()} 드림\n")
     admin = f"{notify.base_url()}/admin?inquiry={quote['inquiry_id']}"
-    notify.send(f"[착수금 결제 완료 #{quote['inquiry_id']}] {quote['title']} · {quote['deposit']:,}원",
-                f"착수금 결제가 완료되었습니다. 고객에게 착수 미팅 일정을 연락해 주세요.\n\n"
+    notify.send(f"[착수금 결제 완료 #{quote['inquiry_id']}]{' [영문]' if english else ''} {quote['title']} · {quote['deposit']:,}원",
+                f"착수금 결제가 완료되었습니다. 고객에게 착수 미팅 일정을 연락해 주세요.{' (영문 고객: 영어로 연락해 주세요.)' if english else ''}\n\n"
                 f"[고객 연락처]\n이름: {customer.get('name') or '-'}\n회사: {customer.get('company') or '-'}\n"
                 f"이메일: {customer.get('email') or '-'}\n전화: {customer.get('phone') or '-'}\n\n"
                 f"[결제 내용]\n견적: {quote['title']}\n견적 합계: {quote['total']:,}원\n착수금: {quote['deposit']:,}원\n"
@@ -506,11 +554,20 @@ def admin_quote(inquiry_id: int, body: QuoteCreate, request: Request):
     if body.send_email:
         if not notify.base_url():
             raise HTTPException(422, "견적서를 메일로 보내려면 서버에 PUBLIC_BASE_URL(사이트 주소)을 설정해 주세요. 링크만 만들려면 메일 발송을 끄세요.")
-        emailed = notify.send_customer(inquiry["email"], f"[{consult.company()}] 견적서를 보내 드립니다: {body.title.strip()}",
-                                       f"{inquiry['name']}님, 요청하신 '{body.title.strip()}' 견적서를 보내 드립니다.\n\n"
-                                       f"합계 {total:,}원 / 착수금 {body.deposit:,}원\n"
-                                       + (f"일정: {body.schedule.strip()}\n" if body.schedule.strip() else "")
-                                       + f"\n아래 링크에서 견적서를 확인하고 착수금을 결제하시면 개발을 시작합니다.\n{quote_link(token)}\n\n"
-                                       f"범위나 금액을 조정하고 싶으시면 이 메일에 회신해 주세요.\n\n{consult.company()} 드림\n")
+        title, schedule, company = body.title.strip(), body.schedule.strip(), consult.company(inquiry.get("lang") or "ko")
+        if inquiry.get("lang") == "en":
+            emailed = notify.send_customer(inquiry["email"], f"[{company}] Your quote: {title}",
+                                           f"Hi {inquiry['name']},\n\nHere is the quote for '{title}' you requested.\n\n"
+                                           f"Total KRW {total:,} / Deposit KRW {body.deposit:,}\n"
+                                           + (f"Schedule: {schedule}\n" if schedule else "")
+                                           + f"\nReview the quote and pay the deposit at the link below, and we will start development.\n{quote_link(token)}\n\n"
+                                           f"If you would like to adjust the scope or price, just reply to this e-mail.\n\nBest regards,\n{company}\n")
+        else:
+            emailed = notify.send_customer(inquiry["email"], f"[{company}] 견적서를 보내 드립니다: {title}",
+                                           f"{inquiry['name']}님, 요청하신 '{title}' 견적서를 보내 드립니다.\n\n"
+                                           f"합계 {total:,}원 / 착수금 {body.deposit:,}원\n"
+                                           + (f"일정: {schedule}\n" if schedule else "")
+                                           + f"\n아래 링크에서 견적서를 확인하고 착수금을 결제하시면 개발을 시작합니다.\n{quote_link(token)}\n\n"
+                                           f"범위나 금액을 조정하고 싶으시면 이 메일에 회신해 주세요.\n\n{company} 드림\n")
     return {"token": token, "path": f"/quote?t={token}", "emailed": emailed, "inquiry": inquiry}
 
