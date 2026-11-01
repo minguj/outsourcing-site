@@ -20,7 +20,12 @@ function BriefCard({ brief, lang }: { brief: Brief; lang: Lang }) {
   </section>;
 }
 
-export function ConsultChat({ onFallback, lang = "ko" }: { onFallback: () => void; lang?: Lang }) {
+/** What the page's bottom inquiry form may attach: the chat so far and its summary. */
+export type ChatSession = { messages: ChatMessage[]; brief: Brief | null; submitted: boolean };
+
+type ChatProps = { onFallback: () => void; lang?: Lang; onChange?: (session: ChatSession) => void; sentElsewhere?: boolean };
+
+export function ConsultChat({ onFallback, lang = "ko", onChange, sentElsewhere = false }: ChatProps) {
   const t = COPY[lang].chat;
   const FAQ = content(lang).FAQ;
   const [ready, setReady] = useState<boolean | null>(null);
@@ -29,7 +34,8 @@ export function ConsultChat({ onFallback, lang = "ko" }: { onFallback: () => voi
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [brief, setBrief] = useState<Brief | null>(null);
-  const [submitted, setSubmitted] = useState(false);
+  const [sentHere, setSentHere] = useState(false);
+  const submitted = sentHere || sentElsewhere;
   const [asked, setAsked] = useState<string[]>([]);
   const log = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -37,6 +43,7 @@ export function ConsultChat({ onFallback, lang = "ko" }: { onFallback: () => voi
   useEffect(() => {
     api<{ consult_ready: boolean }>("/api/site/config").then(c => setReady(c.consult_ready)).catch(() => setReady(false));
   }, []);
+  useEffect(() => { onChange?.({ messages, brief, submitted: sentHere }); }, [messages, brief, sentHere, onChange]);
   const briefRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const box = log.current;
@@ -82,7 +89,7 @@ export function ConsultChat({ onFallback, lang = "ko" }: { onFallback: () => voi
       {messages.map((m, i) => <p key={i} className={"st-msg st-msg-" + m.role}>{m.content}</p>)}
       {busy && <p className="st-msg st-msg-assistant st-typing" aria-label={t.typing}><span /><span /><span /></p>}
       {brief && <div ref={briefRef}><BriefCard brief={brief} lang={lang} /></div>}
-      {brief && !submitted && <div className="st-chat-submit"><p>{t.confirm}</p><InquiryForm lang={lang} compact brief={brief} transcript={messages} onDone={() => setSubmitted(true)} /></div>}
+      {brief && !submitted && <div className="st-chat-submit"><p>{t.confirm}</p><InquiryForm lang={lang} compact brief={brief} transcript={messages} onDone={() => setSentHere(true)} /></div>}
       {submitted && <p className="st-msg st-msg-assistant">{t.submitted}</p>}
     </div>
     {!submitted && <div className="st-starters" aria-label={t.starters}>
