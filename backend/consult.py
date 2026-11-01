@@ -140,8 +140,8 @@ def call_claude(turns, lang="ko"):
     key = os.environ.get("ANTHROPIC_API_KEY")
     if not key:
         raise ConsultError(503, "AI 상담이 아직 준비되지 않았습니다. 아래 양식으로 문의를 남겨 주세요.")
-    # Low temperature keeps summaries close to what the visitor actually said.
-    body = {"model": os.environ.get("CONSULT_MODEL") or DEFAULT_MODEL, "max_tokens": 1024, "temperature": 0.2,
+    # No temperature: current Claude models reject it. The prompt keeps summaries to what the visitor said.
+    body = {"model": os.environ.get("CONSULT_MODEL") or DEFAULT_MODEL, "max_tokens": 1024,
             # The company knowledge is identical on every turn; cache it to cut input-token cost.
             "system": [{"type": "text", "text": system_prompt(lang), "cache_control": {"type": "ephemeral"}}],
             "messages": turns, "tools": [BRIEF_TOOL]}
