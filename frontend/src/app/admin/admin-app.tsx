@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, BRIEF_FIELDS, won, type Brief, type ChatMessage } from "../_site/api";
 import { SITE } from "../site-config";
 
@@ -62,6 +62,9 @@ export default function AdminApp() {
   const [error, setError] = useState("");
   const [link, setLink] = useState("");
   const [emailed, setEmailed] = useState<"sent" | "failed" | "off">("off");
+  const doneRef = useRef<HTMLElement>(null);
+  // After a quote is created, bring the completion panel into view.
+  useEffect(() => { if (link) doneRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }); }, [link]);
   const [note, setNote] = useState("");
 
   const load = useCallback(async () => {
@@ -154,8 +157,16 @@ export default function AdminApp() {
             {detail.quotes.length > 0 && <article className="st-doc"><h3 style={{ fontSize: 16, marginBottom: 10 }}>견적서</h3>
               <table className="st-table"><tbody>{detail.quotes.map(q => <tr key={q.id}><td><a href={`/quote?t=${q.token}`} target="_blank" rel="noreferrer">{q.title}</a><br /><small>{when(q.created_at)}</small></td>
                 <td className="st-num">{won(q.total)}<br /><small>착수금 {won(q.deposit)}</small></td><td><span className="st-badge">{q.status === "paid" ? `결제 완료${q.payment_method ? ` (${q.payment_method})` : ""}` : "발송"}</span></td></tr>)}</tbody></table></article>}
-            {link && <p className="st-badge" role="status" style={{ whiteSpace: "normal" }}>{emailed === "sent" ? "견적서를 만들고 고객에게 메일로 보냈습니다. 링크: " : emailed === "failed" ? "견적서를 만들었지만 메일 설정(SMTP)이 없어 메일은 보내지 못했습니다. 링크를 직접 보내 주세요: " : "견적서 링크를 만들었습니다. 고객에게 보내 주세요: "}<a href={link} target="_blank" rel="noreferrer">{window.location.origin}{link}</a></p>}
-            <QuoteForm key={detail.id} detail={detail} onCreated={(d, path, sent, requested) => { setDetail(d); setLink(path); setEmailed(sent ? "sent" : requested ? "failed" : "off"); void load(); }} />
+            {link ? <article className="st-doc st-quote-done" role="status" ref={doneRef}>
+              <h3>{emailed === "sent" ? "견적서를 발송했습니다" : "견적서를 만들었습니다"}</h3>
+              <p>{emailed === "sent" ? `고객(${detail.email})에게 견적서 링크를 메일로 보냈습니다.` : emailed === "failed" ? "메일 설정(SMTP)이 없어 메일은 보내지 못했습니다. 아래 링크를 고객에게 직접 보내 주세요." : "아래 링크를 고객에게 보내 주세요."}</p>
+              <p className="st-quote-done-link"><a href={link} target="_blank" rel="noreferrer">{window.location.origin}{link}</a></p>
+              <div className="st-quote-done-actions">
+                <a href={link} target="_blank" rel="noreferrer" className="st-button">견적서 열기</a>
+                <button type="button" className="st-button st-button-ghost" onClick={() => setLink("")}>새 견적서 만들기</button>
+              </div>
+            </article>
+            : <QuoteForm key={detail.id} detail={detail} onCreated={(d, path, sent, requested) => { setDetail(d); setLink(path); setEmailed(sent ? "sent" : requested ? "failed" : "off"); void load(); }} />}
           </div>}
         </section>
       </div>
