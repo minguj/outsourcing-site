@@ -22,4 +22,12 @@ export const SITE_EN = {
   },
 };
 
+// 실제 계약 대금(착수금·중도금·잔금)을 받는 계좌. 견적서 화면의 입금 안내에 나온다.
+// 예금주(holder)를 적으면 계좌 아래에 함께 표시한다.
+export const BANK = {
+  bank: "토스뱅크",
+  account: "1000-7205-2664",
+  holder: "",
+};
+
 export const siteFor = (lang: "ko" | "en") => (lang === "en" ? SITE_EN : SITE);
