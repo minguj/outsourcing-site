@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { api } from "../_site/api";
 import { COPY, HOME, money, type Lang } from "../_site/i18n";
-import { siteFor } from "../site-config";
+import { BANK, siteFor } from "../site-config";
 
 type Quote = {
   title: string; items: { name: string; amount: number }[]; total: number; deposit: number; schedule: string; note: string;
@@ -39,6 +39,7 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
   // The quote decides its language; ?lang=en is only a hint until it loads.
   const [hint, setHint] = useState<Lang>("ko");
   const lang: Lang = quote?.lang ?? hint;
@@ -107,7 +108,13 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
     } finally { setBusy(false); }
   }
 
+  async function copyAccount() {
+    try { await navigator.clipboard.writeText(BANK.account.replace(/-/g, "")); setCopied(true); setTimeout(() => setCopied(false), 2000); }
+    catch { /* clipboard blocked: the number stays visible to copy by hand */ }
+  }
+
   const paid = quote?.status === "paid";
+  const b = t.bank;
   return <div className={"st-doc-page" + (lang === "en" ? " st-lang-en" : "")}><div className="st-wrap">
     <p style={{ marginBottom: 16 }}><Link href={HOME[lang]} className="st-logo">{site.name}</Link></p>
     {notice && <p className="st-badge" role="status" style={{ marginBottom: 14 }}>{notice}</p>}
@@ -139,6 +146,19 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
           </div>
           : <p style={{ fontSize: 14, color: "var(--muted)", maxWidth: 280 }}>{t.off}</p>}
       </div>
+      {!quote.is_demo && <section className="st-next st-bank" aria-label={b.title}>
+        <h2>{b.title}</h2>
+        <p className="st-bank-lead">{b.lead}{quote.payment_ready && !paid ? ` ${b.demoNote}` : ""}</p>
+        <dl className="st-bank-info">
+          <div><dt>{b.account}</dt><dd><strong>{BANK.bank} {BANK.account}</strong>
+            <button type="button" className="st-button st-button-ghost st-bank-copy" onClick={() => void copyAccount()}>{copied ? b.copied : b.copy}</button></dd></div>
+          {BANK.holder && <div><dt>{b.holder}</dt><dd>{BANK.holder}</dd></div>}
+          <div><dt>{b.amount}</dt><dd>{won(quote.deposit)}</dd></div>
+          <div><dt>{b.payer}</dt><dd>{b.payerText}</dd></div>
+        </dl>
+        <h3>{b.steps}</h3>
+        <ol>{b.list.map(([title, text]) => <li key={title}><strong>{title}</strong><span>{text}</span></li>)}</ol>
+      </section>}
       {paid && <section className="st-next" aria-label={t.next}>
         <h2>{t.next}</h2>
         <ol>{quote.next_steps.map(step => <li key={step.title}><strong>{step.title}</strong><span>{step.text}</span></li>)}</ol>

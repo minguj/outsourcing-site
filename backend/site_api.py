@@ -569,7 +569,7 @@ def admin_quote(inquiry_id: int, body: QuoteCreate, request: Request):
                                            f"{inquiry['name']}님, 요청하신 '{title}' 견적서를 보내 드립니다.\n\n"
                                            f"합계 {total:,}원 / 착수금 {body.deposit:,}원\n"
                                            + (f"일정: {schedule}\n" if schedule else "")
-                                           + f"\n아래 링크에서 견적서를 확인해 주세요. 내용에 합의하시면 계약서를 작성하고, 착수금이 계좌이체로 입금되면 개발을 시작합니다. 입금 계좌는 계약 때 안내해 드립니다.\n{quote_link(token)}\n\n"
+                                           + f"\n아래 링크에서 견적서를 확인해 주세요. 내용에 합의하시면 계약서를 작성하고, 착수금이 계좌이체로 입금되면 개발을 시작합니다. 입금 계좌와 진행 순서는 견적서 화면에 있습니다.\n{quote_link(token)}\n\n"
                                            f"범위나 금액을 조정하고 싶으시면 이 메일에 회신해 주세요.\n\n{company} 드림\n")
     return {"token": token, "path": f"/quote?t={token}", "emailed": emailed, "inquiry": inquiry}
 

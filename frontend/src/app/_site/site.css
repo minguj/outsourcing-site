@@ -237,6 +237,14 @@
 .st-next li strong { color: var(--ink); }
 .st-next li span { color: #34413b; }
 .st-next-note { margin-top: 14px !important; font-size: 13.5px; color: var(--muted); }
+.st-bank h3 { font-size: 15px; margin: 22px 0 10px; color: var(--ink); }
+.st-bank-lead { font-size: 14px; color: #34413b; margin-bottom: 14px; }
+.st-bank-info { margin: 0; padding: 16px 20px; border: 1px solid var(--rule); border-radius: 4px; background: #fafbf9; display: grid; gap: 8px; }
+.st-bank-info div { display: grid; grid-template-columns: 90px minmax(0, 1fr); gap: 10px; align-items: center; font-size: 14.5px; }
+.st-bank-info dt { color: var(--muted); }
+.st-bank-info dd { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.st-bank-info strong { font-size: 17px; color: var(--ink); letter-spacing: .02em; }
+.st-bank-copy { padding: 4px 12px; min-height: 0; font-size: 13px; }
 
 /* Admin */
 .st-admin-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 24px; align-items: start; }
@@ -273,6 +281,7 @@
   .st-table { font-size: 13.5px; }
   .st-next li { grid-template-columns: 26px minmax(0, 1fr); }
   .st-next li span { grid-column: 2; }
+  .st-bank-info div { grid-template-columns: 1fr; gap: 2px; }
   .st-paid-stamp { width: 76px; height: 76px; top: 14px; right: 14px; font-size: 14px; }
 }
 
