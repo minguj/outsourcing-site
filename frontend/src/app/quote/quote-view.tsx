@@ -109,8 +109,18 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
   }
 
   async function copyAccount() {
-    try { await navigator.clipboard.writeText(BANK.account.replace(/-/g, "")); setCopied(true); setTimeout(() => setCopied(false), 2000); }
-    catch { /* clipboard blocked: the number stays visible to copy by hand */ }
+    const text = BANK.account.replace(/-/g, "");
+    let ok = false;
+    try { await navigator.clipboard.writeText(text); ok = true; } catch { /* no Clipboard API on plain http: fall back below */ }
+    if (!ok) {
+      const area = document.createElement("textarea");
+      area.value = text; area.setAttribute("readonly", ""); area.style.position = "fixed"; area.style.opacity = "0";
+      document.body.appendChild(area); area.select();
+      try { ok = document.execCommand("copy"); } catch { ok = false; }
+      area.remove();
+    }
+    setCopied(ok);
+    if (ok) setTimeout(() => setCopied(false), 2000);
   }
 
   const paid = quote?.status === "paid";
@@ -157,7 +167,8 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
           <div><dt>{b.payer}</dt><dd>{b.payerText}</dd></div>
         </dl>
         <h3>{b.steps}</h3>
-        <ol>{b.list.map(([title, text]) => <li key={title}><strong>{title}</strong><span>{text}</span></li>)}</ol>
+        <ol>{b.list.map(([title, text], i) => <li key={title}><strong>{title}</strong><span>{text}
+          {i === 0 && lang === "ko" && <> <Link href={`/contract?t=${encodeURIComponent(token)}`} target="_blank" className="st-contract-link">{b.contract}</Link></>}</span></li>)}</ol>
       </section>}
       {paid && <section className="st-next" aria-label={t.next}>
         <h2>{t.next}</h2>

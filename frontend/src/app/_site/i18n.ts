@@ -74,10 +74,10 @@ const ko = {
       lead: "실제 계약 대금은 계좌이체로 받습니다.",
       demoNote: "위의 결제 버튼은 사이트에 넣어 드릴 수 있는 온라인 결제 예시로, 눌러도 실제로 청구되지 않습니다.",
       account: "입금 계좌", holder: "예금주", amount: "착수금", payer: "입금자명", payerText: "회사명 또는 담당자 이름으로 보내 주세요.",
-      copy: "계좌번호 복사", copied: "복사했습니다",
+      copy: "계좌번호 복사", copied: "복사했습니다", contract: "계약서(안) 보기",
       steps: "진행 순서",
       list: [
-        ["계약서 작성", "견적 내용에 동의하시면 견적 메일에 회신해 주세요. 계약서를 보내 드립니다."],
+        ["계약서 작성", "계약서(안)를 확인하시고, 동의하시면 견적 메일에 회신해 주세요. 서명할 계약서를 보내 드립니다."],
         ["착수금 입금", "계약서 작성 후 위 계좌로 착수금(30%)을 보내 주세요."],
         ["입금 확인과 착수 미팅", "입금을 확인하면 영업일 기준 1일 안에 연락드려 착수 미팅 일정을 잡습니다."],
         ["개발과 중간 시연", "전체 일정의 절반이 지나면 중간 결과를 보여 드리고, 중도금(50%)을 같은 계좌로 받습니다."],
@@ -162,7 +162,7 @@ const en: Copy = {
       lead: "Contract payments are made by bank transfer.",
       demoNote: "The payment button above is a sample of the online payment we can build into your site. You are never charged.",
       account: "Account", holder: "Account holder", amount: "Deposit", payer: "Sender name", payerText: "Please use your company or your own name.",
-      copy: "Copy account number", copied: "Copied",
+      copy: "Copy account number", copied: "Copied", contract: "View the draft contract",
       steps: "What happens next",
       list: [
         ["Contract", "If you agree with the quote, reply to the quote e-mail and we will send you the contract."],

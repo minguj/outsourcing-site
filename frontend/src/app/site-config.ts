@@ -30,4 +30,10 @@ export const BANK = {
   holder: "",
 };
 
+// 계약서(안)의 을(수급인). 프리랜서 계약이라 개인 이름으로 적는다.
+export const CONTRACTOR = {
+  name: "진민구",
+  brand: "핏에이전트",
+};
+
 export const siteFor = (lang: "ko" | "en") => (lang === "en" ? SITE_EN : SITE);

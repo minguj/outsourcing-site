@@ -245,6 +245,39 @@
 .st-bank-info dd { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .st-bank-info strong { font-size: 17px; color: var(--ink); letter-spacing: .02em; }
 .st-bank-copy { padding: 4px 12px; min-height: 0; font-size: 13px; }
+.st-quote-done { border-color: var(--ink); }
+.st-contract-bar { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.st-contract-draft { margin-bottom: 14px !important; padding: 12px 16px; border: 1px dashed var(--rule); border-radius: 4px; font-size: 14px; color: #34413b; background: #fafbf9; }
+.st-contract { max-width: 860px; margin: 0 auto; line-height: 1.75; }
+.st-contract-title { text-align: center; font-size: 26px; letter-spacing: .12em; padding-bottom: 14px; margin-bottom: 22px !important; border-bottom: 2px solid var(--ink); }
+.st-contract-intro { margin-bottom: 20px !important; }
+.st-contract-articles { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
+.st-contract-articles h2 { font-size: 15.5px; margin-bottom: 4px !important; }
+.st-contract-articles div { font-size: 14.5px; color: #26302b; }
+.st-contract-items { margin: 8px 0 0; padding-left: 18px; }
+.st-contract-items span { color: var(--muted); margin-left: 6px; }
+.st-contract-pay { margin-top: 10px; font-size: 14px; }
+.st-contract-note { margin-top: 20px !important; font-size: 14px; }
+.st-contract-closing { margin-top: 26px !important; }
+.st-contract-date { margin: 22px 0 !important; text-align: center; font-size: 16px; }
+.st-contract-signs { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.st-contract-signs h3 { font-size: 16px; margin-bottom: 8px !important; }
+.st-contract-signs dl { margin: 0; display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 8px 10px; font-size: 14.5px; }
+.st-contract-signs dt { color: var(--muted); }
+.st-contract-signs dd { margin: 0; border-bottom: 1px solid var(--rule); padding-bottom: 4px; }
+@media (max-width: 640px) { .st-contract-signs { grid-template-columns: 1fr; } }
+@media print {
+  .st-no-print { display: none !important; }
+  .st-contract-page { padding: 0; background: #fff; }
+  .st-contract { border: 0; padding: 0; max-width: none; }
+  .st-contract-articles li { break-inside: avoid; }
+  .st-contract-signs { break-inside: avoid; }
+}
+.st-contract-link { font-weight: 600; color: var(--ink); text-decoration: underline; white-space: nowrap; }
+.st-quote-done h3 { font-size: 18px; margin-bottom: 8px; color: var(--ink); }
+.st-quote-done p { font-size: 14.5px; color: #34413b; }
+.st-quote-done-link { margin: 10px 0 16px; padding: 10px 12px; background: #fafbf9; border: 1px solid var(--rule); border-radius: 4px; word-break: break-all; }
+.st-quote-done-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
 /* Admin */
 .st-admin-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); gap: 24px; align-items: start; }
