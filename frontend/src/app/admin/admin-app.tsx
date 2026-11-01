@@ -111,6 +111,7 @@ export default function AdminApp() {
       {authed && <button className="st-button st-button-ghost" onClick={() => void api("/api/admin/logout", { method: "POST", headers: ADMIN }).then(() => { setAuthed(false); setDetail(null); })}>로그아웃</button>}
     </div>
     {error && <p className="st-error" role="alert" style={{ marginBottom: 14 }}>{error}</p>}
+    {authed === null && !error && <p style={{ color: "var(--muted)" }}>관리 정보를 불러오는 중입니다. 계속 이 화면이면 백엔드 서버가 켜져 있는지 확인해 주세요.</p>}
     {authed === false && <form className="st-form" style={{ maxWidth: 380 }} onSubmit={login}>
       <h1 style={{ fontSize: 20 }}>관리자 로그인</h1>
       <label>비밀번호<input type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} /></label>

@@ -210,10 +210,12 @@ async def handle_inquiry(request, forms):
     attached = "\n".join(f"- {display} ({size / 1024 / 1024:.1f}MB)" for display, _, size in saved) or "- 없음"
     link = f"{notify.base_url()}/admin?inquiry={inquiry_id}" if notify.base_url() else f"/admin?inquiry={inquiry_id}"
     english = body.lang == "en"
+    asked = sum(m["role"] == "user" for m in transcript)
+    talk = f"고객 메시지 {asked}개 (전체 대화는 관리 화면에서 확인)" if asked else "없음"
     notify.send(f"[새 상담 접수 #{inquiry_id}]{' [영문]' if english else ''} {brief.get('title') or body.company or body.name}",
                 f"새 상담이 접수되었습니다.{' 영문 사이트에서 접수되어 고객 메일은 영어로 보냈습니다. 답장도 영어로 해 주세요.' if english else ''}\n\n"
                 f"이름: {body.name}\n회사: {body.company or '-'}\n이메일: {email}\n"
-                f"전화: {body.phone or '-'}\n\n[AI 상담 요약]\n{brief_text(brief)}\n\n[직접 남긴 내용]\n{body.message or '-'}\n\n"
+                f"전화: {body.phone or '-'}\n\n[AI 상담 요약]\n{brief_text(brief)}\n\n[AI 상담 대화]\n{talk}\n\n[직접 남긴 내용]\n{body.message or '-'}\n\n"
                 f"[첨부 파일]\n{attached}\n\n관리 화면: {link}\n\n이 메일에 바로 답장하면 고객에게 전달됩니다.\n", reply_to=email)
     name, company = body.name.strip(), consult.company(body.lang)
     if english:

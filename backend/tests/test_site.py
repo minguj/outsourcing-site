@@ -252,12 +252,28 @@ class SiteTests(unittest.TestCase):
         statuses = [self.client.post("/api/quotes/demo", json={}, headers={"X-Forwarded-For": "198.51.100.7"}).status_code for _ in range(11)]
         self.assertEqual(statuses[-1], 429)
 
+    def test_bottom_form_can_carry_the_chat(self):
+        # The page's bottom form sends the AI chat (and its summary when there is one) with the inquiry.
+        chat = [{"role": "assistant", "content": "안녕하세요"}, {"role": "user", "content": "기간은 얼마나 걸리나요?"},
+                {"role": "assistant", "content": "1~2주"}, {"role": "user", "content": "엑셀 변환 툴이 필요해요"}]
+        inquiry_id = self.inquiry(brief=None, message="", transcript=chat).json().get("id")
+        self.assertIsNone(inquiry_id)  # chat without a summary still needs a written request
+        response = self.inquiry(brief=None, message="거래처 엑셀 변환 문의", transcript=chat)
+        stored = site_store.get_inquiry(response.json()["id"])
+        self.assertEqual(len(stored["transcript"]), 4)
+        self.assertIn("고객 메시지 2개", self.sent[-1][1])
+        with_brief = self.inquiry(message="", transcript=chat)
+        self.assertEqual(site_store.get_inquiry(with_brief.json()["id"])["brief"]["title"], "발주서 변환")
+        self.inquiry(transcript=[])
+        self.assertIn("[AI 상담 대화]\n없음", self.sent[-1][1])
+
     def test_english_site_flow(self):
         fake = {"content": [{"type": "text", "text": "Got it."}]}
         with patch.object(consult, "call_claude", return_value=fake) as call:
             self.client.post("/api/consult/chat", json={"messages": [{"role": "user", "content": "hi"}], "lang": "en"})
         self.assertEqual(call.call_args.args[1], "en")
         self.assertIn("English site", consult.system_prompt("en"))
+        self.assertIn("방문자가 대화에서 직접 말한 내용만", consult.system_prompt())
         self.assertNotIn("English site", consult.system_prompt())
         self.assertEqual(self.client.post("/api/consult/chat", json={"messages": [{"role": "user", "content": "hi"}], "lang": "fr"}).status_code, 422)
         inquiry_id = self.inquiry(lang="en", brief={"title": "PO converter", "summary": "Convert orders", "budget": "Undecided", "timeline": "Q1"}).json()["id"]

@@ -3,9 +3,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createDemoQuote } from "./api";
-import { ConsultChat } from "./consult-chat";
+import { ConsultChat, type ChatSession } from "./consult-chat";
 import { COPY, HOME, type Lang } from "./i18n";
 import { InquiryForm } from "./inquiry-form";
 import { siteFor } from "../site-config";
@@ -15,6 +15,9 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
   const router = useRouter();
   const [demoBusy, setDemoBusy] = useState(false);
   const [demoError, setDemoError] = useState("");
+  const [chat, setChat] = useState<ChatSession | null>(null);
+  const [sentBelow, setSentBelow] = useState(false);
+  const onChat = useCallback((session: ChatSession) => setChat(session), []);
   const t = COPY[lang];
   const site = siteFor(lang);
   const { SERVICES, PROCESS, FAQ } = content(lang);
@@ -51,7 +54,7 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
           </div>
           {demoError && <p className="st-error" role="alert" style={{ marginTop: 12 }}>{demoError}</p>}
         </div>
-        <div id="consult"><ConsultChat lang={lang} onFallback={goInquiry} /></div>
+        <div id="consult"><ConsultChat lang={lang} onFallback={goInquiry} onChange={onChat} sentElsewhere={sentBelow} /></div>
       </div></section>
 
       <section id="services" className="st-section"><div className="st-wrap">
@@ -117,7 +120,7 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
           <p className="st-section-lead">{t.inquiry.lead}</p>
           <ul className="st-checks">{t.inquiry.checks.map(c => <li key={c}>{c}</li>)}</ul>
         </div>
-        <InquiryForm lang={lang} />
+        <InquiryForm lang={lang} chat={chat} onDone={includedChat => { if (includedChat) setSentBelow(true); }} />
       </div></section>
     </main>
 

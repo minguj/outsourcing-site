@@ -317,3 +317,9 @@
   .st-stamp, .st-typing span { animation: none; }
   .st-chat-log { scroll-behavior: auto; }
 }
+
+/* Bottom inquiry form: attach the AI chat from the same page */
+.st-attach-chat { flex-direction: row !important; align-items: flex-start; gap: 10px; padding: 12px 14px; border: 1px solid var(--rule); border-left: 3px solid var(--ink); background: #eef2ec; border-radius: 4px; font-weight: 500; }
+.st-attach-chat input { width: 18px; height: 18px; margin-top: 2px; flex: none; }
+.st-attach-chat span { display: flex; flex-direction: column; gap: 3px; }
+.st-attach-chat small { color: var(--muted); font-weight: 400; font-size: 13px; line-height: 1.5; }

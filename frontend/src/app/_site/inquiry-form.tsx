@@ -3,10 +3,13 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api, createDemoQuote, type Brief, type ChatMessage } from "./api";
+import type { ChatSession } from "./consult-chat";
 import { COPY, type Lang } from "./i18n";
 import { siteFor } from "../site-config";
 
-type Props = { brief?: Brief | null; transcript?: ChatMessage[]; compact?: boolean; onDone?: () => void; lang?: Lang };
+type Props = { brief?: Brief | null; transcript?: ChatMessage[]; compact?: boolean; onDone?: (includedChat: boolean) => void; lang?: Lang;
+  /** Bottom form only: the AI chat on the same page, offered as an attachment to this inquiry. */
+  chat?: ChatSession | null };
 
 const ACCEPT = ".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.csv,.hwp,.hwpx,.txt,.md,.png,.jpg,.jpeg,.zip";
 const MAX_FILES = 3;
@@ -22,7 +25,7 @@ export function PrivacyNotice({ lang = "ko" }: { lang?: Lang }) {
   </details>;
 }
 
-export function InquiryForm({ brief, transcript = [], compact = false, onDone, lang = "ko" }: Props) {
+export function InquiryForm({ brief: givenBrief, transcript: givenTranscript = [], compact = false, onDone, lang = "ko", chat }: Props) {
   const t = COPY[lang].form;
   const [form, setForm] = useState({ name: "", company: "", email: "", phone: "", message: "", website: "" });
   const [consent, setConsent] = useState(false);
@@ -32,6 +35,12 @@ export function InquiryForm({ brief, transcript = [], compact = false, onDone, l
   const [files, setFiles] = useState<File[]>([]);
   const router = useRouter();
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm({ ...form, [key]: e.target.value });
+  // A visitor who talked to the AI and then used this form keeps that conversation with the inquiry.
+  const [attachChat, setAttachChat] = useState(true);
+  const chatUsed = !!chat && !chat.submitted && (!!chat.brief || chat.messages.some(m => m.role === "user"));
+  const useChat = chatUsed && attachChat;
+  const brief = useChat ? chat.brief : givenBrief;
+  const transcript = useChat ? chat.messages : givenTranscript;
   const needsMessage = !brief;
 
   async function submit(e: React.FormEvent) {
@@ -42,7 +51,7 @@ export function InquiryForm({ brief, transcript = [], compact = false, onDone, l
       data.append("payload", JSON.stringify({ ...form, brief: brief ?? null, transcript, consent, lang }));
       files.forEach(file => data.append("files", file, file.name));
       const result = await api<{ ok: boolean; id?: number }>("/api/inquiries", { method: "POST", body: data }, lang);
-      setDone(result.id ?? 0); onDone?.();
+      setDone(result.id ?? 0); onDone?.(useChat);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.failed);
     } finally { setBusy(false); }
@@ -76,6 +85,10 @@ export function InquiryForm({ brief, transcript = [], compact = false, onDone, l
       <label>{t.email}<input required type="email" maxLength={254} autoComplete="email" value={form.email} onChange={set("email")} /></label>
       <label>{t.phone}<input type="tel" maxLength={30} autoComplete="tel" value={form.phone} onChange={set("phone")} /></label>
     </div>
+    {chatUsed && <label className="st-attach-chat">
+      <input type="checkbox" checked={attachChat} onChange={e => setAttachChat(e.target.checked)} />
+      <span><strong>{t.attachChat}</strong><small>{chat.brief ? t.attachBrief(chat.brief.title || t.attachUntitled) : t.attachTalk(chat.messages.filter(m => m.role === "user").length)}</small></span>
+    </label>}
     {(needsMessage || !compact) && <label className="st-form-wide">{needsMessage ? t.message : t.extra}
       <textarea required={needsMessage} minLength={needsMessage ? 5 : 0} maxLength={3000} rows={needsMessage ? 6 : 3} value={form.message} onChange={set("message")}
         placeholder={needsMessage ? t.placeholder : ""} /></label>}

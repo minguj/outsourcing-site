@@ -49,6 +49,9 @@ const ko = {
     submit: "상담 접수", submitBrief: "이 내용으로 상담 접수", busy: "접수하는 중", failed: "접수하지 못했습니다.",
     receivedStamp: "접수", received: "상담이 접수되었습니다.", receivedText: "남겨 주신 이메일로 접수 확인 메일을 보냈어요. 담당자가 검토한 뒤 견적서 링크를 메일로 보내 드립니다.",
     preview: "견적서와 착수금 결제가 어떻게 진행되는지 미리 보기",
+    attachChat: "AI 상담 내용 함께 보내기", attachUntitled: "의뢰 요약",
+    attachBrief: (title: string) => `상담 기록지에서 정리한 요약 '${title}'과 대화 기록을 함께 보냅니다.`,
+    attachTalk: (n: number) => `상담 기록지에서 나눈 대화(질문 ${n}개)를 함께 보냅니다. 담당자가 맥락을 보고 연락드려요.`,
   },
   quote: {
     badLink: "견적서 링크가 올바르지 않습니다. 받은 링크를 다시 확인해 주세요.", checking: "결제를 확인하고 있습니다.",
@@ -119,6 +122,9 @@ const en: Copy = {
     submit: "Submit inquiry", submitBrief: "Submit this request", busy: "Submitting", failed: "Couldn't submit your inquiry.",
     receivedStamp: "Received", received: "Your inquiry has been received.", receivedText: "We sent a confirmation to your e-mail. After review, we'll e-mail you a quote link.",
     preview: "Preview how the quote and deposit payment work",
+    attachChat: "Include my AI consultation", attachUntitled: "Request summary",
+    attachBrief: (title: string) => `Sends the summary '${title}' and the conversation from the consultation notes.`,
+    attachTalk: (n: number) => `Sends your conversation from the consultation notes (${n} questions) so we have the context.`,
   },
   quote: {
     badLink: "This quote link is invalid. Please check the link you received.", checking: "Confirming your payment.",
