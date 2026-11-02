@@ -26,6 +26,18 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
   const goInquiry = () => document.getElementById("inquiry")?.scrollIntoView({ behavior: "smooth", block: "start" });
   const goChat = () => document.getElementById("consult")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  // 휴대폰에서는 상담 기록지와 접수 양식이 화면 아래쪽에 있어, 둘 다 안 보일 때만 하단 바로가기 막대를 띄운다.
+  const [ctaHidden, setCtaHidden] = useState(true);
+  useEffect(() => {
+    const targets = ["consult", "inquiry"].map(id => document.getElementById(id)).filter((el): el is HTMLElement => !!el);
+    const visible = new Set<Element>();
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) visible.add(e.target); else visible.delete(e.target); });
+      setCtaHidden(visible.size > 0);
+    }, { threshold: 0.15 });
+    targets.forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
   async function demo() {
     setDemoBusy(true); setDemoError("");
     try { router.push(await createDemoQuote(undefined, lang)); }
@@ -141,6 +153,11 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
         <InquiryForm lang={lang} chat={chat} onDone={includedChat => { if (includedChat) setSentBelow(true); }} />
       </div></section>
     </main>
+
+    <nav className={"st-mobile-cta" + (ctaHidden ? " is-hidden" : "")} aria-label={t.mobileCta.label}>
+      <button type="button" className="st-button st-button-ghost" onClick={goChat}>{t.mobileCta.chat}</button>
+      <button type="button" className="st-button" onClick={goInquiry}>{t.mobileCta.form}</button>
+    </nav>
 
     <footer className="st-footer"><div className="st-wrap">
       <strong>{site.name}</strong><p>{site.description}</p>

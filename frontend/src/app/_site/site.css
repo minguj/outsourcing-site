@@ -306,6 +306,18 @@
 .st-pay-try { margin-top: 26px; border: 1px dashed var(--rule); border-radius: 4px; padding: 12px 16px; background: #fafbf9; font-size: 14px; }
 .st-pay-try summary { cursor: pointer; font-weight: 600; color: var(--ink); }
 .st-pay-try p { margin: 10px 0 12px !important; color: #34413b; }
+.st-mobile-cta { display: none; }
+@media (max-width: 960px) {
+  /* iOS는 16px보다 작은 입력칸을 누르면 화면을 확대한다. */
+  .st-form input:not([type=checkbox]), .st-form textarea, .st-chat-input textarea { font-size: 16px; }
+  .st-mobile-cta { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; box-sizing: border-box;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: rgba(244, 246, 242, .96); border-top: 1px solid var(--rule);
+    transition: transform .2s ease; }
+  .st-mobile-cta.is-hidden { transform: translateY(110%); }
+  .st-mobile-cta .st-button { width: 100%; min-width: 0; justify-content: center; box-sizing: border-box; }
+  .st-footer { padding-bottom: 88px; }
+}
+@media print { .st-mobile-cta { display: none !important; } }
 .st-checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14.5px; }
 .st-lines { display: grid; gap: 22px; margin: 14px 0 4px; }
 .st-lines span { display: block; border-bottom: 1px solid var(--rule); height: 1px; }
@@ -404,7 +416,8 @@
 
 @media (max-width: 960px) {
   .st-faq-grid { grid-template-columns: 1fr; gap: 12px; }
-  .st-examples { grid-template-columns: 1fr; }
+  .st-examples { grid-template-columns: minmax(0, 1fr); }
+  .st-example { min-width: 0; }
   .st-example, .st-example:first-child, .st-example:nth-child(2), .st-example:nth-child(3) { padding: 20px 0; border-left: 0; }
 }
 @media (max-width: 720px) {
