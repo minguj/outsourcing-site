@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api, briefFields, createDemoQuote, type Brief, type ChatMessage } from "./api";
 import { COPY, type Lang } from "./i18n";
 import { InquiryForm } from "./inquiry-form";
@@ -26,6 +26,64 @@ export type ChatSession = { messages: ChatMessage[]; brief: Brief | null; submit
 type ChatProps = { onFallback: () => void; lang?: Lang; onChange?: (session: ChatSession) => void; sentElsewhere?: boolean };
 
 // The chat shows plain text; drop Markdown emphasis and heading marks the model may still add.
+// 휴대폰에서는 상담 기록지가 작아 위아래로 오가야 하므로, 입력을 시작하면 전체화면으로 띄우고 닫으면 원래 자리로 돌아온다.
+const MOBILE = "(max-width: 960px)";
+const isMobile = () => typeof window !== "undefined" && window.matchMedia(MOBILE).matches;
+
+function useFullScreen() {
+  const [full, setFull] = useState(false);
+  const [box, setBox] = useState<{ top: number; height: number } | null>(null);
+  const savedY = useRef(0);
+  const pushed = useRef(false);
+  const isOpen = useRef(false);
+  const open = useCallback(() => {
+    if (!isMobile() || isOpen.current) return;
+    isOpen.current = true;
+    savedY.current = window.scrollY;
+    // 휴대폰의 뒤로 가기 버튼으로도 닫히도록 기록을 하나 남긴다.
+    window.history.pushState({ stChat: true }, "");
+    pushed.current = true;
+    setFull(true);
+  }, []);
+  const close = useCallback(() => {
+    if (pushed.current) { window.history.back(); return; }
+    isOpen.current = false;
+    setFull(false);
+  }, []);
+  useEffect(() => {
+    const onPop = () => { if (pushed.current) { pushed.current = false; isOpen.current = false; setFull(false); } };
+    window.addEventListener("popstate", onPop);
+    window.addEventListener("st-open-chat", open);
+    return () => { window.removeEventListener("popstate", onPop); window.removeEventListener("st-open-chat", open); };
+  }, [open]);
+  useEffect(() => {
+    if (!full) return;
+    const root = document.documentElement;
+    root.classList.add("st-chat-open");
+    // 키보드가 올라오면 보이는 영역에 맞춰 높이를 줄여 입력칸이 가려지지 않게 한다.
+    const vv = window.visualViewport;
+    const fit = () => setBox(vv ? { top: vv.offsetTop, height: vv.height } : null);
+    fit();
+    vv?.addEventListener("resize", fit); vv?.addEventListener("scroll", fit);
+    return () => {
+      vv?.removeEventListener("resize", fit); vv?.removeEventListener("scroll", fit);
+      root.classList.remove("st-chat-open");
+      setBox(null);
+      const y = savedY.current;
+      requestAnimationFrame(() => window.scrollTo(0, y));
+    };
+  }, [full]);
+  // 화면을 돌리거나 넓혀 데스크톱 폭이 되면 원래 배치로 돌아간다.
+  useEffect(() => {
+    if (!full) return;
+    const mq = window.matchMedia(MOBILE);
+    const onChange = () => { if (!mq.matches) close(); };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [full, close]);
+  return { full, box, open, close };
+}
+
 const plain = (text: string) => text.replace(/\*\*(.+?)\*\*/g, "$1").replace(/__(.+?)__/g, "$1").replace(/^#{1,6}\s+/gm, "");
 
 export function ConsultChat({ onFallback, lang = "ko", onChange, sentElsewhere = false }: ChatProps) {
@@ -42,6 +100,7 @@ export function ConsultChat({ onFallback, lang = "ko", onChange, sentElsewhere =
   const [asked, setAsked] = useState<string[]>([]);
   const log = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  const { full, box, open, close } = useFullScreen();
 
   useEffect(() => {
     api<{ consult_ready: boolean }>("/api/site/config").then(c => setReady(c.consult_ready)).catch(() => setReady(false));
@@ -76,6 +135,7 @@ export function ConsultChat({ onFallback, lang = "ko", onChange, sentElsewhere =
   // Frequently asked questions are answered from the page itself: instant, and no AI tokens are used.
   function answer(q: string, a: string) {
     if (busy) return;
+    open();
     setMessages([...messages, { role: "user", content: q }, { role: "assistant", content: a }]);
     setAsked([...asked, q]);
   }
@@ -86,8 +146,14 @@ export function ConsultChat({ onFallback, lang = "ko", onChange, sentElsewhere =
   const remaining = FAQ.filter(f => f.chip !== false && !asked.includes(f.q));
   const offline = ready === false;
 
-  return <div className="st-chat" aria-busy={busy}>
-    <div className="st-chat-head"><strong>{t.head}</strong><span>{brief ? t.done : offline ? t.faqMode : t.live}</span></div>
+  return <div className={"st-chat" + (full ? " is-full" : "")} aria-busy={busy} role={full ? "dialog" : undefined} aria-modal={full || undefined} aria-label={full ? t.head : undefined}
+    style={full && box ? { top: box.top, height: box.height } : undefined}>
+    <div className="st-chat-head"><strong>{t.head}</strong>
+      <div className="st-chat-head-side"><span>{brief ? t.done : offline ? t.faqMode : t.live}</span>
+        {full
+          ? <button type="button" className="st-chat-toggle" onClick={close}>{t.close}</button>
+          : <button type="button" className="st-chat-toggle st-chat-expand" onClick={open}>{t.expand}</button>}
+      </div></div>
     <div className="st-chat-log" ref={log} role="log" aria-live="polite" aria-label={t.log}>
       {messages.map((m, i) => <p key={i} className={"st-msg st-msg-" + m.role}>{m.role === "assistant" ? plain(m.content) : m.content}</p>)}
       {busy && <p className="st-msg st-msg-assistant st-typing" aria-label={t.typing}><span /><span /><span /></p>}
@@ -105,6 +171,7 @@ export function ConsultChat({ onFallback, lang = "ko", onChange, sentElsewhere =
           <button className="st-button" onClick={onFallback}>{t.toForm}</button></div>
       : <form className="st-chat-input" onSubmit={e => { e.preventDefault(); void send(input); }}>
           <textarea aria-label={t.input} rows={2} maxLength={1500} value={input} disabled={busy || ready === null} placeholder={t.placeholder}
+            onFocus={open}
             onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(input); } }} />
           <button className="st-button" disabled={busy || !input.trim()}>{t.send}</button>
         </form>)}

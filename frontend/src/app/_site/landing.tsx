@@ -25,7 +25,11 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
   // One root layout serves both languages; keep <html lang> right for screen readers and translation tools.
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
   const goInquiry = () => document.getElementById("inquiry")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  const goChat = () => document.getElementById("consult")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  // 휴대폰에서는 상담 기록지를 전체화면으로 연다(consult-chat.tsx가 이 이벤트를 받는다).
+  const goChat = () => {
+    if (window.matchMedia("(max-width: 960px)").matches) window.dispatchEvent(new Event("st-open-chat"));
+    else document.getElementById("consult")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
   // 휴대폰에서는 상담 기록지와 접수 양식이 화면 아래쪽에 있어, 둘 다 안 보일 때만 하단 바로가기 막대를 띄운다.
   const [ctaHidden, setCtaHidden] = useState(true);
   useEffect(() => {
