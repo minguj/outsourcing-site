@@ -102,7 +102,7 @@ export const MAINTENANCE: Maintenance = {
     { name: "운영 지원", price: "월 35만 원", fit: "화면이나 기능을 가끔 수정하는 경우", points: 6,
       includes: ["기본 관리 전체", "화면·기능 수정(L2) 2건 정도", "또는 간단 수정(L1) 6건 정도"] },
     { name: "집중 지원", price: "월 70만 원", fit: "기능을 계속 고쳐 가며 운영하는 경우", points: 15,
-      includes: ["기본 관리 전체", "데이터 구조 변경(L3) 1건과 화면·기능 수정(L2) 2건 정도", "포인트 안에서 등급을 섞어 사용"] },
+      includes: ["기본 관리 전체", "데이터 구조 변경(L3) 1건과 화면·기능 수정(L2) 2건 정도"] },
   ],
   levels: [
     { code: "L1", name: "간단 수정", examples: "문구·이미지·색상·링크 변경, 공지 교체", points: "1점" },
@@ -127,7 +127,7 @@ export const MAINTENANCE_EN: Maintenance = {
     { name: "Operations", price: "₩350,000 / month", fit: "Screens or features need changes now and then", points: 6,
       includes: ["Everything in Basic care", "About 2 screen or feature changes (L2)", "Or about 6 small changes (L1)"] },
     { name: "Intensive", price: "₩700,000 / month", fit: "You keep improving features as you run", points: 15,
-      includes: ["Everything in Basic care", "About 1 data structure change (L3) plus 2 L2 changes", "Mix levels freely within your points"] },
+      includes: ["Everything in Basic care", "About 1 data structure change (L3) plus 2 L2 changes"] },
   ],
   levels: [
     { code: "L1", name: "Small change", examples: "Wording, images, colors, links, notices", points: "1 pt" },
