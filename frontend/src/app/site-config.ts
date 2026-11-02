@@ -1,8 +1,8 @@
 // 회사 정보는 이 파일 한 곳에서 바꿉니다. 백엔드 상담봇 이름은 서버 환경변수 COMPANY_NAME과 맞춰 주세요.
 export const SITE = {
   name: "핏에이전트",
-  tagline: "기업 맞춤 AI 상담 에이전트와 문서 변환 툴 개발",
-  description: "회사 업무에 맞춘 AI 상담 에이전트와 문서 변환·검수 툴, 사내 시스템 연동을 맡아 개발하는 외주 개발 서비스입니다.",
+  tagline: "AI 상담·업무 자동화부터 웹사이트·앱 개발까지",
+  description: "AI 상담 에이전트와 문서·업무 자동화부터 웹사이트, 관리자 페이지, 모바일 앱, 결제 연동까지 회사에 맞춰 개발하는 외주 개발 서비스입니다.",
   privacy: {
     items: "이름, 회사명, 이메일, 전화번호(선택), 상담·의뢰 내용, 첨부 파일(선택)",
     // 수탁 업체 상세는 개인정보처리방침 페이지에 적는다:
@@ -16,7 +16,7 @@ export const SITE = {
 // 영문 사이트(/en)용. 회사명은 영문 표기가 정해지면 name을 바꾼다.
 export const SITE_EN = {
   name: "FitAgent",
-  tagline: "Custom AI consultation agents and document conversion tools",
+  tagline: "From AI agents and workflow automation to websites and apps",
   description: "A development studio building AI consultation agents, document conversion and review tools, and internal system integrations tailored to your business.",
   privacy: {
     items: "Name, company, e-mail, phone (optional), consultation and request details, attachments (optional)",
