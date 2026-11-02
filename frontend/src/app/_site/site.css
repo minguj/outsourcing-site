@@ -436,3 +436,16 @@
 .st-attach-chat input { width: 18px; height: 18px; margin-top: 2px; flex: none; }
 .st-attach-chat span { display: flex; flex-direction: column; gap: 3px; }
 .st-attach-chat small { color: var(--muted); font-weight: 400; font-size: 13px; line-height: 1.5; }
+
+/* 휴대폰 전체화면 상담 */
+.st-chat-head-side { display: flex; align-items: center; gap: 12px; }
+.st-chat-toggle { font: inherit; font-size: 13px; font-weight: 600; color: var(--ink); background: #fff; border: 1px solid var(--ink); border-radius: 4px; padding: 6px 12px; min-height: 36px; cursor: pointer; }
+.st-chat-expand { display: none; }
+@media (max-width: 960px) {
+  .st-chat-expand { display: inline-block; }
+  .st-chat-head { align-items: center; }
+  .st-chat.is-full { position: fixed; left: 0; right: 0; top: 0; height: 100vh; height: 100dvh; min-height: 0; z-index: 1000; border: 0; border-radius: 0; box-shadow: none; padding-bottom: env(safe-area-inset-bottom); }
+  .st-chat.is-full .st-chat-head { padding-top: calc(12px + env(safe-area-inset-top)); padding-bottom: 12px; }
+  html.st-chat-open, html.st-chat-open body { overflow: hidden; overscroll-behavior: none; }
+  html.st-chat-open .st-mobile-cta { display: none; }
+}
