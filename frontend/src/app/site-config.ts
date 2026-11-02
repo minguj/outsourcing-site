@@ -1,6 +1,9 @@
 // 검색·링크 미리보기에 쓰는 정식 주소.
 export const SITE_URL = "https://fitagent.co.kr";
 
+// 방문 분석. Google Analytics 4 측정 ID(G-로 시작)를 넣으면 공개 페이지에서만 수집을 시작한다.
+export const ANALYTICS = { ga: "G-628KHERQN6" };
+
 // 검색 등록 확인 코드. Google Search Console·네이버 서치어드바이저에서 "HTML 태그" 방식으로 받은 content 값만 넣는다.
 export const SEARCH_VERIFY = { google: "", naver: "7e1fbaa24af177e04b8477a9040b280fc0cd4007" };
 

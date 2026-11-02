@@ -1,0 +1,10 @@
+[Unit]
+Description=outsourcing-site 데이터 매일 백업 (한국 시간 새벽 3시 20분)
+
+[Timer]
+OnCalendar=*-*-* 18:20:00 UTC
+RandomizedDelaySec=10m
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -1,10 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, briefFields, createDemoQuote, type Brief, type ChatMessage } from "./api";
 import { COPY, type Lang } from "./i18n";
 import { InquiryForm } from "./inquiry-form";
+import { track } from "./analytics";
 import { content } from "../site-content";
 
 function BriefCard({ brief, lang }: { brief: Brief; lang: Lang }) {
@@ -99,7 +99,6 @@ export function ConsultChat({ onFallback, lang = "ko", onChange, sentElsewhere =
   const submitted = sentHere || sentElsewhere;
   const [asked, setAsked] = useState<string[]>([]);
   const log = useRef<HTMLDivElement>(null);
-  const router = useRouter();
   const { full, box, open, close } = useFullScreen();
 
   useEffect(() => {
@@ -118,12 +117,13 @@ export function ConsultChat({ onFallback, lang = "ko", onChange, sentElsewhere =
   async function send(text: string) {
     const content = text.trim();
     if (!content || busy) return;
+    if (!messages.some(m => m.role === "user")) track("consult_start", { lang });
     const next = [...messages, { role: "user" as const, content }];
     setMessages(next); setInput(""); setBusy(true); setError("");
     try {
       const result = await api<{ reply: string; brief: Brief | null }>("/api/consult/chat", { method: "POST", body: JSON.stringify({ messages: next, lang }) }, lang);
       setMessages([...next, { role: "assistant", content: result.reply }]);
-      if (result.brief) setBrief(result.brief);
+      if (result.brief) { if (!brief) track("consult_brief", { lang, project_type: result.brief.project_type || "" }); setBrief(result.brief); }
     } catch (err) {
       const status = (err as { status?: number }).status;
       setError(err instanceof Error ? err.message : t.replyFailed);
@@ -136,12 +136,15 @@ export function ConsultChat({ onFallback, lang = "ko", onChange, sentElsewhere =
   function answer(q: string, a: string) {
     if (busy) return;
     open();
+    track("faq_click", { question: q });
     setMessages([...messages, { role: "user", content: q }, { role: "assistant", content: a }]);
     setAsked([...asked, q]);
   }
   async function demo() {
+    track("demo_quote_start", { from: "chat" });
     setBusy(true); setError("");
-    try { router.push(await createDemoQuote(brief?.title, lang)); } catch (err) { setError(err instanceof Error ? err.message : t.demoFailed); setBusy(false); }
+    // 견적서 화면은 새로 불러와 방문 분석 스크립트가 따라가지 않게 한다(주소에 토큰이 있다).
+    try { window.location.assign(await createDemoQuote(brief?.title, lang)); } catch (err) { setError(err instanceof Error ? err.message : t.demoFailed); setBusy(false); }
   }
   const remaining = FAQ.filter(f => f.chip !== false && !asked.includes(f.q));
   const offline = ready === false;

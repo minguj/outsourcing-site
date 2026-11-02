@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, IBM_Plex_Sans_KR } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "./_site/analytics";
 import { SEARCH_VERIFY, SITE, SITE_URL } from "./site-config";
 
 const geistSans = Geist({
@@ -37,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="ko"
       className={`${geistSans.variable} ${geistMono.variable} ${plexKr.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">{children}<Analytics /></body>
     </html>
   );
 }

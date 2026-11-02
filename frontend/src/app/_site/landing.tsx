@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { track } from "./analytics";
 import { createDemoQuote } from "./api";
 import { ConsultChat, type ChatSession } from "./consult-chat";
 import { COPY, HOME, type Lang } from "./i18n";
@@ -12,7 +12,6 @@ import { CONTACT, siteFor } from "../site-config";
 import { content } from "../site-content";
 
 export default function Landing({ lang = "ko" }: { lang?: Lang }) {
-  const router = useRouter();
   const [demoBusy, setDemoBusy] = useState(false);
   const [demoError, setDemoError] = useState("");
   const [chat, setChat] = useState<ChatSession | null>(null);
@@ -24,9 +23,11 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
   const serviceName = (id: string) => SERVICES.find(s => s.id === id)?.name ?? id;
   // One root layout serves both languages; keep <html lang> right for screen readers and translation tools.
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
-  const goInquiry = () => document.getElementById("inquiry")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  // 버튼 위치(where)를 함께 기록해 어느 버튼으로 상담·접수에 들어오는지 본다.
+  const goInquiry = (where = "other") => { track("cta_click", { target: "inquiry", where }); document.getElementById("inquiry")?.scrollIntoView({ behavior: "smooth", block: "start" }); };
   // 휴대폰에서는 상담 기록지를 전체화면으로 연다(consult-chat.tsx가 이 이벤트를 받는다).
-  const goChat = () => {
+  const goChat = (where = "other") => {
+    track("cta_click", { target: "chat", where });
     if (window.matchMedia("(max-width: 960px)").matches) window.dispatchEvent(new Event("st-open-chat"));
     else document.getElementById("consult")?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
@@ -42,9 +43,11 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
     targets.forEach(el => observer.observe(el));
     return () => observer.disconnect();
   }, []);
-  async function demo() {
+  async function demo(where: string) {
+    track("demo_quote_start", { from: where });
     setDemoBusy(true); setDemoError("");
-    try { router.push(await createDemoQuote(undefined, lang)); }
+    // 견적서 화면은 새로 불러와 방문 분석 스크립트가 따라가지 않게 한다(주소에 토큰이 있다).
+    try { window.location.assign(await createDemoQuote(undefined, lang)); }
     catch (err) { setDemoError(err instanceof Error ? err.message : t.hero.demoFailed); setDemoBusy(false); }
   }
 
@@ -65,12 +68,12 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
           <ul className="st-hero-services" aria-label={t.hero.services}>{SERVICES.map(s => <li key={s.id}><a href={`#service-${s.id}`}>{s.name}</a></li>)}</ul>
           <p className="st-lead">{t.hero.lead2}</p>
           <div className="st-hero-actions">
-            <button className="st-button" disabled={demoBusy} onClick={() => void demo()}>{demoBusy ? t.hero.demoBusy : t.hero.demo}</button>
-            <button className="st-button st-button-ghost" onClick={goInquiry}>{t.hero.form}</button>
+            <button className="st-button" disabled={demoBusy} onClick={() => void demo("hero")}>{demoBusy ? t.hero.demoBusy : t.hero.demo}</button>
+            <button className="st-button st-button-ghost" onClick={() => goInquiry("hero")}>{t.hero.form}</button>
           </div>
           {demoError && <p className="st-error" role="alert" style={{ marginTop: 12 }}>{demoError}</p>}
         </div>
-        <div id="consult"><ConsultChat lang={lang} onFallback={goInquiry} onChange={onChat} sentElsewhere={sentBelow} /></div>
+        <div id="consult"><ConsultChat lang={lang} onFallback={() => goInquiry("chat_offline")} onChange={onChat} sentElsewhere={sentBelow} /></div>
       </div></section>
 
       <section id="services" className="st-section"><div className="st-wrap">
@@ -92,13 +95,13 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
             <ul className="st-tags">{["ai"].map(id => <li key={id}>{serviceName(id)}</li>)}</ul>
             <h3>{t.examples.chat[0]}</h3>
             <p>{t.examples.chat[1]}</p>
-            <button className="st-text-link" onClick={goChat}>{t.examples.chat[2]}</button>
+            <button className="st-text-link" onClick={() => goChat("examples")}>{t.examples.chat[2]}</button>
           </article>
           <article className="st-example">
             <ul className="st-tags">{["payment", "web"].map(id => <li key={id}>{serviceName(id)}</li>)}</ul>
             <h3>{t.examples.quote[0]}</h3>
             <p>{t.examples.quote[1]}</p>
-            <button className="st-text-link" disabled={demoBusy} onClick={() => void demo()}>{t.hero.demo}</button>
+            <button className="st-text-link" disabled={demoBusy} onClick={() => void demo("examples")}>{t.hero.demo}</button>
           </article>
           <article className="st-example">
             <ul className="st-tags">{["web", "infra"].map(id => <li key={id}>{serviceName(id)}</li>)}</ul>
@@ -146,7 +149,7 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
           </tr>)}</tbody>
         </table>
         <ul className="st-plan-notes">{MAINTENANCE.notes.map(n => <li key={n}>{n}</li>)}</ul>
-        <button className="st-text-link" onClick={goInquiry}>{t.maintenance.cta}</button>
+        <button className="st-text-link" onClick={() => goInquiry("maintenance")}>{t.maintenance.cta}</button>
       </div></section>
 
       <section id="faq" className="st-section"><div className="st-wrap st-faq-grid">
@@ -171,8 +174,8 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
     </main>
 
     <nav className={"st-mobile-cta" + (ctaHidden ? " is-hidden" : "")} aria-label={t.mobileCta.label}>
-      <button type="button" className="st-button st-button-ghost" onClick={goChat}>{t.mobileCta.chat}</button>
-      <button type="button" className="st-button" onClick={goInquiry}>{t.mobileCta.form}</button>
+      <button type="button" className="st-button st-button-ghost" onClick={() => goChat("mobile_bar")}>{t.mobileCta.chat}</button>
+      <button type="button" className="st-button" onClick={() => goInquiry("mobile_bar")}>{t.mobileCta.form}</button>
     </nav>
 
     <footer className="st-footer"><div className="st-wrap">

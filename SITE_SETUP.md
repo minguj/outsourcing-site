@@ -51,14 +51,60 @@ EC2의 `/etc/outsourcing-deploy/backend.env`에 넣는다(`backend.env.example` 
 
 ## 데이터
 
-상담·견적·결제 기록은 backend 컨테이너의 `/app/data/site.db`(SQLite), 첨부 파일은 `/app/data/uploads`에 저장되고, Compose 볼륨 `outsourcing-site_backend_data`로 배포·롤백과 무관하게 유지된다. 백업은 EC2에서 다음과 같이 한다.
+상담·견적·결제 기록은 backend 컨테이너의 `/app/data/site.db`(SQLite), 첨부 파일은 `/app/data/uploads`에 저장되고, Compose 볼륨 `outsourcing-site_backend_data`로 배포·롤백과 무관하게 유지된다.
+
+### 자동 백업
+
+`ops/backup.sh`가 매일 한국 시간 새벽 3시 20분쯤(systemd 타이머 `outsourcing-backup.timer`) 데이터 폴더 전체를 묶어 `/var/backups/outsourcing-site/site-<UTC 시각>.tar.gz`로 남긴다. DB는 실행 중에도 일관된 사본이 되도록 SQLite 백업 API로 복사한다. 서버 안 사본은 14일 보관한다.
+
+`/etc/outsourcing-deploy/backup.env`(권한 600)에 다음을 넣으면 S3에도 올린다. EC2에는 해당 버킷에 `s3:PutObject`만 허용한 IAM 역할을 붙이고, 서버에 AWS CLI(`sudo snap install aws-cli --classic`)를 설치한다. S3 쪽 보관 기간은 버킷 수명 주기 규칙(예: 90일 후 삭제)으로 정한다.
 
 ```bash
-# 상담 기록(DB)과 첨부 파일을 함께 백업
-sudo docker run --rm -v outsourcing-site_backend_data:/data -v "$PWD":/backup alpine tar czf /backup/site-data-$(date +%F).tgz -C /data .
+BACKUP_S3_URI=s3://<버킷 이름>/site
+# 선택: BACKUP_LOCAL_DIR=/var/backups/outsourcing-site  BACKUP_KEEP_DAYS=14
+```
+
+설치·수동 실행·확인:
+
+```bash
+sudo install -m 755 backup.sh /opt/outsourcing-deploy/backup.sh
+sudo install -m 644 outsourcing-backup.service outsourcing-backup.timer /etc/systemd/system/
+sudo systemctl daemon-reload && sudo systemctl enable --now outsourcing-backup.timer
+sudo systemctl start outsourcing-backup.service && sudo journalctl -u outsourcing-backup.service -n 20
+systemctl list-timers outsourcing-backup.timer
+```
+
+복원(백업 시점으로 되돌린다. 그 뒤에 들어온 접수는 사라지므로 먼저 현재 상태도 백업한다):
+
+```bash
+sudo systemctl start outsourcing-backup.service          # 현재 상태 먼저 백업
+mkdir -p /tmp/restore && sudo tar -xzf /var/backups/outsourcing-site/site-<시각>.tar.gz -C /tmp/restore
+c=$(sudo docker ps -q --filter label=com.docker.compose.service=backend)
+sudo docker stop "$c"
+sudo docker cp /tmp/restore/data/. "$c":/app/data/
+sudo docker start "$c"
 ```
 
 개인정보 보유 기간 안내(상담 종료 후 1년)는 `site-config.ts`의 문구와 실제 운영을 맞춘다.
+
+## 방문 분석 (Google Analytics 4)
+
+`site-config.ts`의 `ANALYTICS.ga`에 GA4 측정 ID(`G-`로 시작)를 넣으면 공개 페이지에서만 수집을 시작한다. 비워 두면 스크립트를 아예 불러오지 않는다. 구현은 `frontend/src/app/_site/analytics.tsx`.
+
+- 견적서·계약서·관리 화면(`/quote`, `/contract`, `/admin`)은 주소에 고객별 토큰이 있어 수집하지 않는다. 페이지 조회는 쿼리 문자열을 뺀 경로만 보낸다.
+- GA4 관리 → 데이터 스트림 → 향상된 측정에서 **"브라우저 기록 이벤트 기반 페이지 변경"은 끈다.** 켜 두면 GA가 토큰이 붙은 주소를 직접 보낼 수 있다.
+- 이름·연락처·상담 내용은 이벤트에 넣지 않는다. 개인정보처리방침 제7조에 수집 내용과 거부 방법을 적어 두었다.
+
+보내는 이벤트(GA4 관리 → 이벤트에서 `inquiry_submit`과 `consult_brief`를 주요 이벤트로 표시하면 전환으로 볼 수 있다):
+
+| 이벤트 | 언제 | 값 |
+|---|---|---|
+| `cta_click` | 상담·접수로 가는 버튼 | `target`(chat·inquiry), `where`(hero·mobile_bar·maintenance·examples·chat_offline) |
+| `faq_click` | 상담창의 자주 묻는 질문 버튼 | `question` |
+| `consult_start` | AI 상담에 첫 메시지 | `lang` |
+| `consult_brief` | AI가 의뢰 요약을 만듦 | `project_type` |
+| `inquiry_submit` | 상담 접수 완료 | `from`(chat·form), `with_chat`, `files` |
+| `demo_quote_start` | 견적·결제 체험 시작 | `from` |
 
 ## 개인정보처리방침·이용약관·계약 문서
 
