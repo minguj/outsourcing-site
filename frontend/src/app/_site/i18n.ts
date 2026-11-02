@@ -8,7 +8,7 @@ const ko = {
   hero: {
     title: "사이트부터 결제, 문서 자동화, AI 에이전트, 배포까지 필요한 만큼 맡기세요",
     lead: "회사 업무에 맞춘 AI 상담 에이전트와 문서 변환 툴이 주력이고, 그에 필요한 웹사이트와 관리자 페이지, 모바일 앱, 결제 연동, 서버 배포까지 함께 만듭니다.",
-    lead2: "옆의 상담 기록지에서 자주 묻는 질문을 바로 확인하거나, 맡기고 싶은 일을 말씀해 주세요.",
+    lead2: "상담 기록지에서 자주 묻는 질문을 바로 확인하거나, 맡기고 싶은 일을 말씀해 주세요.",
     demo: "견적·결제 흐름 체험", demoBusy: "체험 견적서를 만드는 중", form: "양식으로 문의하기", demoFailed: "체험을 시작하지 못했습니다.", services: "서비스",
   },
   services: { title: "맡길 수 있는 일", lead: "하나만 맡기셔도 되고, 필요한 것끼리 묶어 한 번에 진행할 수도 있습니다. 회사가 이미 쓰는 문서와 시스템에 맞춰 만듭니다.", cols: ["서비스", "하는 일", "예시"] },
@@ -27,6 +27,7 @@ const ko = {
   contact: { lead: "카카오톡으로도 편하게 문의하실 수 있어요.", kakao: "카카오톡으로 문의" },
   inquiry: { title: "상담 접수", lead: "AI 상담 대신 직접 적어 주셔도 됩니다. 지금 하고 있는 일, 바라는 결과, 예산과 일정을 아는 만큼만 적어 주세요.",
     checks: ["접수하면 확인 메일을 보내 드립니다", "담당자가 검토해 견적서 링크를 메일로 보내 드립니다", "상담과 견적은 무료입니다"] },
+  mobileCta: { chat: "AI 상담", form: "상담 접수", label: "빠른 상담" },
   legal: { privacy: "개인정보처리방침", terms: "이용약관·환불 규정", full: "개인정보처리방침 전문 보기" },
   footer: (name: string) => `© ${name}. 이 사이트의 데모와 체험에 쓰인 회사·거래 정보는 모두 가상입니다.`,
   chat: {
@@ -102,7 +103,7 @@ const en: Copy = {
   hero: {
     title: "Websites, payments, document automation, AI agents and deployment: hand over as much as you need",
     lead: "Our focus is AI consultation agents and document conversion tools built around your business, together with the websites, admin pages, payment integration and server deployment they need.",
-    lead2: "Check common questions in the consultation notes next to this, or tell us what you'd like to build.",
+    lead2: "Check common questions in the consultation notes, or tell us what you'd like to build.",
     demo: "Sample quote & payment", demoBusy: "Creating a sample quote", form: "Use the inquiry form", demoFailed: "Couldn't start the demo.", services: "Services",
   },
   services: { title: "What we build", lead: "Hand over a single piece or bundle what you need into one project. We build around the documents and systems you already use.", cols: ["Service", "What we do", "Examples"] },
@@ -121,6 +122,7 @@ const en: Copy = {
   contact: { lead: "You can also reach us on KakaoTalk.", kakao: "Chat on KakaoTalk" },
   inquiry: { title: "Contact us", lead: "You can write to us directly instead of using the AI chat. Share as much as you know about your current work, the result you want, budget and timeline.",
     checks: ["We send a confirmation e-mail when you submit", "We review it and e-mail you a quote link", "Consultation and quotes are free"] },
+  mobileCta: { chat: "AI chat", form: "Contact us", label: "Quick contact" },
   legal: { privacy: "Privacy policy", terms: "Terms and refunds", full: "Read the full privacy policy" },
   footer: (name: string) => `© ${name}. All companies and transactions in this site's demos are fictional.`,
   chat: {
