@@ -1,0 +1,9 @@
+[Unit]
+Description=outsourcing-site 데이터 백업
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/opt/outsourcing-deploy/backup.sh

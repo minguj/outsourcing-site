@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { track } from "./analytics";
 import { useEffect, useId, useRef, useState } from "react";
 import { api, createDemoQuote, type Brief, type ChatMessage } from "./api";
 import type { ChatSession } from "./consult-chat";
@@ -68,6 +69,7 @@ export function InquiryForm({ brief: givenBrief, transcript: givenTranscript = [
       data.append("payload", JSON.stringify({ ...form, brief: brief ?? null, transcript, consent, lang }));
       files.forEach(file => data.append("files", file, file.name));
       const result = await api<{ ok: boolean; id?: number }>("/api/inquiries", { method: "POST", body: data }, lang);
+      track("inquiry_submit", { from: compact ? "chat" : "form", with_chat: useChat, files: files.length, lang });
       setDone(result.id ?? 0); onDone?.(useChat);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.failed);
