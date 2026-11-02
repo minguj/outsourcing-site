@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { api, createDemoQuote, type Brief, type ChatMessage } from "./api";
 import type { ChatSession } from "./consult-chat";
 import { COPY, type Lang } from "./i18n";
@@ -16,20 +16,36 @@ const MAX_FILES = 3;
 const MAX_BYTES = 10 * 1024 * 1024;
 const mb = (bytes: number) => `${(bytes / 1024 / 1024).toFixed(1)}MB`;
 
-export function PrivacyNotice({ lang = "ko" }: { lang?: Lang }) {
+/** The full collection-and-use notice, opened from the consent label so it can be read before agreeing. */
+export function PrivacyDialog({ lang = "ko", open, onClose, onAgree }: { lang?: Lang; open: boolean; onClose: () => void; onAgree: () => void }) {
   const t = COPY[lang].form;
   const { privacy } = siteFor(lang);
-  return <details className="st-privacy"><summary>{t.privacy}</summary>
-    <dl><dt>{t.items}</dt><dd>{privacy.items}</dd><dt>{t.purpose}</dt><dd>{privacy.purpose}</dd><dt>{t.retention}</dt><dd>{privacy.retention}</dd><dt>{t.transfer}</dt><dd>{privacy.transfer}</dd></dl>
-    <p>{t.privacyNote}</p>
-  </details>;
+  const ref = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    const dialog = ref.current;
+    if (!dialog) return;
+    if (open && !dialog.open) dialog.showModal();
+    if (!open && dialog.open) dialog.close();
+  }, [open]);
+  return <dialog ref={ref} className="st-privacy-dialog" aria-labelledby="st-privacy-title" onClose={onClose} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="st-privacy-body">
+      <h3 id="st-privacy-title">{t.privacy}</h3>
+      <dl><dt>{t.items}</dt><dd>{privacy.items}</dd><dt>{t.purpose}</dt><dd>{privacy.purpose}</dd><dt>{t.retention}</dt><dd>{privacy.retention}</dd><dt>{t.transfer}</dt><dd>{privacy.transfer}</dd></dl>
+      <p>{t.privacyNote}</p>
+      <div className="st-privacy-actions">
+        <button type="button" className="st-button st-button-ghost" onClick={onClose}>{t.close}</button>
+        <button type="button" className="st-button" onClick={onAgree}>{t.agreeClose}</button>
+      </div>
+    </div>
+  </dialog>;
 }
 
 export function InquiryForm({ brief: givenBrief, transcript: givenTranscript = [], compact = false, onDone, lang = "ko", chat }: Props) {
   const t = COPY[lang].form;
   const [form, setForm] = useState({ name: "", company: "", email: "", phone: "", message: "", website: "" });
   const [consent, setConsent] = useState(false);
-  const [overseas, setOverseas] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const consentId = useId();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState<number | null>(null);
@@ -49,7 +65,7 @@ export function InquiryForm({ brief: givenBrief, transcript: givenTranscript = [
     setBusy(true); setError("");
     try {
       const data = new FormData();
-      data.append("payload", JSON.stringify({ ...form, brief: brief ?? null, transcript, consent, overseas_consent: overseas, lang }));
+      data.append("payload", JSON.stringify({ ...form, brief: brief ?? null, transcript, consent, lang }));
       files.forEach(file => data.append("files", file, file.name));
       const result = await api<{ ok: boolean; id?: number }>("/api/inquiries", { method: "POST", body: data }, lang);
       setDone(result.id ?? 0); onDone?.(useChat);
@@ -106,10 +122,12 @@ export function InquiryForm({ brief: givenBrief, transcript: givenTranscript = [
       </li>)}</ul>}
     </div>
     <input className="st-honeypot" tabIndex={-1} autoComplete="off" aria-hidden="true" value={form.website} onChange={set("website")} />
-    <label className="st-consent"><input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} required /> {t.consent}</label>
-    <label className="st-consent"><input type="checkbox" checked={overseas} onChange={e => setOverseas(e.target.checked)} required /> {t.overseas}</label>
-    <PrivacyNotice lang={lang} />
+    <div className="st-consent-row">
+      <input id={consentId} type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} required />
+      <label htmlFor={consentId}>{t.consent[0]}<button type="button" className="st-consent-link" onClick={e => { e.preventDefault(); setShowPrivacy(true); }}>{t.consent[1]}</button>{t.consent[2]}</label>
+    </div>
+    <PrivacyDialog lang={lang} open={showPrivacy} onClose={() => setShowPrivacy(false)} onAgree={() => { setConsent(true); setShowPrivacy(false); }} />
     {error && <p className="st-error" role="alert">{error}</p>}
-    <button className="st-button" disabled={busy || !consent || !overseas}>{busy ? t.busy : brief ? t.submitBrief : t.submit}</button>
+    <button className="st-button" disabled={busy || !consent}>{busy ? t.busy : brief ? t.submitBrief : t.submit}</button>
   </form>;
 }

@@ -149,6 +149,19 @@
 .st-file-list li small { color: var(--muted); font-size: 12px; }
 .st-file-list button { border: 0; background: none; font: inherit; font-size: 12.5px; color: var(--stamp); cursor: pointer; padding: 2px 4px; }
 .st-honeypot { position: absolute !important; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.st-consent-row { display: flex; align-items: flex-start; gap: 8px; font-size: 13.5px; font-weight: 500; color: #34413b; }
+.st-consent-row input { width: 18px; height: 18px; margin: 1px 0 0; flex: none; accent-color: var(--ink); }
+.st-consent-row label { display: inline; font-weight: 500; }
+.st-consent-link { all: unset; cursor: pointer; font-weight: 700; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; }
+.st-consent-link:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.st-privacy-dialog { position: fixed; inset: 0; margin: auto; height: fit-content; max-height: calc(100% - 32px); overflow: auto; width: min(560px, calc(100% - 32px)); padding: 0; border: 1px solid var(--rule); border-radius: 6px; color: var(--text, #26302b); }
+.st-privacy-dialog::backdrop { background: rgba(23, 50, 42, .45); }
+.st-privacy-body { padding: 24px; display: grid; gap: 14px; font-size: 14px; line-height: 1.6; }
+.st-privacy-body h3 { font-size: 18px; margin: 0; color: var(--ink); }
+.st-privacy-body dl { display: grid; grid-template-columns: 84px 1fr; gap: 8px 12px; margin: 0; }
+.st-privacy-body dt { font-weight: 700; color: var(--ink); } .st-privacy-body dd { margin: 0; }
+.st-privacy-body p { margin: 0; color: var(--muted); font-size: 13px; }
+.st-privacy-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .st-privacy { font-size: 12.5px; color: var(--muted); }
 .st-privacy summary { cursor: pointer; }
 .st-privacy dl { display: grid; grid-template-columns: 70px 1fr; gap: 4px 10px; margin: 8px 0; }
@@ -301,6 +314,8 @@
   .st-hero-copy { padding-top: 0; }
   .st-steps { grid-template-columns: 1fr 1fr; }
   .st-plans { grid-template-columns: 1fr; }
+  .st-privacy-body dl { grid-template-columns: 1fr; gap: 2px; }
+  .st-privacy-body dd { margin-bottom: 8px; }
   .st-steps li, .st-steps li + li { padding: 18px 16px 14px 0; border-left: 0; border-bottom: 1px solid var(--rule); }
   .st-steps li:nth-child(even) { padding-left: 16px; border-left: 1px solid var(--rule); }
 }

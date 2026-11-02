@@ -25,6 +25,9 @@ export type ChatSession = { messages: ChatMessage[]; brief: Brief | null; submit
 
 type ChatProps = { onFallback: () => void; lang?: Lang; onChange?: (session: ChatSession) => void; sentElsewhere?: boolean };
 
+// The chat shows plain text; drop Markdown emphasis and heading marks the model may still add.
+const plain = (text: string) => text.replace(/\*\*(.+?)\*\*/g, "$1").replace(/__(.+?)__/g, "$1").replace(/^#{1,6}\s+/gm, "");
+
 export function ConsultChat({ onFallback, lang = "ko", onChange, sentElsewhere = false }: ChatProps) {
   const t = COPY[lang].chat;
   const FAQ = content(lang).FAQ;
@@ -86,7 +89,7 @@ export function ConsultChat({ onFallback, lang = "ko", onChange, sentElsewhere =
   return <div className="st-chat" aria-busy={busy}>
     <div className="st-chat-head"><strong>{t.head}</strong><span>{brief ? t.done : offline ? t.faqMode : t.live}</span></div>
     <div className="st-chat-log" ref={log} role="log" aria-live="polite" aria-label={t.log}>
-      {messages.map((m, i) => <p key={i} className={"st-msg st-msg-" + m.role}>{m.content}</p>)}
+      {messages.map((m, i) => <p key={i} className={"st-msg st-msg-" + m.role}>{m.role === "assistant" ? plain(m.content) : m.content}</p>)}
       {busy && <p className="st-msg st-msg-assistant st-typing" aria-label={t.typing}><span /><span /><span /></p>}
       {brief && <div ref={briefRef}><BriefCard brief={brief} lang={lang} /></div>}
       {brief && !submitted && <div className="st-chat-submit"><p>{t.confirm}</p><InquiryForm lang={lang} compact brief={brief} transcript={messages} onDone={() => setSentHere(true)} /></div>}
