@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { api } from "../_site/api";
+import { api, createDemoQuote } from "../_site/api";
 import { COPY, HOME, money, type Lang } from "../_site/i18n";
 import { BANK, siteFor } from "../site-config";
 
@@ -123,6 +123,15 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
     if (ok) setTimeout(() => setCopied(false), 2000);
   }
 
+  // 실제 견적서의 결제 체험은 같은 제목의 체험용 견적서에서 한다. 이 견적서의 상태(결제 완료)는 바뀌지 않는다.
+  async function tryPayment() {
+    if (!quote) return;
+    setBusy(true); setError("");
+    // 같은 /quote 화면이라 클라이언트 이동으로는 새 견적서를 다시 불러오지 않는다. 페이지를 새로 연다.
+    try { window.location.assign(await createDemoQuote(quote.title, lang)); }
+    catch (err) { setError(err instanceof Error ? err.message : t.startFailed); setBusy(false); }
+  }
+
   const paid = quote?.status === "paid";
   const b = t.bank;
   return <div className={"st-doc-page" + (lang === "en" ? " st-lang-en" : "")}><div className="st-wrap">
@@ -146,7 +155,7 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
       </table>
       {quote.schedule && <p className="st-note"><strong>{t.schedule}</strong><br />{quote.schedule}</p>}
       {quote.note && <p className="st-note"><strong>{t.note}</strong><br />{quote.note}</p>}
-      <div className="st-pay-box">
+      {(quote.is_demo || paid) && <div className="st-pay-box">
         <div><small>{t.deposit}</small><strong>{won(quote.deposit)}</strong><small>{paid && quote.paid_at ? t.paidOn(date(lang, quote.paid_at)) : t.startsWork}</small></div>
         {paid ? <span className="st-badge">{t.paid}</span>
           : quote.payment_ready ? <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
@@ -155,10 +164,10 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
               : quote.payment_test && <span className="st-badge st-badge-test">{t.test}</span>}
           </div>
           : <p style={{ fontSize: 14, color: "var(--muted)", maxWidth: 280 }}>{t.off}</p>}
-      </div>
+      </div>}
       {!quote.is_demo && <section className="st-next st-bank" aria-label={b.title}>
         <h2>{b.title}</h2>
-        <p className="st-bank-lead">{b.lead}{quote.payment_ready && !paid ? ` ${b.demoNote}` : ""}</p>
+        <p className="st-bank-lead">{b.lead}</p>
         <dl className="st-bank-info">
           <div><dt>{b.account}</dt><dd><strong>{BANK.bank} {BANK.account}</strong>
             <button type="button" className="st-button st-button-ghost st-bank-copy" onClick={() => void copyAccount()}>{copied ? b.copied : b.copy}</button></dd></div>
@@ -170,6 +179,11 @@ export default function QuoteView({ mode }: { mode: "view" | "success" | "fail" 
         <ol>{b.list.map(([title, text], i) => <li key={title}><strong>{title}</strong><span>{text}
           {i === 0 && lang === "ko" && <> <Link href={`/contract?t=${encodeURIComponent(token)}`} target="_blank" className="st-contract-link">{b.contract}</Link></>}</span></li>)}</ol>
       </section>}
+      {!quote.is_demo && !paid && <details className="st-pay-try">
+        <summary>{b.tryTitle}</summary>
+        <p>{b.tryText}</p>
+        <button type="button" className="st-button st-button-ghost" disabled={busy} onClick={() => void tryPayment()}>{busy ? t.opening : b.tryButton}</button>
+      </details>}
       {paid && <section className="st-next" aria-label={t.next}>
         <h2>{t.next}</h2>
         <ol>{quote.next_steps.map(step => <li key={step.title}><strong>{step.title}</strong><span>{step.text}</span></li>)}</ol>

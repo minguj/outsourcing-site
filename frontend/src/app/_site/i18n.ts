@@ -76,7 +76,9 @@ const ko = {
     bank: {
       title: "입금 안내",
       lead: "실제 계약 대금은 계좌이체로 받습니다.",
-      demoNote: "위의 결제 버튼은 사이트에 넣어 드릴 수 있는 온라인 결제 예시로, 눌러도 실제로 청구되지 않습니다.",
+      tryTitle: "온라인 결제 체험 (선택)",
+      tryText: "사이트에 넣어 드릴 수 있는 카드 결제 연동 예시입니다. 이 견적서와 같은 제목의 체험용 견적서에서 결제 흐름을 볼 수 있고, 실제로 청구되지 않습니다. 이 견적서의 내용과 상태는 바뀌지 않습니다.",
+      tryButton: "결제 흐름 체험하기",
       account: "입금 계좌", holder: "예금주", amount: "착수금", payer: "입금자명", payerText: "회사명 또는 담당자 이름으로 보내 주세요.",
       copy: "계좌번호 복사", copied: "복사했습니다", contract: "계약서(안) 보기",
       steps: "진행 순서",
@@ -168,7 +170,9 @@ const en: Copy = {
     bank: {
       title: "How to pay",
       lead: "Contract payments are made by bank transfer.",
-      demoNote: "The payment button above is a sample of the online payment we can build into your site. You are never charged.",
+      tryTitle: "Try online payment (optional)",
+      tryText: "A sample of the card payment we can build into your site. It opens a sample quote with the same title so you can walk through the payment flow. You are never charged, and this quote does not change.",
+      tryButton: "Try the payment flow",
       account: "Account", holder: "Account holder", amount: "Deposit", payer: "Sender name", payerText: "Please use your company or your own name.",
       copy: "Copy account number", copied: "Copied", contract: "View the draft contract",
       steps: "What happens next",

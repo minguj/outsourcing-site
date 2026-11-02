@@ -303,6 +303,9 @@
 .st-doc-tabs a[aria-current="page"] { background: var(--ink); border-color: var(--ink); color: #fff; }
 .st-contract-section { font-size: 15.5px; margin: 22px 0 8px !important; }
 .st-contract-pay tbody th { border-bottom: 1px solid var(--rule); font-weight: 600; color: var(--ink); text-align: left; }
+.st-pay-try { margin-top: 26px; border: 1px dashed var(--rule); border-radius: 4px; padding: 12px 16px; background: #fafbf9; font-size: 14px; }
+.st-pay-try summary { cursor: pointer; font-weight: 600; color: var(--ink); }
+.st-pay-try p { margin: 10px 0 12px !important; color: #34413b; }
 .st-checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14.5px; }
 .st-lines { display: grid; gap: 22px; margin: 14px 0 4px; }
 .st-lines span { display: block; border-bottom: 1px solid var(--rule); height: 1px; }
