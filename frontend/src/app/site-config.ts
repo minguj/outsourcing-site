@@ -1,3 +1,15 @@
+// 검색·링크 미리보기에 쓰는 정식 주소.
+export const SITE_URL = "https://fitagent.co.kr";
+
+// 검색 등록 확인 코드. Google Search Console·네이버 서치어드바이저에서 "HTML 태그" 방식으로 받은 content 값만 넣는다.
+export const SEARCH_VERIFY = { google: "", naver: "" };
+
+// 검색 키워드. 네이버 등은 참고하고 Google은 무시하므로, 실제 검색 노출은 본문 문구가 좌우한다.
+export const KEYWORDS = [
+  "외주 개발", "AI 상담 에이전트", "AI 챗봇 개발", "업무 자동화", "문서 자동화", "엑셀 자동화", "PDF 변환",
+  "웹사이트 제작", "관리자 페이지 개발", "모바일 앱 개발", "결제 연동", "토스페이먼츠 연동", "프리랜서 개발자", "핏에이전트",
+];
+
 // 회사 정보는 이 파일 한 곳에서 바꿉니다. 백엔드 상담봇 이름은 서버 환경변수 COMPANY_NAME과 맞춰 주세요.
 export const SITE = {
   name: "핏에이전트",

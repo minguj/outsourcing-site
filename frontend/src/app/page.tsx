@@ -1,22 +1,46 @@
 import type { Metadata } from "next";
 import Landing from "./_site/landing";
 import "./_site/site.css";
-import { SITE } from "./site-config";
+import { KEYWORDS, OPERATOR, SITE, SITE_URL } from "./site-config";
+import { content } from "./site-content";
 
 export const metadata: Metadata = {
   title: `${SITE.name} | ${SITE.tagline}`,
   description: SITE.description,
+  keywords: KEYWORDS,
+  alternates: { canonical: "/" },
   // 카카오톡·슬랙 등 링크 미리보기에 쓰인다.
   openGraph: {
     title: `${SITE.name} | ${SITE.tagline}`,
     description: SITE.description,
-    url: "https://fitagent.co.kr",
+    url: SITE_URL,
     siteName: SITE.name,
     locale: "ko_KR",
     type: "website",
   },
 };
 
+// 검색엔진이 서비스 성격과 자주 묻는 질문을 이해하도록 구조화 데이터를 함께 싣는다.
+function jsonLd() {
+  const { FAQ, SERVICES } = content("ko");
+  return [
+    {
+      "@context": "https://schema.org", "@type": "ProfessionalService",
+      name: SITE.name, url: SITE_URL, description: SITE.description, email: OPERATOR.email,
+      areaServed: "KR", availableLanguage: "ko",
+      hasOfferCatalog: { "@type": "OfferCatalog", name: "개발 서비스",
+        itemListElement: SERVICES.map(s => ({ "@type": "Offer", itemOffered: { "@type": "Service", name: s.name } })) },
+    },
+    {
+      "@context": "https://schema.org", "@type": "FAQPage",
+      mainEntity: FAQ.map(f => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })),
+    },
+  ];
+}
+
 export default function Home() {
-  return <Landing />;
+  return <>
+    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd()).replace(/</g, "\\u003c") }} />
+    <Landing />
+  </>;
 }

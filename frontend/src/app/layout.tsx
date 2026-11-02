@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, IBM_Plex_Sans_KR } from "next/font/google";
 import "./globals.css";
-import { SITE } from "./site-config";
+import { SEARCH_VERIFY, SITE, SITE_URL } from "./site-config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,8 +22,13 @@ const plexKr = IBM_Plex_Sans_KR({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: SITE.name,
   description: SITE.description,
+  verification: {
+    ...(SEARCH_VERIFY.google ? { google: SEARCH_VERIFY.google } : {}),
+    ...(SEARCH_VERIFY.naver ? { other: { "naver-site-verification": SEARCH_VERIFY.naver } } : {}),
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
