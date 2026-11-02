@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { track } from "./analytics";
-import { createDemoQuote } from "./api";
 import { ConsultChat, type ChatSession } from "./consult-chat";
 import { COPY, HOME, type Lang } from "./i18n";
 import { InquiryForm } from "./inquiry-form";
@@ -12,8 +11,6 @@ import { CONTACT, siteFor } from "../site-config";
 import { content } from "../site-content";
 
 export default function Landing({ lang = "ko" }: { lang?: Lang }) {
-  const [demoBusy, setDemoBusy] = useState(false);
-  const [demoError, setDemoError] = useState("");
   const [chat, setChat] = useState<ChatSession | null>(null);
   const [sentBelow, setSentBelow] = useState(false);
   const onChat = useCallback((session: ChatSession) => setChat(session), []);
@@ -43,13 +40,6 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
     targets.forEach(el => observer.observe(el));
     return () => observer.disconnect();
   }, []);
-  async function demo(where: string) {
-    track("demo_quote_start", { from: where });
-    setDemoBusy(true); setDemoError("");
-    // 견적서 화면은 새로 불러와 방문 분석 스크립트가 따라가지 않게 한다(주소에 토큰이 있다).
-    try { window.location.assign(await createDemoQuote(undefined, lang)); }
-    catch (err) { setDemoError(err instanceof Error ? err.message : t.hero.demoFailed); setDemoBusy(false); }
-  }
 
   return <div className={"st-page" + (lang === "en" ? " st-lang-en" : "")}>
     <header className="st-nav"><div className="st-wrap">
@@ -94,13 +84,6 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
             <h3>{t.examples.chat[0]}</h3>
             <p>{t.examples.chat[1]}</p>
             <button className="st-text-link" onClick={() => goChat("examples")}>{t.examples.chat[2]}</button>
-          </article>
-          <article className="st-example">
-            <ul className="st-tags">{["payment", "web"].map(id => <li key={id}>{serviceName(id)}</li>)}</ul>
-            <h3>{t.examples.quote[0]}</h3>
-            <p>{t.examples.quote[1]}</p>
-            <button className="st-text-link" disabled={demoBusy} onClick={() => void demo("examples")}>{demoBusy ? t.hero.demoBusy : t.hero.demo}</button>
-            {demoError && <p className="st-error" role="alert">{demoError}</p>}
           </article>
           <article className="st-example">
             <ul className="st-tags">{["web", "infra"].map(id => <li key={id}>{serviceName(id)}</li>)}</ul>
