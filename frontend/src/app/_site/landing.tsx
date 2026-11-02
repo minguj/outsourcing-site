@@ -131,9 +131,11 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
         <div className="st-plans">{MAINTENANCE.plans.map(p => <article key={p.name} className="st-plan">
           <h3>{p.name}</h3>
           <p className="st-plan-fit"><span>{t.maintenance.fit}</span> {p.fit}</p>
-          <p className="st-plan-points">{t.maintenance.points} <strong>{p.points}{t.maintenance.pointUnit}</strong></p>
+          <p className="st-plan-points">{t.maintenance.points} <strong>{p.points}{t.maintenance.pointUnit}</strong> {t.maintenance.pointsTail}</p>
           <ul>{p.includes.map(item => <li key={item}>{item}</li>)}</ul>
         </article>)}</div>
+        <h3 className="st-levels-title">{t.maintenance.howTitle}</h3>
+        <ol className="st-point-steps">{t.maintenance.how.map(([title, text]) => <li key={title}><strong>{title}</strong><p>{text}</p></li>)}</ol>
         <h3 className="st-levels-title">{t.maintenance.levelsTitle}</h3>
         <p className="st-levels-lead">{t.maintenance.levelsLead}</p>
         <table className="st-table st-levels">
