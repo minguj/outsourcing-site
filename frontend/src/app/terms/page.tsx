@@ -10,11 +10,11 @@ export const metadata: Metadata = { title: `이용약관·환불 규정 | ${SITE
 export default function TermsPage() {
   return <LegalPage title="이용약관·환불 규정" effective={POLICY_EFFECTIVE.terms}>
     <Section n={1} title="목적">
-      <p>이 약관은 {OPERATOR.brand}(대표 {OPERATOR.representative}, 이하 &ldquo;운영자&rdquo;)가 운영하는 {OPERATOR.site}(이하 &ldquo;사이트&rdquo;)의 이용 조건과, 사이트를 통해 의뢰한 외주 개발 용역의 대금 지급·환불 기준을 정합니다.</p>
+      <p>이 약관은 {OPERATOR.representative}(이하 &ldquo;운영자&rdquo;)가 &lsquo;{OPERATOR.brand}&rsquo;라는 이름으로 운영하는 {OPERATOR.site}(이하 &ldquo;사이트&rdquo;)의 이용 조건과, 사이트를 통해 의뢰한 외주 개발 용역의 대금 지급·환불 기준을 정합니다.</p>
     </Section>
 
     <Section n={2} title="운영자 정보">
-      <ul><li>상호: {OPERATOR.brand}</li><li>대표: {OPERATOR.representative}</li><li>이메일: <a href={`mailto:${OPERATOR.email}`}>{OPERATOR.email}</a></li><li>계약 형태: 개인(프리랜서) 용역 계약</li></ul>
+      <ul><li>서비스명: {OPERATOR.brand}</li><li>운영자: {OPERATOR.representative} (개인, 사업자등록 없음)</li><li>이메일: <a href={`mailto:${OPERATOR.email}`}>{OPERATOR.email}</a></li><li>계약 형태: 운영자 개인과 맺는 프리랜서 용역 계약</li></ul>
     </Section>
 
     <Section n={3} title="사이트 이용">
