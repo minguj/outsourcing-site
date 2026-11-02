@@ -20,7 +20,7 @@ export function PrivacyNotice({ lang = "ko" }: { lang?: Lang }) {
   const t = COPY[lang].form;
   const { privacy } = siteFor(lang);
   return <details className="st-privacy"><summary>{t.privacy}</summary>
-    <dl><dt>{t.items}</dt><dd>{privacy.items}</dd><dt>{t.purpose}</dt><dd>{privacy.purpose}</dd><dt>{t.retention}</dt><dd>{privacy.retention}</dd></dl>
+    <dl><dt>{t.items}</dt><dd>{privacy.items}</dd><dt>{t.purpose}</dt><dd>{privacy.purpose}</dd><dt>{t.retention}</dt><dd>{privacy.retention}</dd><dt>{t.transfer}</dt><dd>{privacy.transfer}</dd></dl>
     <p>{t.privacyNote}</p>
   </details>;
 }
@@ -29,6 +29,7 @@ export function InquiryForm({ brief: givenBrief, transcript: givenTranscript = [
   const t = COPY[lang].form;
   const [form, setForm] = useState({ name: "", company: "", email: "", phone: "", message: "", website: "" });
   const [consent, setConsent] = useState(false);
+  const [overseas, setOverseas] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState<number | null>(null);
@@ -48,7 +49,7 @@ export function InquiryForm({ brief: givenBrief, transcript: givenTranscript = [
     setBusy(true); setError("");
     try {
       const data = new FormData();
-      data.append("payload", JSON.stringify({ ...form, brief: brief ?? null, transcript, consent, lang }));
+      data.append("payload", JSON.stringify({ ...form, brief: brief ?? null, transcript, consent, overseas_consent: overseas, lang }));
       files.forEach(file => data.append("files", file, file.name));
       const result = await api<{ ok: boolean; id?: number }>("/api/inquiries", { method: "POST", body: data }, lang);
       setDone(result.id ?? 0); onDone?.(useChat);
@@ -106,8 +107,9 @@ export function InquiryForm({ brief: givenBrief, transcript: givenTranscript = [
     </div>
     <input className="st-honeypot" tabIndex={-1} autoComplete="off" aria-hidden="true" value={form.website} onChange={set("website")} />
     <label className="st-consent"><input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} required /> {t.consent}</label>
+    <label className="st-consent"><input type="checkbox" checked={overseas} onChange={e => setOverseas(e.target.checked)} required /> {t.overseas}</label>
     <PrivacyNotice lang={lang} />
     {error && <p className="st-error" role="alert">{error}</p>}
-    <button className="st-button" disabled={busy || !consent}>{busy ? t.busy : brief ? t.submitBrief : t.submit}</button>
+    <button className="st-button" disabled={busy || !consent || !overseas}>{busy ? t.busy : brief ? t.submitBrief : t.submit}</button>
   </form>;
 }

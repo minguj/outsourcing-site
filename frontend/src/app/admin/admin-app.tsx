@@ -19,7 +19,7 @@ function QuoteForm({ detail, onCreated }: { detail: Detail; onCreated: (d: Detai
   const [items, setItems] = useState([{ name: "", amount: "" }]);
   const [deposit, setDeposit] = useState("");
   const [schedule, setSchedule] = useState(detail.brief.timeline ?? "");
-  const [note, setNote] = useState("부가세 별도 금액입니다. 잔금은 납품 후 7일 이내에 지급합니다.");
+  const [note, setNote] = useState("잔금은 완료 보고 후 7일 이내에 지급합니다.");
   const [sendEmail, setSendEmail] = useState(true);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);

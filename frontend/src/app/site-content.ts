@@ -28,7 +28,7 @@ export const PROCESS = [
   { title: "견적", text: "담당자가 검토한 뒤 범위, 일정, 금액을 담은 견적서 링크를 메일로 보내 드립니다." },
   { title: "계약과 착수금", text: "견적에 합의하시면 계약서를 작성하고, 착수금(30%)이 계좌이체로 입금되면 착수 일정을 잡습니다." },
   { title: "개발과 중간 시연", text: "실제 회사 문서와 문의 유형으로 중간 결과를 보여 드리고 함께 조정합니다. 일정의 절반이 지나면 중도금(50%)을 정산합니다." },
-  { title: "납품과 안정화", text: "운영 환경에 배포하고 완료 보고 후 7일 안에 잔금(20%)을 정산합니다. 잔금 후 15일간 무상으로 하자를 보수합니다." },
+  { title: "납품과 안정화", text: "운영 환경에 배포하고 완료 보고 후 7일 안에 잔금(20%)을 정산합니다. 잔금 후 3주간 무상으로 하자를 보수합니다." },
 ];
 
 export const FAQ: Faq[] = [
@@ -37,14 +37,16 @@ export const FAQ: Faq[] = [
   { q: "주로 어떤 프로젝트를 하나요?", a: "회사 업무에 맞춘 AI 상담 에이전트와 문서 변환·자동화 툴 외에도, 그와 함께 필요한 웹사이트·관리자 페이지, 모바일 앱, 결제 연동, 서버 배포까지 한 번에 맡을 수 있습니다." },
   { q: "어떤 개발 경력이 있나요?", a: "삼성전자 시스템 소프트웨어 개발, 중고거래 마켓·학교 앱 같은 모바일 앱, 재고·주문 관리 시스템(웹·관리자 페이지·DB), 현장 설비·작업 관리 시스템(API·DB·관리자 페이지)을 개발했습니다. 필요한 경우 소스 관리와 배포 파이프라인 구축까지 함께 진행했습니다." },
   { q: "기간은 얼마나 걸리나요?", a: "서버 개발을 포함한 사이트와 관리자 페이지는 2주~1개월 정도입니다. 범위와 자료 준비에 따라 달라지고, 확정 일정은 견적서로 안내드립니다. 바로 착수할 수 있는지는 접수 후 알려 드립니다." },
-  { q: "결제는 어떻게 하나요?", a: "계약서를 작성한 뒤 착수금 30%가 입금되면 개발을 시작하고, 중도금 50%는 전체 일정의 절반이 지난 시점에, 잔금 20%는 완료 보고 후 7일 안에 받습니다. 모두 계좌이체로 정산하고, 부가세는 별도입니다. 메인의 '견적·결제 흐름 체험'은 사이트에 넣어 드릴 수 있는 온라인 결제 예시입니다." },
+  { q: "결제는 어떻게 하나요?", a: "계약서를 작성한 뒤 착수금 30%가 입금되면 개발을 시작하고, 중도금 50%는 전체 일정의 절반이 지난 시점에, 잔금 20%는 완료 보고 후 7일 안에 받습니다. 모두 계좌이체로 정산합니다. 메인의 '견적·결제 흐름 체험'은 사이트에 넣어 드릴 수 있는 온라인 결제 예시입니다." },
   { q: "기획서나 디자인이 없어도 되나요?", a: "네, 없어도 맡기실 수 있습니다. 다만 기획과 디자인을 함께 확정하는 과정이 필요해서, 그만큼의 비용과 기간이 견적에 추가됩니다." },
   { q: "서버나 배포도 맡길 수 있나요?", a: "AWS나 네이버 클라우드뿐 아니라 회사 내부 서버(온프레미스) 환경에도 배포할 수 있습니다. GitHub, Bitbucket 등에 코드를 올리면 자동으로 무중단 배포되도록 설정해 드립니다. 이미 쓰는 서버가 있으면 그 환경에 맞춥니다." },
-  { q: "비용은 어떻게 정해지나요?", a: "만들 범위와 연동할 시스템, 기획·디자인 확정 여부에 따라 달라서 상담 내용을 보고 견적으로 안내드립니다. 작은 변환 툴 하나부터 사이트·결제·AI를 묶은 프로젝트까지 단계를 나눠 진행할 수도 있습니다. 부가세는 별도입니다.", chip: false },
+  { q: "비용은 어떻게 정해지나요?", a: "만들 범위와 연동할 시스템, 기획·디자인 확정 여부에 따라 달라서 상담 내용을 보고 견적으로 안내드립니다. 작은 변환 툴 하나부터 사이트·결제·AI를 묶은 프로젝트까지 단계를 나눠 진행할 수도 있습니다.", chip: false },
   { q: "세금계산서 발행이 되나요?", a: "모든 프로젝트는 프리랜서 계약으로 진행합니다. 세금계산서가 꼭 필요한 경우 별도로 문의해 주세요.", chip: false },
   { q: "진행 중에 수정하거나 범위를 바꿀 수 있나요?", a: "진행하면서 수정 사항이나 범위 변경이 생길 수 있습니다. 이 경우 함께 협의해 일정과 비용을 조정합니다.", chip: false },
   { q: "납품 후 소스코드는 누구 소유인가요?", a: "납품 후 소스코드와 저작권은 의뢰하신 회사에 넘겨 드립니다.", chip: false },
-  { q: "하자보수나 유지보수는 어떻게 되나요?", a: "잔금 완료 후 15일 동안 무상으로 하자를 보수해 드립니다. 이후 유지보수 계약은 범위와 비용을 따로 협의합니다.", chip: false },
+  { q: "하자보수나 유지보수는 어떻게 되나요?", a: "잔금 완료 후 3주 동안 무상으로 하자를 보수해 드립니다. 완료 보고 후 검수 1주를 더하면 납품부터 약 한 달입니다. 그 뒤에는 월 구독형 유지보수로 이어서 맡기실 수 있습니다.", chip: false },
+  { q: "월 구독형 유지보수는 어떻게 되나요?", a: "납품 후에도 양식 변경, 예외 처리, AI 답변 개선처럼 손볼 일이 생깁니다. 월 구독으로 장애 대응과 점검, 작은 수정, AI 개선을 맡기실 수 있고, 플랜과 금액은 운영 규모를 보고 안내드립니다. 메인의 '유지보수' 메뉴에서 플랜 구성을 보실 수 있습니다.", chip: false },
+  { q: "1인 회사인데 문제가 생기면 어떻게 하나요?", a: "납품할 때 소스코드와 함께 설치·배포 방법, 운영 매뉴얼, 인수인계 문서를 드리고 이 내용을 계약서에 넣습니다. 다른 개발자가 이어받아도 운영할 수 있게 정리해 드립니다.", chip: false },
   { q: "서버비나 AI 사용료는 누가 내나요?", a: "AI 에이전트의 AI 사용료(토큰)는 의뢰하신 회사에서 결제·충전한 계정을 제공해 주셔야 합니다. 서버를 저희가 위탁 운영하면 기본 위탁 운영비에 규모·설계에 따른 비용이 추가되고, 서버를 직접 운영하시고 개발만 맡기시면 운영비는 들지 않습니다.", chip: false },
   { q: "모바일 앱도 만드나요?", a: "네, 모바일 앱과 앱이 쓰는 서버 API, 관리자 페이지까지 함께 만들 수 있습니다.", chip: false },
   { q: "미팅은 어떻게 하나요?", a: "화상 미팅과 방문 미팅 모두 가능합니다. 접수 후 담당자가 편하신 방식으로 일정을 잡아 드립니다.", chip: false },
@@ -85,6 +87,26 @@ export const FAQ_EN: Faq[] = [
   { q: "Do I need to send company data?", a: "Not for the consultation. Form examples or a description are enough, without real personal or transaction data. When real data is needed later, we sign an NDA first if you need one." },
 ];
 
+// 월 구독형 유지보수 플랜. 금액은 공개하지 않고 상담 후 안내한다. 플랜 이름·구성은 여기서 바꾼다.
+export type Plan = { name: string; fit: string; includes: string[] };
+export const MAINTENANCE: { plans: Plan[]; notes: string[] } = {
+  plans: [
+    { name: "기본 관리", fit: "안정적으로 돌아가기만 하면 되는 경우", includes: ["장애 접수와 대응", "서버·도메인·인증서 점검", "백업 확인과 월간 점검 보고"] },
+    { name: "운영 지원", fit: "양식이나 화면이 가끔 바뀌는 경우", includes: ["기본 관리 전체", "문구·양식 변경 같은 작은 수정", "새로 생긴 예외 케이스 보완"] },
+    { name: "AI 개선", fit: "AI 상담·자동화를 계속 다듬어 쓰는 경우", includes: ["운영 지원 전체", "AI 답변과 회사 지식 업데이트", "월간 사용 내역 검토와 개선 제안"] },
+  ],
+  notes: ["무상 하자보수 기간(잔금 후 3주)이 끝나면 이어서 시작합니다.", "월 금액과 세부 범위는 운영 규모를 보고 상담 후 안내드립니다."],
+};
+
+export const MAINTENANCE_EN: { plans: Plan[]; notes: string[] } = {
+  plans: [
+    { name: "Basic care", fit: "It just needs to keep running", includes: ["Incident intake and response", "Server, domain and certificate checks", "Backup checks and a monthly report"] },
+    { name: "Operations", fit: "Forms or screens change now and then", includes: ["Everything in Basic care", "Small changes such as wording or form updates", "Handling newly found edge cases"] },
+    { name: "AI improvement", fit: "You keep refining your AI agent or automation", includes: ["Everything in Operations", "Updating AI answers and company knowledge", "Monthly usage review and improvement ideas"] },
+  ],
+  notes: ["Starts after the free defect-fix period (3 weeks after the final payment).", "Monthly price and exact scope are quoted after a consultation."],
+};
+
 export const content = (lang: Lang) => lang === "en"
-  ? { SERVICES: SERVICES_EN, PROCESS: PROCESS_EN, FAQ: FAQ_EN }
-  : { SERVICES, PROCESS, FAQ };
+  ? { SERVICES: SERVICES_EN, PROCESS: PROCESS_EN, FAQ: FAQ_EN, MAINTENANCE: MAINTENANCE_EN }
+  : { SERVICES, PROCESS, FAQ, MAINTENANCE };

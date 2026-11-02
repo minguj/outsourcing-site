@@ -105,5 +105,6 @@ export function ConsultChat({ onFallback, lang = "ko", onChange, sentElsewhere =
             onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(input); } }} />
           <button className="st-button" disabled={busy || !input.trim()}>{t.send}</button>
         </form>)}
+    {!submitted && !offline && <p className="st-chat-notice">{t.aiNotice}</p>}
   </div>;
 }
