@@ -46,7 +46,7 @@ export const FAQ: Faq[] = [
   { q: "진행 중에 수정하거나 범위를 바꿀 수 있나요?", a: "진행하면서 수정 사항이나 범위 변경이 생길 수 있습니다. 이 경우 함께 협의해 일정과 비용을 조정합니다.", chip: false },
   { q: "납품 후 소스코드는 누구 소유인가요?", a: "납품 후 소스코드와 저작권은 의뢰하신 회사에 넘겨 드립니다.", chip: false },
   { q: "하자보수나 유지보수는 어떻게 되나요?", a: "잔금 완료 후 3주 동안 무상으로 하자를 보수해 드립니다. 완료 보고 후 검수 1주를 더하면 납품부터 약 한 달입니다. 그 뒤에는 월 구독형 유지보수로 이어서 맡기실 수 있습니다.", chip: false },
-  { q: "월 구독형 유지보수는 어떻게 되나요?", a: "납품 후에도 양식 변경, 예외 처리, AI 답변 개선처럼 손볼 일이 생깁니다. 월 구독으로 장애 대응과 점검, 작은 수정, AI 개선을 맡기실 수 있고, 플랜과 금액은 운영 규모를 보고 안내드립니다. 메인의 '유지보수' 메뉴에서 플랜 구성을 보실 수 있습니다.", chip: false },
+  { q: "월 구독형 유지보수는 어떻게 되나요?", a: "납품 후에도 화면·양식 변경이나 예외 처리처럼 손볼 일이 생깁니다. 월 구독으로 장애 감시와 대응, 보안 업데이트와 백업을 맡기시고, 매달 받는 작업 포인트만큼 수정을 요청하실 수 있습니다. 작업은 간단 수정, 화면·기능 수정, 데이터 구조 변경, 운영환경 변경 네 등급으로 나누며, 금액은 운영 규모를 보고 상담 후 안내드립니다. 메인의 '유지보수' 메뉴에서 플랜 구성을 보실 수 있습니다.", chip: false },
   { q: "계약 후 취소하면 환불되나요?", a: "착수 전에 취소하시면 착수금을 돌려드리고(요청으로 이미 한 기획 작업이 있으면 그 비용만 뺍니다), 진행 중 해지는 수행한 비율로 정산합니다. 검수를 마친 뒤에는 환불 대신 3주 무상 하자보수로 처리합니다. 자세한 기준은 사이트 하단 '이용약관·환불 규정'에 있습니다.", chip: false },
   { q: "1인 회사인데 문제가 생기면 어떻게 하나요?", a: "납품할 때 소스코드와 함께 설치·배포 방법, 운영 매뉴얼, 인수인계 문서를 드리고 이 내용을 계약서에 넣습니다. 다른 개발자가 이어받아도 운영할 수 있게 정리해 드립니다.", chip: false },
   { q: "서버비나 AI 사용료는 누가 내나요?", a: "AI 에이전트의 AI 사용료(토큰)는 의뢰하신 회사에서 결제·충전한 계정을 제공해 주셔야 합니다. 서버를 저희가 위탁 운영하면 기본 위탁 운영비에 규모·설계에 따른 비용이 추가되고, 서버를 직접 운영하시고 개발만 맡기시면 운영비는 들지 않습니다.", chip: false },
@@ -89,24 +89,62 @@ export const FAQ_EN: Faq[] = [
   { q: "Do I need to send company data?", a: "Not for the consultation. Form examples or a description are enough, without real personal or transaction data. When real data is needed later, we sign an NDA first if you need one." },
 ];
 
-// 월 구독형 유지보수 플랜. 금액은 공개하지 않고 상담 후 안내한다. 플랜 이름·구성은 여기서 바꾼다.
-export type Plan = { name: string; fit: string; includes: string[] };
-export const MAINTENANCE: { plans: Plan[]; notes: string[] } = {
+// 월 구독형 유지보수. 금액은 공개하지 않고 상담 후 안내한다(단가는 유지보수 계약서에 채운다).
+// 플랜마다 매달 작업 포인트를 주고, 요청 작업은 등급(L1~L4)에 따라 포인트를 차감한다.
+export type Plan = { name: string; fit: string; points: number; includes: string[] };
+export type Level = { code: string; name: string; examples: string; points: string };
+type Maintenance = { plans: Plan[]; levels: Level[]; notes: string[] };
+
+export const MAINTENANCE: Maintenance = {
   plans: [
-    { name: "기본 관리", fit: "안정적으로 돌아가기만 하면 되는 경우", includes: ["장애 접수와 대응", "서버·도메인·인증서 점검", "백업 확인과 월간 점검 보고"] },
-    { name: "운영 지원", fit: "양식이나 화면이 가끔 바뀌는 경우", includes: ["기본 관리 전체", "문구·양식 변경 같은 작은 수정", "새로 생긴 예외 케이스 보완"] },
-    { name: "AI 개선", fit: "AI 상담·자동화를 계속 다듬어 쓰는 경우", includes: ["운영 지원 전체", "AI 답변과 회사 지식 업데이트", "월간 사용 내역 검토와 개선 제안"] },
+    { name: "기본 관리", fit: "안정적으로 돌아가기만 하면 되는 경우", points: 2,
+      includes: ["장애 감시와 대응", "보안 업데이트, 매일 백업과 월 1회 복구 점검", "월간 점검 보고", "요청은 당일 첫 응답", "간단 수정(L1) 2건 정도"] },
+    { name: "운영 지원", fit: "화면이나 양식이 가끔 바뀌는 경우", points: 6,
+      includes: ["기본 관리 전체", "화면·기능 수정(L2) 2건 정도", "또는 간단 수정(L1) 6건 정도"] },
+    { name: "집중 지원", fit: "기능을 계속 고쳐 가며 운영하는 경우", points: 15,
+      includes: ["기본 관리 전체", "데이터 구조 변경(L3) 1건과 화면·기능 수정(L2) 2건 정도", "포인트 안에서 등급을 섞어 사용"] },
   ],
-  notes: ["무상 하자보수 기간(잔금 후 3주)이 끝나면 이어서 시작합니다.", "월 금액과 세부 범위는 운영 규모를 보고 상담 후 안내드립니다."],
+  levels: [
+    { code: "L1", name: "간단 수정", examples: "문구·이미지·색상·링크 변경, 공지 교체", points: "1점" },
+    { code: "L2", name: "화면·기능 수정", examples: "화면·입력 항목 추가(데이터 구조는 그대로), 검증 규칙 변경, 엑셀·PDF 양식 추가, AI 답변·회사 자료 업데이트", points: "3점" },
+    { code: "L3", name: "데이터 구조 변경", examples: "데이터베이스 마이그레이션이 필요한 변경. 백업, 되돌리기 계획, 사전 검증까지 포함", points: "8점" },
+    { code: "L4", name: "운영환경 변경", examples: "서버 이전·사양 변경, 도메인·메일 교체, 배포 방식 변경, 외부 서비스 버전 교체", points: "사전 견적" },
+    { code: "—", name: "신규 개발", examples: "새 기능이나 새 시스템", points: "별도 견적" },
+  ],
+  notes: [
+    "작업마다 시작 전에 등급을 알려 드리고, 동의하신 뒤 진행합니다.",
+    "남은 포인트는 다음 달까지 한 번 이월되고, 포인트를 넘는 작업은 건별로 청구합니다.",
+    "납품한 코드의 결함은 구독 중이면 포인트를 차감하지 않고 고칩니다.",
+    "서버·AI 사용료·도메인 같은 외부 비용은 실비로 별도입니다.",
+    "무상 하자보수 기간(잔금 후 3주)이 끝나면 이어서 시작하고, 1개월 단위로 해지할 수 있습니다.",
+    "금액은 운영 규모를 보고 상담 후 안내드립니다.",
+  ],
 };
 
-export const MAINTENANCE_EN: { plans: Plan[]; notes: string[] } = {
+export const MAINTENANCE_EN: Maintenance = {
   plans: [
-    { name: "Basic care", fit: "It just needs to keep running", includes: ["Incident intake and response", "Server, domain and certificate checks", "Backup checks and a monthly report"] },
-    { name: "Operations", fit: "Forms or screens change now and then", includes: ["Everything in Basic care", "Small changes such as wording or form updates", "Handling newly found edge cases"] },
-    { name: "AI improvement", fit: "You keep refining your AI agent or automation", includes: ["Everything in Operations", "Updating AI answers and company knowledge", "Monthly usage review and improvement ideas"] },
+    { name: "Basic care", fit: "It just needs to keep running", points: 2,
+      includes: ["Monitoring and incident response", "Security updates, daily backups and a monthly restore check", "Monthly report", "Same-day first response", "About 2 small changes (L1)"] },
+    { name: "Operations", fit: "Screens or forms change now and then", points: 6,
+      includes: ["Everything in Basic care", "About 2 screen or feature changes (L2)", "Or about 6 small changes (L1)"] },
+    { name: "Intensive", fit: "You keep improving features as you run", points: 15,
+      includes: ["Everything in Basic care", "About 1 data structure change (L3) plus 2 L2 changes", "Mix levels freely within your points"] },
   ],
-  notes: ["Starts after the free defect-fix period (3 weeks after the final payment).", "Monthly price and exact scope are quoted after a consultation."],
+  levels: [
+    { code: "L1", name: "Small change", examples: "Wording, images, colors, links, notices", points: "1 pt" },
+    { code: "L2", name: "Screen or feature change", examples: "New screens or fields (same data structure), validation rules, a new Excel/PDF format, AI answer and knowledge updates", points: "3 pts" },
+    { code: "L3", name: "Data structure change", examples: "Changes that need a database migration, including backup, rollback plan and pre-release checks", points: "8 pts" },
+    { code: "L4", name: "Infrastructure change", examples: "Server moves or resizing, domain or mail changes, deployment changes, upgrading external services", points: "Quoted first" },
+    { code: "—", name: "New development", examples: "New features or systems", points: "Separate quote" },
+  ],
+  notes: [
+    "We tell you the level before starting and proceed once you agree.",
+    "Unused points carry over once to the next month; work beyond your points is billed per task.",
+    "Defects in code we delivered are fixed without using points while you subscribe.",
+    "Outside costs such as servers, AI usage and domains are billed at cost.",
+    "Starts after the free defect-fix period (3 weeks after the final payment) and can be cancelled month to month.",
+    "Pricing is quoted after a consultation, based on the size of your operation.",
+  ],
 };
 
 export const content = (lang: Lang) => lang === "en"
