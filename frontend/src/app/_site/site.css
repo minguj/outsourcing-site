@@ -468,3 +468,11 @@
   .st-levels .st-level-points { grid-column: 2; grid-row: 1; width: auto; }
 }
 .st-contract-rules { list-style: decimal; display: grid; gap: 4px; margin-top: 10px; }
+/* 포인트 사용 흐름 */
+.st-point-steps { list-style: none; counter-reset: pt; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.st-point-steps li { counter-increment: pt; border-left: 3px solid var(--ink); padding: 2px 0 2px 14px; }
+.st-point-steps strong { display: block; font-size: 15.5px; color: var(--ink); margin-bottom: 4px; }
+.st-point-steps strong::before { content: counter(pt) ". "; color: var(--stamp); }
+.st-point-steps p { font-size: 14px; color: #34413b; margin: 0; }
+.st-plan-points strong { font-size: 18px; }
+@media (max-width: 960px) { .st-point-steps { grid-template-columns: 1fr; gap: 12px; } }

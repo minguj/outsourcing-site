@@ -113,8 +113,6 @@ export const MAINTENANCE: Maintenance = {
     { code: "—", name: "신규 개발", examples: "새 기능이나 새 시스템", points: "별도 견적" },
   ],
   notes: [
-    "작업마다 시작 전에 등급을 알려 드리고, 동의하신 뒤 진행합니다.",
-    "남은 포인트는 다음 달까지 한 번 이월되고, 포인트를 넘는 작업은 건별로 청구합니다.",
     "납품한 코드의 결함은 구독 중이면 포인트를 차감하지 않고 고칩니다.",
     "개발 후 서버 운영까지 맡기시는 경우 기본 관리 이상의 구독이 필요합니다.",
     "서버·AI 사용료·도메인 같은 외부 비용은 실비로 별도입니다.",
@@ -140,8 +138,6 @@ export const MAINTENANCE_EN: Maintenance = {
     { code: "—", name: "New development", examples: "New features or systems", points: "Separate quote" },
   ],
   notes: [
-    "We tell you the level before starting and proceed once you agree.",
-    "Unused points carry over once to the next month; work beyond your points is billed per task.",
     "Defects in code we delivered are fixed without using points while you subscribe.",
     "If we run your servers after delivery, a Basic care or higher subscription is required.",
     "Outside costs such as servers, AI usage and domains are billed at cost.",
