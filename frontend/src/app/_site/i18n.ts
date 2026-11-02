@@ -27,6 +27,7 @@ const ko = {
   contact: { lead: "카카오톡으로도 편하게 문의하실 수 있어요.", kakao: "카카오톡으로 문의" },
   inquiry: { title: "상담 접수", lead: "AI 상담 대신 직접 적어 주셔도 됩니다. 지금 하고 있는 일, 바라는 결과, 예산과 일정을 아는 만큼만 적어 주세요.",
     checks: ["접수하면 확인 메일을 보내 드립니다", "담당자가 검토해 견적서 링크를 메일로 보내 드립니다", "상담과 견적은 무료입니다"] },
+  legal: { privacy: "개인정보처리방침", terms: "이용약관·환불 규정", full: "개인정보처리방침 전문 보기" },
   footer: (name: string) => `© ${name}. 이 사이트의 데모와 체험에 쓰인 회사·거래 정보는 모두 가상입니다.`,
   chat: {
     greeting: "안녕하세요. 외주 개발 상담을 도와드려요. 자주 묻는 질문은 아래 버튼으로 바로 확인하실 수 있고, 만들고 싶은 것을 말씀해 주시면 담당자가 볼 수 있게 정리해 드릴게요.",
@@ -118,6 +119,7 @@ const en: Copy = {
   contact: { lead: "You can also reach us on KakaoTalk.", kakao: "Chat on KakaoTalk" },
   inquiry: { title: "Contact us", lead: "You can write to us directly instead of using the AI chat. Share as much as you know about your current work, the result you want, budget and timeline.",
     checks: ["We send a confirmation e-mail when you submit", "We review it and e-mail you a quote link", "Consultation and quotes are free"] },
+  legal: { privacy: "Privacy policy", terms: "Terms and refunds", full: "Read the full privacy policy" },
   footer: (name: string) => `© ${name}. All companies and transactions in this site's demos are fictional.`,
   chat: {
     greeting: "Hello! I can help with your development project. Tap a common question below for an instant answer, or tell me what you'd like to build and I'll put it together for our team.",

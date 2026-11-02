@@ -298,6 +298,33 @@
   .st-contract-articles li { break-inside: avoid; }
   .st-contract-signs { break-inside: avoid; }
 }
+.st-doc-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.st-doc-tabs a { padding: 6px 12px; border: 1px solid var(--rule); border-radius: 999px; font-size: 13.5px; color: var(--ink); text-decoration: none; background: var(--sheet, #fff); }
+.st-doc-tabs a[aria-current="page"] { background: var(--ink); border-color: var(--ink); color: #fff; }
+.st-contract-section { font-size: 15.5px; margin: 22px 0 8px !important; }
+.st-contract-pay tbody th { border-bottom: 1px solid var(--rule); font-weight: 600; color: var(--ink); text-align: left; }
+.st-checklist { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14.5px; }
+.st-lines { display: grid; gap: 22px; margin: 14px 0 4px; }
+.st-lines span { display: block; border-bottom: 1px solid var(--rule); height: 1px; }
+.st-legal-links { display: flex; gap: 14px; font-size: 14px; }
+.st-legal-links a { color: var(--ink); }
+.st-legal { max-width: 920px; }
+.st-legal-meta { text-align: center; color: var(--muted); font-size: 13.5px; margin: -10px 0 20px !important; }
+.st-legal-lead { margin-bottom: 18px !important; font-size: 14.5px; }
+.st-legal-section { margin-top: 20px; font-size: 14.5px; }
+.st-legal-section h2 { font-size: 15.5px; margin-bottom: 6px !important; }
+.st-legal-section ul { margin: 6px 0; padding-left: 20px; display: grid; gap: 4px; }
+.st-legal-section p { margin: 6px 0 !important; }
+.st-legal-section .st-table { font-size: 13.5px; margin: 8px 0; }
+.st-table-scroll { overflow-x: auto; }
+.st-admin-docs { display: inline-flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.st-faq-link { font-weight: 600; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.st-footer-links { display: flex; gap: 14px; flex-wrap: wrap; }
+.st-footer-links a { color: inherit; }
+@media print {
+  .st-legal-page { padding: 0; background: #fff; }
+  .st-legal { border: 0; padding: 0; max-width: none; }
+}
 .st-contract-link { font-weight: 600; color: var(--ink); text-decoration: underline; white-space: nowrap; }
 .st-quote-done h3 { font-size: 18px; margin-bottom: 8px; color: var(--ink); }
 .st-quote-done p { font-size: 14.5px; color: #34413b; }

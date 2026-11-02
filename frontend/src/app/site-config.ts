@@ -41,6 +41,16 @@ export const BANK = {
 };
 
 // 계약서(안)의 을(수급인). 프리랜서 계약이라 개인 이름으로 적는다.
+// 개인정보처리방침·이용약관에 표시하는 운영자 정보와 시행일. 내용을 바꾸면 시행일도 함께 바꾼다.
+export const OPERATOR = {
+  brand: "핏에이전트",
+  representative: "진민구",
+  privacyOfficer: "진민구",
+  email: "help@fitagent.co.kr",
+  site: "fitagent.co.kr",
+};
+export const POLICY_EFFECTIVE = { privacy: "2026년 11월 2일", terms: "2026년 11월 2일" };
+
 export const CONTRACTOR = {
   name: "진민구",
   brand: "핏에이전트",
