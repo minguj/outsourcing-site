@@ -46,7 +46,7 @@ export const FAQ: Faq[] = [
   { q: "진행 중에 수정하거나 범위를 바꿀 수 있나요?", a: "진행하면서 수정 사항이나 범위 변경이 생길 수 있습니다. 이 경우 함께 협의해 일정과 비용을 조정합니다.", chip: false },
   { q: "납품 후 소스코드는 누구 소유인가요?", a: "납품 후 소스코드와 저작권은 의뢰하신 회사에 넘겨 드립니다.", chip: false },
   { q: "하자보수나 유지보수는 어떻게 되나요?", a: "잔금 완료 후 3주 동안 무상으로 하자를 보수해 드립니다. 완료 보고 후 검수 1주를 더하면 납품부터 약 한 달입니다. 그 뒤에는 월 구독형 유지보수로 이어서 맡기실 수 있습니다.", chip: false },
-  { q: "월 구독형 유지보수는 어떻게 되나요?", a: "납품 후에도 화면·기능 수정이나 예외 처리처럼 손볼 일이 생깁니다. 월 구독으로 장애 감시와 대응, 보안 업데이트와 백업을 맡기시고, 매달 받는 작업 포인트만큼 수정을 요청하실 수 있습니다. 작업은 간단 수정, 화면·기능 수정, 데이터 구조 변경, 운영환경 변경 네 등급으로 나누며, 금액은 운영 규모를 보고 상담 후 안내드립니다. 메인의 '유지보수' 메뉴에서 플랜 구성을 보실 수 있습니다.", chip: false },
+  { q: "월 구독형 유지보수는 어떻게 되나요?", a: "납품 후에도 화면·기능 수정이나 예외 처리처럼 손볼 일이 생깁니다. 월 구독으로 장애 감시와 대응, 보안 업데이트와 백업을 맡기시고, 매달 받는 작업 포인트만큼 수정을 요청하실 수 있습니다. 월 요금은 기본 관리 15만 원, 운영 지원 35만 원, 집중 지원 70만 원입니다. 작업은 간단 수정, 화면·기능 수정, 데이터 구조 변경, 운영환경 변경 네 등급으로 나누고, 포인트를 넘는 작업의 건별 요금은 상담 후 안내드립니다. 메인의 '유지보수' 메뉴에서 플랜 구성을 보실 수 있습니다.", chip: false },
   { q: "개발 없이 서버 운영만 맡길 수 있나요?", a: "가능합니다. 다른 곳에서 만든 서비스는 먼저 코드와 서버 상태를 진단(사전 견적)한 뒤, 기본 관리 이상의 월 구독으로 운영을 맡아 드립니다. 개발을 맡기신 뒤 서버 운영까지 원하시는 경우에도 기본 관리 이상의 구독이 필요합니다.", chip: false },
   { q: "계약 후 취소하면 환불되나요?", a: "착수 전에 취소하시면 착수금을 돌려드리고(요청으로 이미 한 기획 작업이 있으면 그 비용만 뺍니다), 진행 중 해지는 수행한 비율로 정산합니다. 검수를 마친 뒤에는 환불 대신 3주 무상 하자보수로 처리합니다. 자세한 기준은 사이트 하단 '이용약관·환불 규정'에 있습니다.", chip: false },
   { q: "서버비나 AI 사용료는 누가 내나요?", a: "AI 에이전트의 AI 사용료(토큰)는 의뢰하신 회사에서 결제·충전한 계정을 제공해 주셔야 합니다. 서버를 저희가 위탁 운영하면 기본 위탁 운영비에 규모·설계에 따른 비용이 추가되고, 서버를 직접 운영하시고 개발만 맡기시면 운영비는 들지 않습니다.", chip: false },
@@ -89,19 +89,19 @@ export const FAQ_EN: Faq[] = [
   { q: "Do I need to send company data?", a: "Not for the consultation. Form examples or a description are enough, without real personal or transaction data. When real data is needed later, we sign an NDA first if you need one." },
 ];
 
-// 월 구독형 유지보수. 금액은 공개하지 않고 상담 후 안내한다(단가는 유지보수 계약서에 채운다).
+// 월 구독형 유지보수. 플랜 월 요금은 공개하고, 건별 단가는 상담 후 안내한다(유지보수 계약서에 채운다).
 // 플랜마다 매달 작업 포인트를 주고, 요청 작업은 등급(L1~L4)에 따라 포인트를 차감한다.
-export type Plan = { name: string; fit: string; points: number; includes: string[] };
+export type Plan = { name: string; price: string; fit: string; points: number; includes: string[] };
 export type Level = { code: string; name: string; examples: string; points: string };
 type Maintenance = { plans: Plan[]; levels: Level[]; notes: string[] };
 
 export const MAINTENANCE: Maintenance = {
   plans: [
-    { name: "기본 관리", fit: "서버 운영까지 맡겨 개발했거나, 운영만 맡기려는 경우", points: 2,
+    { name: "기본 관리", price: "월 15만 원", fit: "서버 운영까지 맡겨 개발했거나, 운영만 맡기려는 경우", points: 2,
       includes: ["장애 감시와 대응", "보안 업데이트, 매일 백업과 월 1회 복구 점검", "월간 점검 보고", "요청은 당일 첫 응답", "간단 수정(L1) 2건 정도"] },
-    { name: "운영 지원", fit: "화면이나 기능을 가끔 수정하는 경우", points: 6,
+    { name: "운영 지원", price: "월 35만 원", fit: "화면이나 기능을 가끔 수정하는 경우", points: 6,
       includes: ["기본 관리 전체", "화면·기능 수정(L2) 2건 정도", "또는 간단 수정(L1) 6건 정도"] },
-    { name: "집중 지원", fit: "기능을 계속 고쳐 가며 운영하는 경우", points: 15,
+    { name: "집중 지원", price: "월 70만 원", fit: "기능을 계속 고쳐 가며 운영하는 경우", points: 15,
       includes: ["기본 관리 전체", "데이터 구조 변경(L3) 1건과 화면·기능 수정(L2) 2건 정도", "포인트 안에서 등급을 섞어 사용"] },
   ],
   levels: [
@@ -116,17 +116,17 @@ export const MAINTENANCE: Maintenance = {
     "개발 후 서버 운영까지 맡기시는 경우 기본 관리 이상의 구독이 필요합니다.",
     "서버·AI 사용료·도메인 같은 외부 비용은 실비로 별도입니다.",
     "무상 하자보수 기간(잔금 후 3주)이 끝나면 이어서 시작하고, 1개월 단위로 해지할 수 있습니다.",
-    "금액은 운영 규모를 보고 상담 후 안내드립니다.",
+    "포인트를 넘는 작업의 건별 요금과 운영환경 변경·신규 개발 비용은 상담 후 안내드립니다.",
   ],
 };
 
 export const MAINTENANCE_EN: Maintenance = {
   plans: [
-    { name: "Basic care", fit: "We run your servers after building it, or you only need operations", points: 2,
+    { name: "Basic care", price: "₩150,000 / month", fit: "We run your servers after building it, or you only need operations", points: 2,
       includes: ["Monitoring and incident response", "Security updates, daily backups and a monthly restore check", "Monthly report", "Same-day first response", "About 2 small changes (L1)"] },
-    { name: "Operations", fit: "Screens or features need changes now and then", points: 6,
+    { name: "Operations", price: "₩350,000 / month", fit: "Screens or features need changes now and then", points: 6,
       includes: ["Everything in Basic care", "About 2 screen or feature changes (L2)", "Or about 6 small changes (L1)"] },
-    { name: "Intensive", fit: "You keep improving features as you run", points: 15,
+    { name: "Intensive", price: "₩700,000 / month", fit: "You keep improving features as you run", points: 15,
       includes: ["Everything in Basic care", "About 1 data structure change (L3) plus 2 L2 changes", "Mix levels freely within your points"] },
   ],
   levels: [
@@ -141,7 +141,7 @@ export const MAINTENANCE_EN: Maintenance = {
     "If we run your servers after delivery, a Basic care or higher subscription is required.",
     "Outside costs such as servers, AI usage and domains are billed at cost.",
     "Starts after the free defect-fix period (3 weeks after the final payment) and can be cancelled month to month.",
-    "Pricing is quoted after a consultation, based on the size of your operation.",
+    "Per-task rates beyond your points, infrastructure changes and new development are quoted after a consultation.",
   ],
 };
 

@@ -17,8 +17,8 @@ export default function MaintenanceView() {
   const articles: [string, ReactNode][] = [
     ["목적", <>이 계약은 을이 갑의 시스템 {system}(이하 &ldquo;대상 시스템&rdquo;)을 월 구독 방식으로 유지보수하는 데 필요한 조건을 정하는 것을 목적으로 한다.</>],
     ["플랜과 범위", <>갑은 아래 플랜 중 하나를 고르며, 을은 고른 플랜에 포함된 일을 수행한다. 모든 플랜에는 장애 감시와 대응, 보안 업데이트, 매일 백업과 월 1회 복구 점검, 월간 점검 보고가 포함된다.
-      <table className="st-table st-contract-pay"><thead><tr><th style={{ width: 120 }}>선택</th><th>포함 내용</th><th style={{ width: 90 }}>월 포인트</th></tr></thead><tbody>
-        {MAINTENANCE.plans.map(p => <tr key={p.name}><td>☐ {p.name}</td><td>{p.includes.join(", ")}</td><td>{p.points}점</td></tr>)}
+      <table className="st-table st-contract-pay"><thead><tr><th style={{ width: 120 }}>선택</th><th>포함 내용</th><th style={{ width: 90 }}>월 포인트</th><th style={{ width: 100 }}>월 요금</th></tr></thead><tbody>
+        {MAINTENANCE.plans.map(p => <tr key={p.name}><td>☐ {p.name}</td><td>{p.includes.join(", ")}</td><td>{p.points}점</td><td style={{ whiteSpace: "nowrap" }}>{p.price.replace("월 ", "")}</td></tr>)}
       </tbody></table></>],
     ["작업 등급과 포인트", <>갑이 요청한 작업은 아래 등급에 따라 그 달의 작업 포인트에서 차감한다.
       <table className="st-table st-contract-pay"><thead><tr><th style={{ width: 150 }}>등급</th><th>작업 예</th><th style={{ width: 90 }}>포인트</th><th style={{ width: 130 }}>건별 요금</th></tr></thead><tbody>
@@ -32,7 +32,7 @@ export default function MaintenanceView() {
         <li>을이 납품한 코드의 결함으로 생긴 오류는 계약 기간 중 포인트를 차감하지 않고 고친다.</li>
       </ol></>],
     ["범위 밖 작업", <>새 기능이나 새 시스템 개발, 새로운 외부 시스템 연동처럼 위 작업 등급에 해당하지 않는 작업은 별도로 견적을 내고 합의한 뒤 진행한다.</>],
-    ["이용료와 지급", <>월 이용료는 {BLANK}원으로 한다. 갑은 매 이용 기간이 시작되기 전까지 그 기간의 이용료를 을의 계좌({BANK.bank} {BANK.account}{BANK.holder ? `, 예금주 ${BANK.holder}` : ""})로 이체한다.</>],
+    ["이용료와 지급", <>월 이용료는 갑이 고른 플랜의 월 요금({BLANK}원)으로 한다. 갑은 매 이용 기간이 시작되기 전까지 그 기간의 이용료를 을의 계좌({BANK.bank} {BANK.account}{BANK.holder ? `, 예금주 ${BANK.holder}` : ""})로 이체한다.</>],
     ["기간과 연장", <>이용 기간은 {BLANK}년　　월　　일부터 1개월 단위로 한다(보통 무상 하자보수 기간이 끝난 다음 날부터 시작한다). 어느 쪽도 종료 의사를 밝히지 않으면 같은 조건으로 1개월씩 자동으로 연장된다.</>],
     ["요청과 대응", <>갑은 장애나 작업 요청을 메일 등 기록이 남는 방법으로 접수한다. 을은 영업일 기준 요청 당일에 첫 응답을 하고(업무 시간이 끝난 뒤 들어온 요청은 다음 영업일), 서비스가 멈춘 장애는 다른 요청보다 먼저 처리한다. 처리 결과는 메일 등으로 알린다. 갑의 요청으로 야간·주말·공휴일에 작업하는 경우 차감 포인트나 건별 요금에 50%를 더한다. 다만 서비스가 멈춘 장애 대응에는 더하지 않는다.</>],
     ["운영 비용", <>AI 사용료(토큰), 서버·도메인 등 외부 서비스 비용은 갑이 부담하며, 필요한 계정은 갑의 명의로 준비한다. 을이 서버를 위탁 운영하는 경우의 비용은 별도로 협의한다.</>],
