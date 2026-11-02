@@ -8,7 +8,7 @@ import { createDemoQuote } from "./api";
 import { ConsultChat, type ChatSession } from "./consult-chat";
 import { COPY, HOME, type Lang } from "./i18n";
 import { InquiryForm } from "./inquiry-form";
-import { siteFor } from "../site-config";
+import { CONTACT, siteFor } from "../site-config";
 import { content } from "../site-content";
 
 export default function Landing({ lang = "ko" }: { lang?: Lang }) {
@@ -20,7 +20,7 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
   const onChat = useCallback((session: ChatSession) => setChat(session), []);
   const t = COPY[lang];
   const site = siteFor(lang);
-  const { SERVICES, PROCESS, FAQ } = content(lang);
+  const { SERVICES, PROCESS, FAQ, MAINTENANCE } = content(lang);
   const serviceName = (id: string) => SERVICES.find(s => s.id === id)?.name ?? id;
   // One root layout serves both languages; keep <html lang> right for screen readers and translation tools.
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
@@ -35,7 +35,7 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
   return <div className={"st-page" + (lang === "en" ? " st-lang-en" : "")}>
     <header className="st-nav"><div className="st-wrap">
       <Link href={HOME[lang]} className="st-logo">{site.name}</Link>
-      <nav aria-label={t.nav.label}><a href="#services">{t.nav.services}</a><a href="#examples">{t.nav.examples}</a><a href="#process">{t.nav.process}</a><a href="#faq">{t.nav.faq}</a><a href="#inquiry" className="st-nav-cta">{t.nav.inquiry}</a>
+      <nav aria-label={t.nav.label}><a href="#services">{t.nav.services}</a><a href="#examples">{t.nav.examples}</a><a href="#process">{t.nav.process}</a><a href="#maintenance">{t.nav.maintenance}</a><a href="#faq">{t.nav.faq}</a><a href="#inquiry" className="st-nav-cta">{t.nav.inquiry}</a>
         {/* 영문 사이트는 보류 중이라 한국어 페이지에는 전환 버튼을 숨긴다. 다시 열 때 lang 조건을 지운다. */}
         {lang === "en" && <Link href={t.nav.switchHref} className="st-lang-switch" hrefLang={t.nav.switchLang} lang={t.nav.switchLang}>{t.nav.switchTo}</Link>}</nav>
     </div></header>
@@ -109,6 +109,18 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
         <ol className="st-steps">{PROCESS.map((s, i) => <li key={s.title} className={i === 2 ? "st-step-pay" : undefined}><span className="st-step-no" aria-hidden="true">{i + 1}</span><h3>{s.title}</h3><p>{s.text}</p></li>)}</ol>
       </div></section>
 
+      <section id="maintenance" className="st-section"><div className="st-wrap">
+        <h2>{t.maintenance.title}</h2>
+        <p className="st-section-lead">{t.maintenance.lead}</p>
+        <div className="st-plans">{MAINTENANCE.plans.map(p => <article key={p.name} className="st-plan">
+          <h3>{p.name}</h3>
+          <p className="st-plan-fit"><span>{t.maintenance.fit}</span> {p.fit}</p>
+          <ul>{p.includes.map(item => <li key={item}>{item}</li>)}</ul>
+        </article>)}</div>
+        <ul className="st-plan-notes">{MAINTENANCE.notes.map(n => <li key={n}>{n}</li>)}</ul>
+        <button className="st-text-link" onClick={goInquiry}>{t.maintenance.cta}</button>
+      </div></section>
+
       <section id="faq" className="st-section"><div className="st-wrap st-faq-grid">
         <div><h2>{t.faq.title}</h2><p className="st-section-lead">{t.faq.lead}</p></div>
         <div className="st-faq">{FAQ.map(f => <details key={f.q}><summary>{f.q}</summary><p>{f.a}</p></details>)}</div>
@@ -119,6 +131,12 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
           <h2>{t.inquiry.title}</h2>
           <p className="st-section-lead">{t.inquiry.lead}</p>
           <ul className="st-checks">{t.inquiry.checks.map(c => <li key={c}>{c}</li>)}</ul>
+          {CONTACT.kakao && <div className="st-contact">
+            <p>{t.contact.lead}</p>
+            <div className="st-contact-links">
+              <a href={CONTACT.kakao} target="_blank" rel="noreferrer" className="st-button st-button-kakao">{t.contact.kakao}</a>
+            </div>
+          </div>}
         </div>
         <InquiryForm lang={lang} chat={chat} onDone={includedChat => { if (includedChat) setSentBelow(true); }} />
       </div></section>
@@ -126,6 +144,7 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
 
     <footer className="st-footer"><div className="st-wrap">
       <strong>{site.name}</strong><p>{site.description}</p>
+      {CONTACT.kakao && <p className="st-footer-small"><a href={CONTACT.kakao} target="_blank" rel="noreferrer">{t.contact.kakao}</a></p>}
       <p className="st-footer-small">{t.footer(site.name)}</p>
     </div></footer>
   </div>;

@@ -46,7 +46,7 @@ class SiteTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200, response.text)
 
     def inquiry(self, **extra):
-        body = {"name": "홍길동", "company": "(가상)테스트상사", "email": "buyer@example.com", "consent": True,
+        body = {"name": "홍길동", "company": "(가상)테스트상사", "email": "buyer@example.com", "consent": True, "overseas_consent": True,
                 "brief": {"project_type": "문서 변환·자동화", "title": "발주서 변환", "summary": "거래처 발주서를 표준 양식으로",
                           "budget": "1천만원 내외", "timeline": "12월 오픈", "goals": ["수작업 절감"], "evil": "drop"},
                 "transcript": [{"role": "user", "content": "발주서 변환이 필요해요"}]}
@@ -78,6 +78,7 @@ class SiteTests(unittest.TestCase):
 
     def test_inquiry_is_stored_cleaned_and_notified(self):
         self.assertEqual(self.inquiry(consent=False).status_code, 422)
+        self.assertEqual(self.inquiry(overseas_consent=False).status_code, 422)
         self.assertEqual(self.inquiry(email="not-an-email").status_code, 422)
         self.assertEqual(self.inquiry(brief=None, message="").status_code, 422)
         response = self.inquiry()
@@ -184,7 +185,7 @@ class SiteTests(unittest.TestCase):
             self.assertFalse(created["emailed"])
 
     def multipart(self, files, **extra):
-        payload = {"name": "홍길동", "email": "buyer@example.com", "consent": True, "message": "기획서 첨부합니다", **extra}
+        payload = {"name": "홍길동", "email": "buyer@example.com", "consent": True, "overseas_consent": True, "message": "기획서 첨부합니다", **extra}
         return self.client.post("/api/inquiries", data={"payload": json.dumps(payload, ensure_ascii=False)}, files=files)
 
     def test_inquiry_attachments_are_stored_and_admin_only(self):

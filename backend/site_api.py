@@ -111,6 +111,7 @@ class Inquiry(BaseModel):
     brief: dict | None = None
     transcript: list[ChatMessage] = Field(default_factory=list, max_length=50)
     consent: bool
+    overseas_consent: bool = False
     lang: Lang = "ko"
     website: str = Field(default="", max_length=200)  # honeypot: humans never fill this
 
@@ -191,6 +192,8 @@ async def handle_inquiry(request, forms):
         raise HTTPException(422, str(error)) from None
     if not body.consent:
         raise HTTPException(422, "개인정보 수집·이용에 동의해 주세요.")
+    if not body.overseas_consent:
+        raise HTTPException(422, "개인정보 국외 이전에 동의해 주세요.")
     email = body.email.strip()
     if not EMAIL.match(email):
         raise HTTPException(422, "이메일 주소를 확인해 주세요.")

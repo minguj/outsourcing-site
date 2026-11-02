@@ -60,6 +60,12 @@ sudo docker run --rm -v outsourcing-site_backend_data:/data -v "$PWD":/backup al
 
 개인정보 보유 기간 안내(상담 종료 후 1년)는 `site-config.ts`의 문구와 실제 운영을 맞춘다.
 
+## 연락처·유지보수·국외 이전
+
+- 카카오톡 문의 주소(채널 채팅 또는 1:1 오픈채팅)는 `site-config.ts`의 `CONTACT.kakao`에 넣는다. 값이 있으면 상담 접수 옆과 하단에 바로가기가 나오고, 비워 두면 숨긴다.
+- 월 구독 유지보수 플랜(이름, 맞는 경우, 포함 내용, 안내 문구)은 `site-content.ts`의 `MAINTENANCE`에서 고친다. 금액은 공개하지 않는다. AI 상담이 쓰는 같은 내용은 `site_knowledge.py`의 `POLICIES`(유지보수 구독)에 있다.
+- 상담 접수에는 개인정보 수집·이용 동의와 별도로 국외 이전 동의(`overseas_consent`)가 필수다. 대상과 설명은 `site-config.ts`의 `privacy.transfer`에 있다. AI 상담 입력창 아래에는 Anthropic(미국)으로 전송된다는 안내가 나온다.
+
 ## 로컬 실행
 
 기존 두 터미널 실행 방법(`dev/purchase_order_demo/README.md`)과 같다. 기능을 켜려면 백엔드를 띄우기 전에 PowerShell에서 환경변수를 설정한다.
