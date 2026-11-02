@@ -449,3 +449,22 @@
   html.st-chat-open, html.st-chat-open body { overflow: hidden; overscroll-behavior: none; }
   html.st-chat-open .st-mobile-cta { display: none; }
 }
+
+/* 유지보수 작업 등급 */
+.st-plan-points { font-size: 14px; color: var(--muted); margin-bottom: 12px !important; }
+.st-plan-points strong { color: var(--ink); font-size: 16px; margin-left: 4px; }
+.st-levels-title { font-size: 18px; margin: 36px 0 6px !important; }
+.st-levels-lead { font-size: 14.5px; color: #34413b; margin-bottom: 10px !important; }
+.st-levels .st-level-name { white-space: nowrap; font-weight: 600; color: var(--ink); width: 1%; }
+.st-levels .st-level-name span { display: inline-block; min-width: 26px; color: var(--muted); font-weight: 700; }
+.st-levels .st-level-points { white-space: nowrap; text-align: right; font-weight: 600; width: 1%; }
+@media (max-width: 640px) {
+  .st-levels thead { display: none; }
+  .st-levels, .st-levels tbody, .st-levels tr, .st-levels td { display: block; width: auto; }
+  .st-levels tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 12px 0; border-bottom: 1px solid var(--rule); }
+  .st-levels td { border: 0; padding: 0; }
+  .st-levels .st-level-name { width: auto; }
+  .st-levels td:nth-child(2) { grid-column: 1 / -1; grid-row: 2; font-size: 13.5px; color: #34413b; }
+  .st-levels .st-level-points { grid-column: 2; grid-row: 1; width: auto; }
+}
+.st-contract-rules { list-style: decimal; display: grid; gap: 4px; margin-top: 10px; }
