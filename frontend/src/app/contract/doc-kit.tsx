@@ -103,7 +103,7 @@ export function Signs({ quote, clientRole = "대표자" }: { quote: Quote | null
     <p className="st-contract-date">{BLANK}년　　월　　일</p>
     <div className="st-contract-signs">
       <section><h3>갑</h3><dl><dt>상호</dt><dd>{quote?.customer.company || BLANK}</dd><dt>주소</dt><dd>{BLANK}</dd><dt>{clientRole}</dt><dd>{BLANK}　(서명 또는 인)</dd></dl></section>
-      <section><h3>을</h3><dl><dt>상호</dt><dd>{CONTRACTOR.brand}</dd><dt>주소</dt><dd>{BLANK}</dd><dt>성명</dt><dd>{CONTRACTOR.name}　(서명 또는 인)</dd></dl></section>
+      <section><h3>을</h3><dl><dt>성명</dt><dd>{CONTRACTOR.name}　(서명 또는 인)</dd><dt>주소</dt><dd>{BLANK}</dd><dt>서비스명</dt><dd>{CONTRACTOR.brand}</dd></dl></section>
     </div>
   </>;
 }

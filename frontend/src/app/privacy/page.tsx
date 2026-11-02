@@ -15,7 +15,7 @@ const PROCESSORS = [
 
 export default function PrivacyPage() {
   return <LegalPage title="개인정보처리방침" effective={POLICY_EFFECTIVE.privacy}>
-    <p className="st-legal-lead">{OPERATOR.brand}(대표 {OPERATOR.representative}, 이하 &ldquo;운영자&rdquo;)는 {OPERATOR.site}(이하 &ldquo;사이트&rdquo;)에서 개발 의뢰 상담과 견적·계약을 위해 개인정보를 처리하며, 개인정보 보호법에 따라 이용자의 개인정보를 보호하고 관련 고충을 처리하기 위하여 다음과 같이 개인정보처리방침을 둡니다.</p>
+    <p className="st-legal-lead">{OPERATOR.representative}(이하 &ldquo;운영자&rdquo;)는 &lsquo;{OPERATOR.brand}&rsquo;라는 이름으로 운영하는 {OPERATOR.site}(이하 &ldquo;사이트&rdquo;)에서 개발 의뢰 상담과 견적·계약을 위해 개인정보를 처리하며, 개인정보 보호법에 따라 이용자의 개인정보를 보호하고 관련 고충을 처리하기 위하여 다음과 같이 개인정보처리방침을 둡니다.</p>
 
     <Section n={1} title="처리 목적">
       <ul><li>개발 의뢰 상담 접수와 응대(AI 상담 포함)</li><li>견적서 발행, 계약 체결과 이행, 대금 확인</li><li>접수 확인·견적 안내 등 필요한 연락</li><li>사이트 보안과 부정 이용 방지</li></ul>
