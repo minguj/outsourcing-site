@@ -4,6 +4,9 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+      # HTTPS. EC2 보안 그룹에서도 443(TCP, UDP)을 열어야 한다.
+      - "443:443"
+      - "443:443/udp"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data

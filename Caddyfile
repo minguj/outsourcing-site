@@ -1,12 +1,33 @@
+# 운영 사이트 주소. 도메인을 바꾸면 아래 두 곳(fitagent.co.kr)과 www 블록을 함께 바꾼다.
+# Caddy가 Let's Encrypt 인증서를 자동으로 발급·갱신한다(80·443 포트가 열려 있어야 함).
+
+(site) {
+	encode zstd gzip
+
+	@api path /api /api/*
+	handle @api {
+		reverse_proxy backend:8000
+	}
+
+	handle {
+		reverse_proxy frontend:3000
+	}
+}
+
+fitagent.co.kr {
+	import site
+}
+
+www.fitagent.co.kr {
+	redir https://fitagent.co.kr{uri} permanent
+}
+
+# 배포 스크립트가 서버 안에서 http://127.0.0.1 로 상태를 점검한다. 지우지 않는다.
+http://127.0.0.1, http://localhost {
+	import site
+}
+
+# IP 주소 등 그 밖의 주소로 들어오면 도메인으로 보낸다.
 :80 {
-    encode zstd gzip
-
-    @api path /api /api/*
-    handle @api {
-        reverse_proxy backend:8000
-    }
-
-    handle {
-        reverse_proxy frontend:3000
-    }
+	redir https://fitagent.co.kr{uri} permanent
 }
