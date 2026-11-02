@@ -2,7 +2,7 @@
 export const SITE_URL = "https://fitagent.co.kr";
 
 // 검색 등록 확인 코드. Google Search Console·네이버 서치어드바이저에서 "HTML 태그" 방식으로 받은 content 값만 넣는다.
-export const SEARCH_VERIFY = { google: "", naver: "" };
+export const SEARCH_VERIFY = { google: "", naver: "7e1fbaa24af177e04b8477a9040b280fc0cd4007" };
 
 // 검색 키워드. 네이버 등은 참고하고 Google은 무시하므로, 실제 검색 노출은 본문 문구가 좌우한다.
 export const KEYWORDS = [
