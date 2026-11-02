@@ -123,7 +123,7 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
 
       <section id="faq" className="st-section"><div className="st-wrap st-faq-grid">
         <div><h2>{t.faq.title}</h2><p className="st-section-lead">{t.faq.lead}</p></div>
-        <div className="st-faq">{FAQ.map(f => <details key={f.q}><summary>{f.q}</summary><p>{f.a}</p></details>)}</div>
+        <div className="st-faq">{FAQ.map(f => <details key={f.q}><summary>{f.q}</summary><p>{f.a}{f.link && <> <Link href={f.link.href} className="st-faq-link" target="_blank">{f.link.label}</Link></>}</p></details>)}</div>
       </div></section>
 
       <section id="inquiry" className="st-section st-inquiry"><div className="st-wrap st-inquiry-grid">
@@ -145,6 +145,7 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
     <footer className="st-footer"><div className="st-wrap">
       <strong>{site.name}</strong><p>{site.description}</p>
       {CONTACT.kakao && <p className="st-footer-small"><a href={CONTACT.kakao} target="_blank" rel="noreferrer">{t.contact.kakao}</a></p>}
+      <p className="st-footer-small st-footer-links"><Link href="/privacy"><strong>{t.legal.privacy}</strong></Link><Link href="/terms">{t.legal.terms}</Link></p>
       <p className="st-footer-small">{t.footer(site.name)}</p>
     </div></footer>
   </div>;

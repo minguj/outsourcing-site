@@ -1,45 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { api } from "../_site/api";
-import { money } from "../_site/i18n";
-import { BANK, CONTRACTOR, SITE } from "../site-config";
+import type { ReactNode } from "react";
+import { BANK } from "../site-config";
+import { Articles, DocShell, Loading, Parties, Signs, day, payments, useQuote, won } from "./doc-kit";
 
-// 견적서(/quote?t=…)와 같은 토큰으로 그 견적 내용을 채운 외주 개발 계약서(안)를 보여 준다.
-// 서명은 이 화면을 인쇄하거나 PDF로 저장해 주고받는다.
-type Quote = {
-  title: string; items: { name: string; amount: number }[]; total: number; deposit: number; schedule: string; note: string;
-  created_at: number; customer: { name: string; company: string }; is_demo: boolean;
-};
-
-const won = (value: number) => money("ko", value);
-const day = (seconds: number) => new Intl.DateTimeFormat("ko-KR", { dateStyle: "long" }).format(new Date(seconds * 1000));
-const BLANK = "　　　　　　　　　　";
-
+// 견적서(/quote?t=…)와 같은 토큰으로 그 견적 내용을 채운 외주 개발 계약서(안).
+// 서명은 이 화면을 인쇄·PDF 저장하거나 Word로 저장해 주고받는다.
 export default function ContractView() {
-  const [token, setToken] = useState("");
-  const [quote, setQuote] = useState<Quote | null>(null);
-  const [error, setError] = useState("");
+  const { token, quote, error } = useQuote(true);
+  if (!quote) return <Loading error={error} />;
 
-  useEffect(() => {
-    const t = new URLSearchParams(window.location.search).get("t") ?? "";
-    setToken(t);
-    if (!t) { setError("계약서 링크가 올바르지 않습니다. 받은 링크를 다시 확인해 주세요."); return; }
-    api<Quote>(`/api/quotes/${t}`, undefined, "ko").then(setQuote)
-      .catch(err => setError(err instanceof Error ? err.message : "계약서를 불러오지 못했습니다."));
-  }, []);
-
-  if (!quote) return <div className="st-doc-page"><div className="st-wrap">
-    <p style={{ marginBottom: 16 }}><Link href="/" className="st-logo">{SITE.name}</Link></p>
-    {error ? <p className="st-error" role="alert">{error}</p> : <p>계약서를 불러오는 중입니다.</p>}
-  </div></div>;
-
-  const client = quote.customer.company || quote.customer.name;
-  const middle = Math.round(quote.total * 0.5);
-  const balance = Math.max(quote.total - quote.deposit - middle, 0);
+  const { middle, balance } = payments(quote);
   const quoteLink = `/quote?t=${encodeURIComponent(token)}`;
-  const articles: [string, React.ReactNode][] = [
+  const articles: [string, ReactNode][] = [
     ["목적", <>이 계약은 갑이 을에게 맡기는 「{quote.title}」 개발(이하 &ldquo;이 과업&rdquo;)에 관하여 갑과 을의 권리와 의무를 정하는 것을 목적으로 한다.</>],
     ["과업 범위", <>을이 수행할 과업은 {day(quote.created_at)} 발행한 견적서(<Link href={quoteLink}>견적서 보기</Link>)의 항목과 같다. 세부 기능과 화면은 착수 미팅에서 정하고, 정한 내용은 메일 등 기록이 남는 방법으로 서로 확인한다.
       <ul className="st-contract-items">{quote.items.map((item, i) => <li key={i}>{item.name} <span>{won(item.amount)}</span></li>)}</ul></>],
@@ -64,26 +38,13 @@ export default function ContractView() {
     ["기타", <>이 계약에서 정하지 않은 사항은 갑과 을이 협의하여 정하며, 협의가 되지 않으면 관련 법령과 일반 관례에 따른다. 이 계약과 관련한 분쟁은 먼저 협의로 해결하고, 소송이 필요하면 민사소송법에 따른 관할 법원에서 다툰다.</>],
   ];
 
-  return <div className="st-doc-page st-contract-page"><div className="st-wrap">
-    <div className="st-contract-bar st-no-print">
-      <Link href="/" className="st-logo">{SITE.name}</Link>
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <Link href={quoteLink} className="st-button st-button-ghost">견적서로 돌아가기</Link>
-        <button type="button" className="st-button" onClick={() => window.print()}>인쇄 · PDF 저장</button>
-      </div>
-    </div>
-    <p className="st-contract-draft st-no-print">계약서(안)입니다. 내용을 확인하시고 고칠 점이 있으면 견적 메일에 회신해 주세요. 확정되면 서명할 계약서를 보내 드립니다.</p>
-    <article className="st-doc st-contract" aria-label="외주 개발 계약서(안)">
-      <h1 className="st-contract-title">외주 개발 계약서(안)</h1>
-      <p className="st-contract-intro"><strong>{client}</strong>(이하 &ldquo;갑&rdquo;)와 <strong>{CONTRACTOR.name}</strong>({CONTRACTOR.brand}, 이하 &ldquo;을&rdquo;)은 다음과 같이 외주 개발 계약을 맺는다.</p>
-      <ol className="st-contract-articles">{articles.map(([title, body], i) => <li key={title}><h2>제{i + 1}조 ({title})</h2><div>{body}</div></li>)}</ol>
-      {quote.note && <p className="st-contract-note"><strong>견적서 안내 문구</strong><br />{quote.note}</p>}
-      <p className="st-contract-closing">이 계약을 증명하기 위하여 계약서 2부를 작성하여 갑과 을이 서명 또는 날인한 뒤 각 1부씩 보관한다.</p>
-      <p className="st-contract-date">{BLANK}년　　월　　일</p>
-      <div className="st-contract-signs">
-        <section><h3>갑</h3><dl><dt>상호</dt><dd>{quote.customer.company || BLANK}</dd><dt>주소</dt><dd>{BLANK}</dd><dt>대표자</dt><dd>{BLANK}　(서명 또는 인)</dd></dl></section>
-        <section><h3>을</h3><dl><dt>상호</dt><dd>{CONTRACTOR.brand}</dd><dt>주소</dt><dd>{BLANK}</dd><dt>성명</dt><dd>{CONTRACTOR.name}　(서명 또는 인)</dd></dl></section>
-      </div>
-    </article>
-  </div></div>;
+  return <DocShell title="외주 개발 계약서(안)" token={token}
+    notice="계약서(안)입니다. 내용을 확인하시고 고칠 점이 있으면 견적 메일에 회신해 주세요. 확정되면 서명할 계약서를 보내 드립니다.">
+    <h1 className="st-contract-title">외주 개발 계약서(안)</h1>
+    <Parties quote={quote} tail="다음과 같이 외주 개발 계약을 맺는다." />
+    <Articles items={articles} />
+    {quote.note && <p className="st-contract-note"><strong>견적서 안내 문구</strong><br />{quote.note}</p>}
+    <p className="st-contract-closing">이 계약을 증명하기 위하여 계약서 2부를 작성하여 갑과 을이 서명 또는 날인한 뒤 각 1부씩 보관한다.</p>
+    <Signs quote={quote} />
+  </DocShell>;
 }

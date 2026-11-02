@@ -155,7 +155,7 @@ export default function AdminApp() {
               <button className="st-button st-button-ghost" style={{ marginTop: 8 }} onClick={() => void update({ admin_note: note })}>메모 저장</button>
             </article>
             {detail.quotes.length > 0 && <article className="st-doc"><h3 style={{ fontSize: 16, marginBottom: 10 }}>견적서</h3>
-              <table className="st-table"><tbody>{detail.quotes.map(q => <tr key={q.id}><td><a href={`/quote?t=${q.token}`} target="_blank" rel="noreferrer">{q.title}</a><br /><small>{when(q.created_at)}</small></td>
+              <table className="st-table"><tbody>{detail.quotes.map(q => <tr key={q.id}><td><a href={`/quote?t=${q.token}`} target="_blank" rel="noreferrer">{q.title}</a><br /><small>{when(q.created_at)}</small><br /><small className="st-admin-docs">{[["/contract", "계약서(안)"], ["/contract/nda", "NDA"], ["/contract/completion", "완료 확인서"], ["/contract/maintenance", "유지보수 계약서"]].map(([href, label]) => <a key={href} href={`${href}?t=${q.token}`} target="_blank" rel="noreferrer">{label}</a>)}</small></td>
                 <td className="st-num">{won(q.total)}<br /><small>착수금 {won(q.deposit)}</small></td><td><span className="st-badge">{q.status === "paid" ? `결제 완료${q.payment_method ? ` (${q.payment_method})` : ""}` : "발송"}</span></td></tr>)}</tbody></table></article>}
             {link ? <article className="st-doc st-quote-done" role="status" ref={doneRef}>
               <h3>{emailed === "sent" ? "견적서를 발송했습니다" : "견적서를 만들었습니다"}</h3>

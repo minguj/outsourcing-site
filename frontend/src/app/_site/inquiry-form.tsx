@@ -31,7 +31,7 @@ export function PrivacyDialog({ lang = "ko", open, onClose, onAgree }: { lang?: 
     <div className="st-privacy-body">
       <h3 id="st-privacy-title">{t.privacy}</h3>
       <dl><dt>{t.items}</dt><dd>{privacy.items}</dd><dt>{t.purpose}</dt><dd>{privacy.purpose}</dd><dt>{t.retention}</dt><dd>{privacy.retention}</dd><dt>{t.transfer}</dt><dd>{privacy.transfer}</dd></dl>
-      <p>{t.privacyNote}</p>
+      <p>{t.privacyNote} <a href="/privacy" target="_blank" rel="noreferrer">{COPY[lang].legal.full}</a></p>
       <div className="st-privacy-actions">
         <button type="button" className="st-button st-button-ghost" onClick={onClose}>{t.close}</button>
         <button type="button" className="st-button" onClick={onAgree}>{t.agreeClose}</button>

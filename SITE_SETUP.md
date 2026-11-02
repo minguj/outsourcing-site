@@ -60,6 +60,13 @@ sudo docker run --rm -v outsourcing-site_backend_data:/data -v "$PWD":/backup al
 
 개인정보 보유 기간 안내(상담 종료 후 1년)는 `site-config.ts`의 문구와 실제 운영을 맞춘다.
 
+## 개인정보처리방침·이용약관·계약 문서
+
+- `/privacy` 개인정보처리방침, `/terms` 이용약관·환불 규정. 운영자 정보와 시행일은 `site-config.ts`의 `OPERATOR`, `POLICY_EFFECTIVE`에서 바꾼다. 메인 하단과 상담 접수 동의 팝업에서 연결된다.
+- 수집 항목, 위탁 업체(국외 이전), 보유 기간을 바꾸면 `privacy/page.tsx`와 `site-config.ts`의 `privacy` 안내문, 시행일을 함께 바꾼다.
+- 환불 기준을 바꾸면 `terms/page.tsx`, 계약서(`contract/`), `site_knowledge.py`(운영 기준·FAQ), `site-content.ts`(FAQ)를 함께 맞춘다.
+- 계약 문서 4종: `/contract`(외주 개발 계약서(안), 견적 토큰 필수), `/contract/nda`, `/contract/completion`, `/contract/maintenance`. 뒤의 셋은 `?t=견적토큰`이 있으면 고객사·과업명·금액을 채우고, 없으면 빈 양식이다. 모두 인쇄·PDF 저장과 Word(.doc) 저장을 지원하고, 관리 화면의 견적서 목록에서 바로 열 수 있다.
+
 ## 연락처·유지보수·국외 이전
 
 - 카카오톡 문의 주소(채널 채팅 또는 1:1 오픈채팅)는 `site-config.ts`의 `CONTACT.kakao`에 넣는다. 값이 있으면 상담 접수 옆과 하단에 바로가기가 나오고, 비워 두면 숨긴다.
