@@ -68,10 +68,8 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
           <ul className="st-hero-services" aria-label={t.hero.services}>{SERVICES.map(s => <li key={s.id}><a href={`#service-${s.id}`}>{s.name}</a></li>)}</ul>
           <p className="st-lead">{t.hero.lead2}</p>
           <div className="st-hero-actions">
-            <button className="st-button" disabled={demoBusy} onClick={() => void demo("hero")}>{demoBusy ? t.hero.demoBusy : t.hero.demo}</button>
-            <button className="st-button st-button-ghost" onClick={() => goInquiry("hero")}>{t.hero.form}</button>
+            <button className="st-button" onClick={() => goInquiry("hero")}>{t.hero.form}</button>
           </div>
-          {demoError && <p className="st-error" role="alert" style={{ marginTop: 12 }}>{demoError}</p>}
         </div>
         <div id="consult"><ConsultChat lang={lang} onFallback={() => goInquiry("chat_offline")} onChange={onChat} sentElsewhere={sentBelow} /></div>
       </div></section>
@@ -101,7 +99,8 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
             <ul className="st-tags">{["payment", "web"].map(id => <li key={id}>{serviceName(id)}</li>)}</ul>
             <h3>{t.examples.quote[0]}</h3>
             <p>{t.examples.quote[1]}</p>
-            <button className="st-text-link" disabled={demoBusy} onClick={() => void demo("examples")}>{t.hero.demo}</button>
+            <button className="st-text-link" disabled={demoBusy} onClick={() => void demo("examples")}>{demoBusy ? t.hero.demoBusy : t.hero.demo}</button>
+            {demoError && <p className="st-error" role="alert">{demoError}</p>}
           </article>
           <article className="st-example">
             <ul className="st-tags">{["web", "infra"].map(id => <li key={id}>{serviceName(id)}</li>)}</ul>
