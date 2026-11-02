@@ -64,7 +64,8 @@ sudo docker run --rm -v outsourcing-site_backend_data:/data -v "$PWD":/backup al
 
 - 카카오톡 문의 주소(채널 채팅 또는 1:1 오픈채팅)는 `site-config.ts`의 `CONTACT.kakao`에 넣는다. 값이 있으면 상담 접수 옆과 하단에 바로가기가 나오고, 비워 두면 숨긴다.
 - 월 구독 유지보수 플랜(이름, 맞는 경우, 포함 내용, 안내 문구)은 `site-content.ts`의 `MAINTENANCE`에서 고친다. 금액은 공개하지 않는다. AI 상담이 쓰는 같은 내용은 `site_knowledge.py`의 `POLICIES`(유지보수 구독)에 있다.
-- 상담 접수에는 개인정보 수집·이용 동의와 별도로 국외 이전 동의(`overseas_consent`)가 필수다. 대상과 설명은 `site-config.ts`의 `privacy.transfer`에 있다. AI 상담 입력창 아래에는 Anthropic(미국)으로 전송된다는 안내가 나온다.
+- 상담 접수에는 개인정보 수집·이용 동의(필수)만 받는다. 동의 문구의 '개인정보 수집·이용'을 누르면 수집 항목·목적·보유 기간·처리 위탁(국외 처리 포함) 안내 팝업이 열린다. 국외 처리위탁(Anthropic·Google·AWS)은 개인정보 보호법 제28조의8 제1항 제3호(계약 체결·이행을 위한 처리위탁·보관)에 따라 별도 동의 대신 안내와 개인정보처리방침 공개로 알린다. 문구는 `site-config.ts`의 `privacy`에 있다.
+- AI 상담 입력창 아래에는 'AI가 답변하는 상담이며 개인정보를 적지 말라'는 안내만 짧게 둔다.
 
 ## 로컬 실행
 

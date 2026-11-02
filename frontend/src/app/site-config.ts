@@ -5,7 +5,7 @@ export const SITE = {
   description: "회사 업무에 맞춘 AI 상담 에이전트와 문서 변환·검수 툴, 사내 시스템 연동을 개발하는 외주 개발사입니다.",
   privacy: {
     items: "이름, 회사명, 이메일, 전화번호(선택), 상담·의뢰 내용, 첨부 파일(선택)",
-    transfer: "AI 상담 대화는 답변을 만들기 위해 Anthropic PBC(미국)로 전송됩니다. 접수·견적 알림 메일은 Google LLC(미국)의 Gmail로 발송되고, 상담 기록은 Amazon Web Services(호주 시드니 리전) 서버에 보관됩니다.",
+    transfer: "상담 응대와 견적 안내를 위해 다음 업체에 처리를 맡기며, 정보가 국외에서 처리·보관됩니다. Anthropic PBC(미국, AI 상담 답변 생성), Google LLC(미국, 메일 발송), Amazon Web Services(호주 시드니 리전, 서버 보관). 자세한 내용은 개인정보처리방침에서 확인하실 수 있습니다.",
     purpose: "개발 의뢰 상담, 견적 안내와 연락",
     retention: "상담 종료 후 1년 보관 후 파기 (삭제를 요청하시면 즉시 파기)",
   },
@@ -18,7 +18,7 @@ export const SITE_EN = {
   description: "A development studio building AI consultation agents, document conversion and review tools, and internal system integrations tailored to your business.",
   privacy: {
     items: "Name, company, e-mail, phone (optional), consultation and request details, attachments (optional)",
-    transfer: "AI chat messages are sent to Anthropic PBC (USA) to generate replies. Notification e-mails are sent through Google LLC (USA) Gmail, and records are stored on Amazon Web Services servers in the Sydney (Australia) region.",
+    transfer: "To answer inquiries and send quotes, processing is entrusted to the following providers, and data is processed or stored abroad: Anthropic PBC (USA, AI chat replies), Google LLC (USA, e-mail delivery), Amazon Web Services (Sydney, Australia region, server storage). See the privacy policy for details.",
     purpose: "Consulting on development requests, sending quotes and contacting you",
     retention: "Kept for one year after the consultation ends, then destroyed (destroyed immediately on request)",
   },
