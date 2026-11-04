@@ -9,6 +9,8 @@ import { COPY, type Lang } from "./i18n";
 import { siteFor } from "../site-config";
 
 type Props = { brief?: Brief | null; transcript?: ChatMessage[]; compact?: boolean; onDone?: (includedChat: boolean) => void; lang?: Lang;
+  /** AI 상담 기록 번호: 접수를 그 대화 기록과 연결한다. */
+  session?: string;
   /** Bottom form only: the AI chat on the same page, offered as an attachment to this inquiry. */
   chat?: ChatSession | null };
 
@@ -41,7 +43,7 @@ export function PrivacyDialog({ lang = "ko", open, onClose, onAgree }: { lang?: 
   </dialog>;
 }
 
-export function InquiryForm({ brief: givenBrief, transcript: givenTranscript = [], compact = false, onDone, lang = "ko", chat }: Props) {
+export function InquiryForm({ brief: givenBrief, transcript: givenTranscript = [], compact = false, onDone, lang = "ko", chat, session: givenSession }: Props) {
   const t = COPY[lang].form;
   const [form, setForm] = useState({ name: "", company: "", email: "", phone: "", message: "", website: "" });
   const [consent, setConsent] = useState(false);
@@ -60,13 +62,14 @@ export function InquiryForm({ brief: givenBrief, transcript: givenTranscript = [
   const brief = useChat ? chat.brief : givenBrief;
   const transcript = useChat ? chat.messages : givenTranscript;
   const needsMessage = !brief;
+  const session = useChat ? chat.session : givenSession;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true); setError("");
     try {
       const data = new FormData();
-      data.append("payload", JSON.stringify({ ...form, brief: brief ?? null, transcript, consent, lang }));
+      data.append("payload", JSON.stringify({ ...form, brief: brief ?? null, transcript, consent, lang, ...(session ? { session } : {}) }));
       files.forEach(file => data.append("files", file, file.name));
       const result = await api<{ ok: boolean; id?: number }>("/api/inquiries", { method: "POST", body: data }, lang);
       track("inquiry_submit", { from: compact ? "chat" : "form", with_chat: useChat, files: files.length, lang });
