@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { INDUSTRIES, STORES, STORE_CATEGORIES, type Company, type Store } from "../_tower/data";
 import { fmtTime, matches, useTower } from "../_tower/store";
 
@@ -9,6 +9,21 @@ type View = { kind: "list" } | { kind: "company"; id: string } | { kind: "store"
 
 function Logo({ name, color, size = 44 }: { name: string; color: string; size?: number }) {
   return <span className="tw-logo" style={{ background: color, width: size, height: size, fontSize: size * 0.42 }} aria-hidden="true">{name.slice(0, 1)}</span>;
+}
+/** 사진 자리: 실제 사진 대신 직접 그린 일러스트(저작권 문제 없음). */
+function Illust({ kind, color, height = 150 }: { kind: string; color: string; height?: number }) {
+  const icon: Record<string, ReactNode> = {
+    카페: <><path d="M60 52h36v22a14 14 0 0 1-14 14h-8a14 14 0 0 1-14-14Z" /><path d="M96 58h6a7 7 0 0 1 0 14h-6M68 40c0-5 5-5 5-10M80 40c0-5 5-5 5-10" /></>,
+    식당: <><path d="M48 66h64a32 32 0 0 1-64 0Z" /><path d="M58 58l34-24M70 58l30-20" /></>,
+    "운동·건강": <><path d="M50 60h60M56 48v24M64 44v32M96 44v32M104 48v24" /></>,
+    "편의·생활": <><path d="M64 40l-14 10 8 10 6-4v32h32V56l6 4 8-10-14-10c-2 6-8 8-16 8s-14-2-16-8Z" /></>,
+  };
+  return <svg className="tw-illust" viewBox="0 0 160 100" preserveAspectRatio="xMidYMid slice" style={{ height, background: `linear-gradient(135deg, ${color}, ${color}b3 60%, #1f2937)` }} aria-hidden="true">
+    {kind === "company"
+      ? <g fill="rgba(255,255,255,.16)"><rect x="18" y="38" width="26" height="62" /><rect x="48" y="18" width="34" height="82" /><rect x="86" y="30" width="24" height="70" /><rect x="114" y="46" width="30" height="54" />
+          <g fill="rgba(255,255,255,.35)">{[24, 32, 40, 48, 56, 64, 72, 80].map(y => <rect key={y} x="54" y={y} width="22" height="3" rx="1" />)}</g></g>
+      : <g fill="none" stroke="rgba(255,255,255,.55)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round">{icon[kind]}</g>}
+  </svg>;
 }
 function Heart({ on }: { on: boolean }) {
   return <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2Z" fill={on ? "#e5484d" : "none"} stroke={on ? "#e5484d" : "#8a94a6"} strokeWidth="1.8" /></svg>;
@@ -22,6 +37,7 @@ export default function AppView() {
   const [industry, setIndustry] = useState("전체");
   const [onlyFav, setOnlyFav] = useState(false);
   const [category, setCategory] = useState("전체");
+  const [storeQ, setStoreQ] = useState("");
   const [toast, setToast] = useState("");
   const [redeeming, setRedeeming] = useState<string | null>(null);
 
@@ -34,15 +50,16 @@ export default function AppView() {
     .filter(c => !onlyFav || state.favorites.includes(c.id))
     .filter(c => matches(c, q)), [state.companies, state.favorites, industry, onlyFav, q]);
 
+  const stores = STORES.filter(s => (category === "전체" || s.category === category) && [s.name, s.category, s.intro, ...s.menu].join(" ").includes(storeQ.trim()));
   const company = view.kind === "company" ? state.companies.find(c => c.id === view.id) : undefined;
   const store = view.kind === "store" ? STORES.find(s => s.id === view.id) : undefined;
-  const title = company ? "기업 상세" : store ? store.name : tab === "companies" ? "입주기업" : tab === "stores" ? "상가 혜택" : "내 쿠폰";
+  const title = company ? "기업 상세" : store ? "가맹점 상세" : tab === "companies" ? "입주기업 비즈니스 허브" : tab === "stores" ? "상가 혜택" : "내 쿠폰";
 
   return <div className="tw-app">
-    <header className="tw-bar">
+    <header className={"tw-bar" + (view.kind === "list" ? " tone-" + tab : " detail")}>
       {view.kind !== "list"
         ? <button className="tw-back" onClick={() => setView({ kind: "list" })} aria-label="뒤로">‹</button>
-        : <span className="tw-brand">스마트타워</span>}
+        : <span />}
       <strong>{title}</strong>
       <span className="tw-sample">샘플</span>
     </header>
@@ -54,7 +71,7 @@ export default function AppView() {
       {view.kind === "list" && tab === "companies" && <>
         <div className="tw-search"><input value={q} onChange={e => setQ(e.target.value)} placeholder="기업명, 업종, 기술 검색 (초성도 가능)" aria-label="입주기업 검색" /></div>
         <div className="tw-chips" role="tablist" aria-label="업종">
-          {["전체", ...INDUSTRIES].map(i => <button key={i} role="tab" aria-selected={industry === i} className={industry === i ? "on" : ""} onClick={() => setIndustry(i)}>{i}</button>)}
+          {["전체", ...INDUSTRIES].map(i => <button key={i} role="tab" aria-selected={industry === i} className={industry === i ? "on tone-companies" : ""} onClick={() => setIndustry(i)}>{i}</button>)}
         </div>
         <div className="tw-row-between"><span className="tw-count">입주기업 {companies.length}곳</span>
           <label className="tw-fav-toggle"><input type="checkbox" checked={onlyFav} onChange={e => setOnlyFav(e.target.checked)} /> 즐겨찾기만</label></div>
@@ -74,19 +91,25 @@ export default function AppView() {
       </>}
 
       {view.kind === "list" && tab === "stores" && <>
-        <div className="tw-banner"><strong>입주사 임직원 전용 혜택</strong><span>단지 안 상가 쿠폰을 받아 매장에서 바로 쓰세요.</span></div>
+        <div className="tw-search"><input value={storeQ} onChange={e => setStoreQ(e.target.value)} placeholder="상점명, 메뉴, 카테고리 검색" aria-label="상가 검색" /></div>
         <div className="tw-chips" role="tablist" aria-label="업종">
-          {["전체", ...STORE_CATEGORIES].map(i => <button key={i} role="tab" aria-selected={category === i} className={category === i ? "on" : ""} onClick={() => setCategory(i)}>{i}</button>)}
+          {["전체", ...STORE_CATEGORIES].map(i => <button key={i} role="tab" aria-selected={category === i} className={category === i ? "on tone-stores" : ""} onClick={() => setCategory(i)}>{i}</button>)}
         </div>
-        <ul className="tw-list">
-          {STORES.filter(s => category === "전체" || s.category === category).map(s => {
-            const live = state.coupons.filter(k => k.storeId === s.id && k.active);
-            return <li key={s.id} className="tw-card" onClick={() => setView({ kind: "store", id: s.id })}>
-              <Logo name={s.name} color={s.color} />
-              <div className="tw-card-main"><strong>{s.name}</strong><span className="tw-sub">{s.category} · {s.room}</span><p>{s.intro}</p>
-                {live[0] && <span className="tw-coupon-pill">{live[0].title}</span>}</div>
+        <div className="tw-hero-banner">
+          <Illust kind="식당" color="#7c2d12" height={132} />
+          <div><strong>점심 한 끼도<br />더 가볍게</strong><span>입주사 임직원 전용 상가 혜택</span></div>
+        </div>
+        <div className="tw-row-between"><h2 className="tw-sec-title">추천 가맹점</h2><span className="tw-count">{stores.length}곳</span></div>
+        <ul className="tw-store-grid">
+          {stores.map(s => {
+            const live = state.coupons.find(k => k.storeId === s.id && k.active);
+            return <li key={s.id} onClick={() => setView({ kind: "store", id: s.id })}>
+              <Illust kind={s.category} color={s.color} height={96} />
+              <div className="tw-store-info"><strong>{s.name}</strong><span className="tw-sub">{s.room} · {s.category}</span>
+                {live && <span className="tw-coupon-pill">{live.benefit} 쿠폰</span>}</div>
             </li>;
           })}
+          {stores.length === 0 && <li className="tw-empty">검색 결과가 없습니다.</li>}
         </ul>
       </>}
 
@@ -122,45 +145,59 @@ export default function AppView() {
 }
 
 function CompanyDetail({ co, fav, onFav, say }: { co: Company; fav: boolean; onFav: () => void; say: (t: string) => void }) {
+  const [tab, setTab] = useState("intro");
+  const tabs: [string, string][] = [["intro", "기업소개"], ["services", "주요서비스"], ["portfolio", "포트폴리오"], ["contact", "연락처"]];
   return <article className="tw-detail">
-    <div className="tw-detail-head" style={{ background: `linear-gradient(135deg, ${co.color}, ${co.color}cc)` }}>
-      <Logo name={co.name} color="rgba(255,255,255,.18)" size={56} />
-      <h1>{co.name}</h1><span>{co.industry} · {co.room}</span>
+    <Illust kind="company" color={co.color} height={150} />
+    <div className="tw-profile">
+      <span className="tw-profile-logo"><Logo name={co.name} color={co.color} size={64} /></span>
+      <h1>{co.name}</h1>
+      <span className="tw-sub">{co.industry} · {co.room}</span>
+      <p>{co.intro}</p>
+      <div className="tw-actions">
+        <button className="tw-btn navy" onClick={() => say("샘플에서는 전화·메일로 연결되지 않습니다.")}>문의하기</button>
+        <button className={"tw-btn ghost" + (fav ? " fav" : "")} onClick={onFav}><Heart on={fav} /> {fav ? "즐겨찾기됨" : "즐겨찾기"}</button>
+      </div>
     </div>
-    <div className="tw-actions">
-      <button className="tw-btn" onClick={() => say("샘플에서는 전화·메일로 연결되지 않습니다.")}>문의하기</button>
-      <button className={"tw-btn ghost" + (fav ? " fav" : "")} onClick={onFav}><Heart on={fav} /> {fav ? "즐겨찾기됨" : "즐겨찾기"}</button>
-    </div>
-    <section><h2>기업 소개</h2><p>{co.intro}</p></section>
-    <section><h2>보유 기술</h2><div className="tw-tags big">{co.techs.map(t => <span key={t}>{t}</span>)}</div></section>
-    <section><h2>주요 서비스</h2><ul className="tw-bullets">{co.services.map(s => <li key={s}>{s}</li>)}</ul></section>
-    {co.portfolio.length > 0 && <section><h2>포트폴리오</h2>{co.portfolio.map(p => <div key={p.title} className="tw-pf"><strong>{p.title}</strong><span>{p.desc}</span></div>)}</section>}
-    <section><h2>연락처</h2><dl className="tw-dl"><dt>대표</dt><dd>{co.ceo}</dd><dt>전화</dt><dd>{co.phone}</dd><dt>메일</dt><dd>{co.email}</dd><dt>홈페이지</dt><dd>{co.site}</dd></dl></section>
+    <div className="tw-dtabs" role="tablist">{tabs.map(([id, label]) => <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? "on" : ""} onClick={() => setTab(id)}>{label}</button>)}</div>
+    {tab === "intro" && <><section><h2>회사 소개</h2><p>{co.intro}</p></section>
+      <section><h2>보유 기술</h2><div className="tw-tags big">{co.techs.map(t => <span key={t}>{t}</span>)}</div></section></>}
+    {tab === "services" && <section><h2>주요 서비스</h2><div className="tw-tags big">{co.services.map(s => <span key={s}>{s}</span>)}</div></section>}
+    {tab === "portfolio" && <section><h2>포트폴리오</h2>{co.portfolio.length ? co.portfolio.map(p => <div key={p.title} className="tw-pf"><Illust kind="company" color={co.color} height={70} /><strong>{p.title}</strong><span>{p.desc}</span></div>) : <p className="tw-sub">등록된 포트폴리오가 없습니다.</p>}</section>}
+    {tab === "contact" && <section><h2>연락처</h2><dl className="tw-dl"><dt>대표</dt><dd>{co.ceo}</dd><dt>전화</dt><dd>{co.phone}</dd><dt>메일</dt><dd>{co.email}</dd><dt>홈페이지</dt><dd>{co.site}</dd><dt>위치</dt><dd>{co.room}</dd></dl></section>}
   </article>;
 }
 
 function StoreDetail({ store, say }: { store: Store; say: (t: string) => void }) {
   const { state, actions } = useTower();
+  const [tab, setTab] = useState("info");
   const list = state.coupons.filter(k => k.storeId === store.id);
+  const couponCards = list.map(k => {
+    const got = state.mine.some(m => m.couponId === k.id); const left = k.total - k.issued;
+    return <div key={k.id} className={"tw-coupon" + (!k.active ? " off" : "")}>
+      <span className="tw-coupon-icon" aria-hidden="true">%</span>
+      <div><strong>{k.title}</strong><span className="tw-sub">{k.to.replaceAll("-", ".")}까지 · 남은 수량 {Math.max(left, 0)}장</span></div>
+      <button className="tw-btn small red" disabled={!k.active || got || left <= 0}
+        onClick={() => { const err = actions.claim(k.id); say(err ?? "쿠폰을 받았습니다. '내 쿠폰'에서 확인하세요."); }}>
+        {!k.active ? "종료" : got ? "받음" : left <= 0 ? "소진" : "쿠폰받기"}</button>
+    </div>;
+  });
   return <article className="tw-detail">
-    <div className="tw-detail-head" style={{ background: `linear-gradient(135deg, ${store.color}, ${store.color}cc)` }}>
-      <Logo name={store.name} color="rgba(255,255,255,.18)" size={56} />
-      <h1>{store.name}</h1><span>{store.category} · {store.room}</span>
+    <Illust kind={store.category} color={store.color} height={170} />
+    <div className="tw-profile store">
+      <span className="tw-profile-logo round"><Logo name={store.name} color={store.color} size={60} /></span>
+      <h1>{store.name}</h1>
+      <span className="tw-sub">{store.room} · {store.category}</span>
     </div>
-    <section><h2>쿠폰</h2>
-      {list.map(k => {
-        const got = state.mine.some(m => m.couponId === k.id); const left = k.total - k.issued;
-        return <div key={k.id} className={"tw-coupon" + (!k.active ? " off" : "")}>
-          <div><strong>{k.title}</strong><span className="tw-sub">{k.from.slice(5).replace("-", "/")} ~ {k.to.slice(5).replace("-", "/")} · 남은 수량 {Math.max(left, 0)}장</span></div>
-          <button className="tw-btn small" disabled={!k.active || got || left <= 0}
-            onClick={() => { const err = actions.claim(k.id); say(err ?? "쿠폰을 받았습니다. '내 쿠폰'에서 확인하세요."); }}>
-            {!k.active ? "종료" : got ? "받음" : left <= 0 ? "소진" : "받기"}</button>
-        </div>;
-      })}
-    </section>
-    <section><h2>매장 소개</h2><p>{store.intro}</p></section>
-    <section><h2>메뉴·가격</h2><ul className="tw-bullets">{store.menu.map(m => <li key={m}>{m}</li>)}</ul></section>
-    <section><h2>운영 시간</h2><p>{store.hours}</p></section>
+    <div className="tw-dtabs" role="tablist">{([["info", "상점정보"], ["menu", "메뉴"], ["coupon", `쿠폰 ${list.filter(k => k.active).length}`]] as [string, string][]).map(([id, label]) =>
+      <button key={id} role="tab" aria-selected={tab === id} className={tab === id ? "on" : ""} onClick={() => setTab(id)}>{label}</button>)}</div>
+    {tab === "info" && <>
+      {list.some(k => k.active) && <section>{couponCards.filter((_, i) => list[i].active).slice(0, 1)}</section>}
+      <section><h2>상점 소개</h2><p>{store.intro}</p></section>
+      <section><h2>영업시간</h2><p>{store.hours}</p></section>
+    </>}
+    {tab === "menu" && <section><h2>메뉴·가격</h2><ul className="tw-menu">{store.menu.map(m => { const hit = m.match(/^(.+?) ((?:월 |\d+회 )?[\d,]+만? ?원)$/); return <li key={m}><span>{hit ? hit[1] : m}</span><b>{hit ? hit[2] : ""}</b></li>; })}</ul></section>}
+    {tab === "coupon" && <section><h2>쿠폰</h2>{couponCards}</section>}
   </article>;
 }
 
