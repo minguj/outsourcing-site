@@ -206,3 +206,46 @@ button.tw-kpi:hover { border-color: var(--tw-primary); }
   .tw-input { min-width: 0; width: 100%; }
 }
 .tw-warnline { font-size: 13px; color: var(--tw-bad); background: #fef2f2; border-radius: 8px; padding: 8px 12px; }
+
+/* 시안에 맞춘 보완: 메뉴별 색 헤더, 사진 자리 일러스트, 상세 탭, 가맹점 카드 */
+.tw-bar.tone-companies { background: #1f4fa8; border-color: #1f4fa8; }
+.tw-bar.tone-stores { background: #f08c1a; border-color: #f08c1a; }
+.tw-bar.tone-mine { background: #4b3fb0; border-color: #4b3fb0; }
+.tw-bar[class*="tone-"] strong { color: #fff; }
+.tw-bar[class*="tone-"] .tw-sample { background: rgba(255, 255, 255, .2); border-color: rgba(255, 255, 255, .35); color: #fff; }
+.tw-bar.detail strong { text-align: center; font-size: 16px; }
+.tw-chips button.on.tone-stores { background: #f08c1a; border-color: #f08c1a; }
+.tw-illust { display: block; width: 100%; }
+.tw-hero-banner { position: relative; border-radius: 16px; overflow: hidden; margin: 12px 0 6px; }
+.tw-hero-banner > div { position: absolute; inset: 0; padding: 18px; display: flex; flex-direction: column; justify-content: center; gap: 8px; color: #fff; background: linear-gradient(90deg, rgba(17, 24, 39, .7), rgba(17, 24, 39, .1)); }
+.tw-hero-banner strong { font-size: 21px; line-height: 1.35; } .tw-hero-banner span { font-size: 12.5px; opacity: .85; }
+.tw-sec-title { font-size: 16px; color: var(--tw-ink); }
+.tw-store-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.tw-store-grid > li:not(.tw-empty) { background: #fff; border: 1px solid #eef0f4; border-radius: 14px; overflow: hidden; cursor: pointer; }
+.tw-store-grid .tw-empty { grid-column: 1 / -1; }
+.tw-store-info { padding: 10px 12px 12px; display: grid; gap: 3px; justify-items: start; }
+.tw-store-info strong { font-size: 14.5px; color: var(--tw-ink); }
+.tw-store-info .tw-coupon-pill { margin-top: 4px; background: #fff4e5; border-color: #fbd5a5; color: #c2410c; }
+
+.tw-profile { position: relative; background: #fff; padding: 40px 16px 16px; display: grid; gap: 4px; border-bottom: 1px solid var(--tw-line); }
+.tw-profile-logo { position: absolute; top: -34px; left: 16px; padding: 4px; background: #fff; border-radius: 16px; box-shadow: 0 4px 14px rgba(20, 33, 61, .15); line-height: 0; }
+.tw-profile-logo.round, .tw-profile-logo.round .tw-logo { border-radius: 50%; }
+.tw-profile h1 { font-size: 21px; color: var(--tw-ink); margin-top: 6px; }
+.tw-profile > p { font-size: 14px; color: #4b5563; line-height: 1.55; margin-top: 4px; }
+.tw-profile .tw-actions { padding: 12px 0 0; border: 0; }
+.tw-profile.store { padding-bottom: 14px; }
+.tw-btn.navy { background: var(--tw-ink); border-color: var(--tw-ink); }
+.tw-btn.red { background: #e5484d; border-color: #e5484d; }
+.tw-btn.red:disabled { background: #c7cfdd; border-color: #c7cfdd; }
+.tw-dtabs { position: sticky; top: 56px; z-index: 3; display: flex; background: #fff; border-bottom: 1px solid var(--tw-line); overflow-x: auto; }
+.tw-dtabs button { flex: 1; min-width: max-content; border: 0; background: none; padding: 13px 10px; font-size: 14px; color: var(--tw-muted); border-bottom: 2px solid transparent; }
+.tw-dtabs button.on { color: var(--tw-ink); font-weight: 700; border-bottom-color: var(--tw-ink); }
+.tw-coupon { border: 0; background: #fff1f0; }
+.tw-coupon > div { flex: 1; }
+.tw-coupon strong { color: #b42318; }
+.tw-coupon-icon { flex: none; width: 38px; height: 38px; border-radius: 50%; background: #e5484d; color: #fff; display: grid; place-items: center; font-weight: 800; }
+.tw-pf .tw-illust { border-radius: 8px; margin-bottom: 6px; }
+.tw-menu { list-style: none; margin: 0; padding: 0; display: grid; }
+.tw-menu li { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid #f1f3f7; font-size: 14.5px; }
+.tw-menu b { font-weight: 600; color: var(--tw-ink); white-space: nowrap; }
+.tw-chips button.on.tone-companies { background: #1f4fa8; border-color: #1f4fa8; }
