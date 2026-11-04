@@ -31,16 +31,25 @@ export function track(event: string, params: Record<string, string | number | bo
   gtag()?.("event", event, params);
 }
 
+// 광고 성과를 구분하려고 유입 표시 파라미터(utm_*, gclid 등)만 남긴다. 다른 쿼리는 버린다.
+const CAMPAIGN = /^(utm_[a-z_]+|gclid|gbraid|wbraid|fbclid|n_media|n_query)$/;
+function campaignQuery() {
+  const kept = new URLSearchParams();
+  new URLSearchParams(window.location.search).forEach((v, k) => { if (CAMPAIGN.test(k)) kept.append(k, v); });
+  const q = kept.toString();
+  return q ? "?" + q : "";
+}
+
 // 개발 모드에서 effect가 두 번 돌아도 같은 페이지를 두 번 세지 않는다.
 let lastPath = "";
 
 export function Analytics() {
   const pathname = usePathname();
   useEffect(() => {
-    // 쿼리 문자열은 빼고 경로만 보낸다.
+    // 쿼리 문자열은 유입 표시 파라미터만 남기고 뺀다.
     if (pathname === lastPath) return;
     lastPath = pathname;
-    gtag()?.("event", "page_view", { page_location: window.location.origin + pathname, page_path: pathname, page_title: document.title });
+    gtag()?.("event", "page_view", { page_location: window.location.origin + pathname + campaignQuery(), page_path: pathname, page_title: document.title });
   }, [pathname]);
   if (!ANALYTICS.ga || isPrivate(pathname)) return null;
   return <Script src={`https://www.googletagmanager.com/gtag/js?id=${ANALYTICS.ga}`} strategy="afterInteractive" />;
