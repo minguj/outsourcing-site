@@ -90,6 +90,12 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
             <h3>{t.examples.admin[0]}</h3>
             <p>{t.examples.admin[1]}</p>
           </article>
+          <article className="st-example">
+            <ul className="st-tags">{["app", "web"].map(id => <li key={id}>{serviceName(id)}</li>)}</ul>
+            <h3>{t.examples.tower[0]}</h3>
+            <p>{t.examples.tower[1]}</p>
+            <Link className="st-text-link" href="/demo/tower" onClick={() => track("demo_open", { demo: "tower" })}>{t.examples.tower[2]}</Link>
+          </article>
           <article className="st-example st-example-wide">
             <div>
               <ul className="st-tags">{["docs"].map(id => <li key={id}>{serviceName(id)}</li>)}</ul>

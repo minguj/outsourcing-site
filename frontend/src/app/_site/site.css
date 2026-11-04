@@ -396,10 +396,11 @@
 
 /* 작업 예시 */
 .st-examples-section { background: var(--sheet); }
-.st-examples { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; border-top: 2px solid var(--ink); }
+.st-examples { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 2px solid var(--ink); }
 .st-example { padding: 22px 24px 24px; border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .st-example:first-child { padding-left: 0; }
-.st-example:nth-child(2) { border-left: 1px solid var(--rule); padding-right: 0; }
+.st-example:nth-child(2), .st-example:nth-child(3) { border-left: 1px solid var(--rule); }
+.st-example:nth-child(3) { padding-right: 0; }
 .st-example h3 { font-size: 18px; font-weight: 700; }
 .st-example p { color: #34413b; font-size: 14.5px; max-width: 36em; }
 .st-example .st-example-note { color: var(--muted); font-size: 13px; }
