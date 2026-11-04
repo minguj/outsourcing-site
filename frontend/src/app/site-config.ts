@@ -65,7 +65,7 @@ export const OPERATOR = {
   email: "help@fitagent.co.kr",
   site: "fitagent.co.kr",
 };
-export const POLICY_EFFECTIVE = { privacy: "2026년 11월 2일", terms: "2026년 11월 2일" };
+export const POLICY_EFFECTIVE = { privacy: "2026년 11월 4일", terms: "2026년 11월 2일" };
 
 export const CONTRACTOR = {
   name: "진민구",

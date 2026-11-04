@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api, BRIEF_FIELDS, won, type Brief, type ChatMessage } from "../_site/api";
 import { SITE } from "../site-config";
+import { ConsultLog } from "./consult-log";
 
 type Row = { id: number; created_at: number; status: string; name: string; company: string; email: string; brief: Brief; quote_status: string | null; file_count?: number; lang?: "ko" | "en" };
 type QuoteRow = { id: number; token: string; title: string; total: number; deposit: number; status: string; created_at: number; paid_at: number | null; payment_method: string | null };
@@ -66,6 +67,7 @@ export default function AdminApp() {
   // After a quote is created, bring the completion panel into view.
   useEffect(() => { if (link) doneRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }); }, [link]);
   const [note, setNote] = useState("");
+  const [view, setView] = useState<"inquiries" | "consults">("inquiries");
 
   const load = useCallback(async () => {
     try { setListing(await api<Listing>("/api/admin/inquiries")); setAuthed(true); }
@@ -80,7 +82,9 @@ export default function AdminApp() {
   useEffect(() => {
     void (async () => {
       await load();
-      const id = Number(new URLSearchParams(window.location.search).get("inquiry"));
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("view") === "consults") setView("consults");
+      const id = Number(params.get("inquiry"));
       if (id) await open(id);
     })();
   }, [load, open]);
@@ -124,7 +128,12 @@ export default function AdminApp() {
       <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 14 }}>
         AI 상담 {listing.consult ? "켜짐" : "꺼짐 (ANTHROPIC_API_KEY 필요)"} / 이메일 알림 {listing.smtp ? "켜짐" : "꺼짐 (SMTP 설정 필요)"} / 온라인 결제 {listing.payments === "toss" ? "켜짐" : listing.payments === "mock" ? "모의 결제 (로컬 테스트)" : "꺼짐 (TOSS 키 필요)"}
       </p>
-      <div className="st-admin-grid">
+      <div className="st-admin-tabs" role="tablist">
+        <button role="tab" aria-selected={view === "inquiries"} className={view === "inquiries" ? "on" : ""} onClick={() => { setView("inquiries"); window.history.replaceState(null, "", detail ? `/admin?inquiry=${detail.id}` : "/admin"); }}>상담 접수 <b>{listing.inquiries.length}</b></button>
+        <button role="tab" aria-selected={view === "consults"} className={view === "consults" ? "on" : ""} onClick={() => { setView("consults"); window.history.replaceState(null, "", "/admin?view=consults"); }}>AI 상담 기록</button>
+      </div>
+      {view === "consults" && <ConsultLog onOpenInquiry={id => { setView("inquiries"); void open(id); }} />}
+      {view === "inquiries" && <div className="st-admin-grid">
         <section className="st-doc" style={{ padding: 0, overflow: "auto" }}>
           <table className="st-table"><thead><tr><th>접수</th><th>의뢰</th><th>상태</th></tr></thead>
             <tbody>{listing.inquiries.length === 0 && <tr><td colSpan={3}>아직 접수된 상담이 없습니다.</td></tr>}
@@ -169,7 +178,7 @@ export default function AdminApp() {
             : <QuoteForm key={detail.id} detail={detail} onCreated={(d, path, sent, requested) => { setDetail(d); setLink(path); setEmailed(sent ? "sent" : requested ? "failed" : "off"); void load(); }} />}
           </div>}
         </section>
-      </div>
+      </div>}
     </>}
   </div></div>;
 }

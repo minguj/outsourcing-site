@@ -3,6 +3,7 @@ import base64
 from collections import defaultdict, deque
 from datetime import datetime, timedelta, timezone
 import hmac
+import logging
 import os
 from pathlib import Path
 import re
@@ -29,6 +30,7 @@ else:
     from site_knowledge import QUOTE_STEP, kickoff_steps, kickoff_text
 
 router = APIRouter(prefix="/api")
+log = logging.getLogger(__name__)
 LOCK = RLock()
 HITS = defaultdict(deque)
 DAILY = {"day": "", "count": 0}
@@ -72,10 +74,14 @@ class ChatMessage(BaseModel):
 Lang = Literal["ko", "en"]
 
 
+SessionId = Field(default=None, pattern=r"^[A-Za-z0-9_-]{16,64}$")
+
+
 class Chat(BaseModel):
     model_config = ConfigDict(extra="forbid")
     messages: list[ChatMessage] = Field(min_length=1, max_length=50)
     lang: Lang = "ko"
+    session: str | None = SessionId  # 상담창마다 브라우저가 만든 무작위 번호. 대화 기록을 묶는 데만 쓴다.
 
 
 @router.post("/consult/chat")
@@ -88,10 +94,17 @@ def chat(body: Chat, request: Request):
         if DAILY["count"] >= int(os.environ.get("CONSULT_DAILY_LIMIT") or 500):
             raise HTTPException(503, "오늘 AI 상담 이용량이 많아 잠시 쉬고 있어요. 아래 양식으로 문의를 남겨 주세요.")
         DAILY["count"] += 1
+    messages = [m.model_dump() for m in body.messages]
     try:
-        return consult.reply([m.model_dump() for m in body.messages], body.lang)
+        result = consult.reply(messages, body.lang)
     except consult.ConsultError as error:
         raise HTTPException(error.status, str(error)) from None
+    if body.session:
+        try:
+            store.save_consult(body.session, body.lang, messages + [{"role": "assistant", "content": result["reply"]}], clean_brief(result.get("brief")))
+        except Exception:  # 기록 저장 실패가 상담 응답을 막지 않게 한다
+            log.exception("AI 상담 기록 저장 실패")
+    return result
 
 
 @router.get("/site/config")
@@ -113,6 +126,7 @@ class Inquiry(BaseModel):
     consent: bool
     overseas_consent: bool = False  # 예전 화면 호환용. 국외 처리위탁은 안내(처리방침)로 알리고 별도 동의는 받지 않는다.
     lang: Lang = "ko"
+    session: str | None = SessionId
     website: str = Field(default="", max_length=200)  # honeypot: humans never fill this
 
 
@@ -208,6 +222,8 @@ async def handle_inquiry(request, forms):
         raise HTTPException(422, str(error)) from None
     for display, stored, size in saved:
         store.add_file(inquiry_id, display, stored, size)
+    if body.session:
+        store.link_consult(body.session, inquiry_id)
     attached = "\n".join(f"- {display} ({size / 1024 / 1024:.1f}MB)" for display, _, size in saved) or "- 없음"
     link = f"{notify.base_url()}/admin?inquiry={inquiry_id}" if notify.base_url() else f"/admin?inquiry={inquiry_id}"
     english = body.lang == "en"
@@ -489,6 +505,32 @@ def admin_inquiry(inquiry_id: int, request: Request):
     if not inquiry:
         raise HTTPException(404, "문의를 찾을 수 없습니다.")
     return inquiry
+
+
+@router.get("/admin/consults")
+def admin_consults(request: Request, days: int = 30, q: str = ""):
+    require_admin(request)
+    days = min(max(days, 1), 365)
+    store.purge_consults()
+    return {"consults": store.list_consults(days, q[:100]), "stats": store.consult_stats(days)}
+
+
+@router.get("/admin/consults/{session_id}")
+def admin_consult(session_id: str, request: Request):
+    require_admin(request)
+    record = store.get_consult(session_id)
+    if not record:
+        raise HTTPException(404, "상담 기록을 찾을 수 없습니다.")
+    return record
+
+
+@router.delete("/admin/consults/{session_id}")
+def admin_delete_consult(session_id: str, request: Request):
+    """정보주체가 삭제를 요청하면 관리자가 바로 지울 수 있게 한다."""
+    require_admin(request)
+    if not store.delete_consult(session_id):
+        raise HTTPException(404, "상담 기록을 찾을 수 없습니다.")
+    return {"ok": True}
 
 
 @router.get("/admin/files/{file_id}")

@@ -41,6 +41,17 @@ CREATE TABLE IF NOT EXISTS quotes (
   paid_at REAL,
   payment_method TEXT
 );
+CREATE TABLE IF NOT EXISTS consult_sessions (
+  id TEXT PRIMARY KEY,
+  created_at REAL NOT NULL,
+  updated_at REAL NOT NULL,
+  lang TEXT NOT NULL DEFAULT 'ko',
+  messages TEXT NOT NULL DEFAULT '[]',
+  brief TEXT NOT NULL DEFAULT '{}',
+  user_turns INTEGER NOT NULL DEFAULT 0,
+  inquiry_id INTEGER
+);
+CREATE INDEX IF NOT EXISTS consult_sessions_updated ON consult_sessions(updated_at);
 CREATE TABLE IF NOT EXISTS inquiry_files (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   inquiry_id INTEGER NOT NULL REFERENCES inquiries(id),
@@ -146,6 +157,87 @@ def update_inquiry(inquiry_id, status=None, admin_note=None):
         if admin_note is not None:
             db().execute("UPDATE inquiries SET admin_note = ? WHERE id = ?", (admin_note, inquiry_id))
         db().commit()
+
+
+# ---------- AI 상담 기록 ----------
+# 접수 여부와 관계없이 AI 상담 대화를 보관한다. 상담창에 보관 사실과 기간을 알리고,
+# 보관 기간(CONSULT_RETENTION_DAYS, 기본 90일)이 지나면 자동으로 지운다.
+
+def consult_retention_days():
+    try:
+        return max(1, int(os.environ.get("CONSULT_RETENTION_DAYS") or 90))
+    except ValueError:
+        return 90
+
+
+def purge_consults():
+    cutoff = time.time() - consult_retention_days() * 86400
+    with LOCK:
+        removed = db().execute("DELETE FROM consult_sessions WHERE updated_at < ?", (cutoff,)).rowcount
+        db().commit()
+        return removed
+
+
+def save_consult(session_id, lang, messages, brief):
+    """Upsert one chat session with its full transcript (the client sends the whole history each turn)."""
+    now = time.time()
+    turns = sum(m["role"] == "user" for m in messages)
+    with LOCK:
+        row = db().execute("SELECT brief FROM consult_sessions WHERE id = ?", (session_id,)).fetchone()
+        if row is None:
+            db().execute("INSERT INTO consult_sessions (id, created_at, updated_at, lang, messages, brief, user_turns) VALUES (?,?,?,?,?,?,?)",
+                         (session_id, now, now, lang, json.dumps(messages, ensure_ascii=False), json.dumps(brief or {}, ensure_ascii=False), turns))
+        else:
+            kept = brief or json.loads(row["brief"])  # 요약은 한 번 만들어지면 이후 턴에서 없어도 유지
+            db().execute("UPDATE consult_sessions SET updated_at = ?, lang = ?, messages = ?, brief = ?, user_turns = ? WHERE id = ?",
+                         (now, lang, json.dumps(messages, ensure_ascii=False), json.dumps(kept, ensure_ascii=False), turns, session_id))
+        db().commit()
+    purge_consults()
+
+
+def link_consult(session_id, inquiry_id):
+    with LOCK:
+        db().execute("UPDATE consult_sessions SET inquiry_id = ? WHERE id = ?", (inquiry_id, session_id))
+        db().commit()
+
+
+def list_consults(days=30, query=""):
+    since = time.time() - days * 86400
+    with LOCK:
+        rows = db().execute("SELECT * FROM consult_sessions WHERE updated_at >= ? ORDER BY updated_at DESC LIMIT 500", (since,)).fetchall()
+    result = []
+    needle = query.strip().lower()
+    for row in rows:
+        messages = json.loads(row["messages"])
+        if needle and not any(needle in m["content"].lower() for m in messages):
+            continue
+        brief = json.loads(row["brief"])
+        first = next((m["content"] for m in messages if m["role"] == "user"), "")
+        result.append({"id": row["id"], "created_at": row["created_at"], "updated_at": row["updated_at"], "lang": row["lang"],
+                       "user_turns": row["user_turns"], "first": first[:160], "title": brief.get("title", ""),
+                       "has_brief": bool(brief), "inquiry_id": row["inquiry_id"]})
+    return result
+
+
+def consult_stats(days=30):
+    since = time.time() - days * 86400
+    with LOCK:
+        row = db().execute("SELECT COUNT(*) AS total, SUM(brief != '{}') AS briefs, SUM(inquiry_id IS NOT NULL) AS submitted, "
+                           "AVG(user_turns) AS turns FROM consult_sessions WHERE updated_at >= ?", (since,)).fetchone()
+    return {"days": days, "total": row["total"] or 0, "briefs": row["briefs"] or 0, "submitted": row["submitted"] or 0,
+            "avg_turns": round(row["turns"] or 0, 1), "retention_days": consult_retention_days()}
+
+
+def get_consult(session_id):
+    with LOCK:
+        return row_dict(db().execute("SELECT * FROM consult_sessions WHERE id = ?", (session_id,)).fetchone(), ("messages", "brief"))
+
+
+def delete_consult(session_id):
+    with LOCK:
+        removed = db().execute("DELETE FROM consult_sessions WHERE id = ?", (session_id,)).rowcount
+        db().commit()
+        return removed
 
 
 def create_quote(inquiry_id, title, items, total, deposit, schedule, note):

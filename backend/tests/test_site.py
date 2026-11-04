@@ -319,6 +319,42 @@ class SiteTests(unittest.TestCase):
             self.assertEqual(self.client.post(f"/api/quotes/{token}/checkout").status_code, 503)
             self.assertEqual(self.client.post("/api/admin/login", json={"password": "anything"}, headers=ADMIN).status_code, 503)
 
+    def test_consult_sessions_are_kept_linked_and_admin_only(self):
+        session = "s" * 20
+        fake = {"content": [{"type": "text", "text": "어떤 업무인가요?"}]}
+        brief = {"content": [{"type": "text", "text": "정리했어요."}, {"type": "tool_use", "name": "save_brief", "input": {"title": "발주서 변환", "evil": "x"}}]}
+        with patch.object(consult, "call_claude", side_effect=[fake, brief, fake]):
+            self.client.post("/api/consult/chat", json={"messages": [{"role": "user", "content": "발주서 자동화"}], "session": session})
+            self.client.post("/api/consult/chat", json={"session": session, "messages": [
+                {"role": "user", "content": "발주서 자동화"}, {"role": "assistant", "content": "어떤 업무인가요?"}, {"role": "user", "content": "거래처 3곳"}]})
+            # 세션 번호 없이 온 대화는 남기지 않는다
+            self.client.post("/api/consult/chat", json={"messages": [{"role": "user", "content": "익명"}]})
+        self.assertEqual(self.client.post("/api/consult/chat", json={"messages": [{"role": "user", "content": "x"}], "session": "bad id!"}).status_code, 422)
+        self.assertEqual(self.client.get("/api/admin/consults").status_code, 401)
+        inquiry_id = self.inquiry(session=session).json()["id"]
+        self.login()
+        listing = self.client.get("/api/admin/consults").json()
+        self.assertEqual(len(listing["consults"]), 1)
+        row = listing["consults"][0]
+        self.assertEqual((row["user_turns"], row["title"], row["inquiry_id"], row["first"]), (2, "발주서 변환", inquiry_id, "발주서 자동화"))
+        self.assertEqual((listing["stats"]["total"], listing["stats"]["briefs"], listing["stats"]["submitted"]), (1, 1, 1))
+        record = self.client.get(f"/api/admin/consults/{session}").json()
+        self.assertEqual(len(record["messages"]), 4)
+        self.assertNotIn("evil", record["brief"])
+        self.assertEqual(len(self.client.get("/api/admin/consults?q=거래처").json()["consults"]), 1)
+        self.assertEqual(len(self.client.get("/api/admin/consults?q=없는말").json()["consults"]), 0)
+        # 보관 기간이 지나면 지워진다
+        site_store.db().execute("UPDATE consult_sessions SET updated_at = 0"); site_store.db().commit()
+        self.assertEqual(self.client.get("/api/admin/consults").json()["consults"], [])
+        self.assertEqual(self.client.get(f"/api/admin/consults/{session}").status_code, 404)
+
+    def test_admin_can_delete_a_consult(self):
+        site_store.save_consult("d" * 20, "ko", [{"role": "user", "content": "지워 주세요"}], {})
+        self.login()
+        self.assertEqual(self.client.delete(f"/api/admin/consults/{'d' * 20}").status_code, 403)
+        self.assertEqual(self.client.delete(f"/api/admin/consults/{'d' * 20}", headers=ADMIN).status_code, 200)
+        self.assertEqual(self.client.get(f"/api/admin/consults/{'d' * 20}").status_code, 404)
+
 
 if __name__ == "__main__":
     unittest.main()

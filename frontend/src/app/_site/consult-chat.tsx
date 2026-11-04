@@ -21,7 +21,17 @@ function BriefCard({ brief, lang }: { brief: Brief; lang: Lang }) {
 }
 
 /** What the page's bottom inquiry form may attach: the chat so far and its summary. */
-export type ChatSession = { messages: ChatMessage[]; brief: Brief | null; submitted: boolean };
+export type ChatSession = { messages: ChatMessage[]; brief: Brief | null; submitted: boolean; session?: string };
+
+// 상담창 대화를 서버 기록에서 하나로 묶는 무작위 번호. 같은 탭에서는 새로고침해도 유지된다.
+const SESSION_KEY = "consult-session";
+function sessionId() {
+  try { const kept = window.sessionStorage.getItem(SESSION_KEY); if (kept) return kept; } catch { /* 저장 불가 환경 */ }
+  const bytes = new Uint8Array(18); window.crypto.getRandomValues(bytes);
+  const id = btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  try { window.sessionStorage.setItem(SESSION_KEY, id); } catch { /* 저장 불가 환경 */ }
+  return id;
+}
 
 type ChatProps = { onFallback: () => void; lang?: Lang; onChange?: (session: ChatSession) => void; sentElsewhere?: boolean };
 
@@ -100,11 +110,12 @@ export function ConsultChat({ onFallback, lang = "ko", onChange, sentElsewhere =
   const [asked, setAsked] = useState<string[]>([]);
   const log = useRef<HTMLDivElement>(null);
   const { full, box, open, close } = useFullScreen();
+  const session = useRef("");
 
   useEffect(() => {
     api<{ consult_ready: boolean }>("/api/site/config").then(c => setReady(c.consult_ready)).catch(() => setReady(false));
   }, []);
-  useEffect(() => { onChange?.({ messages, brief, submitted: sentHere }); }, [messages, brief, sentHere, onChange]);
+  useEffect(() => { onChange?.({ messages, brief, submitted: sentHere, session: session.current || undefined }); }, [messages, brief, sentHere, onChange]);
   const briefRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const box = log.current;
@@ -121,7 +132,7 @@ export function ConsultChat({ onFallback, lang = "ko", onChange, sentElsewhere =
     const next = [...messages, { role: "user" as const, content }];
     setMessages(next); setInput(""); setBusy(true); setError("");
     try {
-      const result = await api<{ reply: string; brief: Brief | null }>("/api/consult/chat", { method: "POST", body: JSON.stringify({ messages: next, lang }) }, lang);
+      const result = await api<{ reply: string; brief: Brief | null }>("/api/consult/chat", { method: "POST", body: JSON.stringify({ messages: next, lang, session: (session.current ||= sessionId()) }) }, lang);
       setMessages([...next, { role: "assistant", content: result.reply }]);
       if (result.brief) { if (!brief) track("consult_brief", { lang, project_type: result.brief.project_type || "" }); setBrief(result.brief); }
     } catch (err) {
@@ -161,7 +172,7 @@ export function ConsultChat({ onFallback, lang = "ko", onChange, sentElsewhere =
       {messages.map((m, i) => <p key={i} className={"st-msg st-msg-" + m.role}>{m.role === "assistant" ? plain(m.content) : m.content}</p>)}
       {busy && <p className="st-msg st-msg-assistant st-typing" aria-label={t.typing}><span /><span /><span /></p>}
       {brief && <div ref={briefRef}><BriefCard brief={brief} lang={lang} /></div>}
-      {brief && !submitted && <div className="st-chat-submit"><p>{t.confirm}</p><InquiryForm lang={lang} compact brief={brief} transcript={messages} onDone={() => setSentHere(true)} /></div>}
+      {brief && !submitted && <div className="st-chat-submit"><p>{t.confirm}</p><InquiryForm lang={lang} compact brief={brief} transcript={messages} session={session.current || undefined} onDone={() => setSentHere(true)} /></div>}
       {submitted && <p className="st-msg st-msg-assistant">{t.submitted}</p>}
     </div>
     {!submitted && <div className="st-starters" aria-label={t.starters}>
