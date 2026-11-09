@@ -103,7 +103,7 @@ export function Signs({ quote, clientRole = "대표자" }: { quote: Quote | null
     <p className="st-contract-date">{BLANK}년　　월　　일</p>
     <div className="st-contract-signs">
       <section><h3>갑</h3><dl><dt>상호</dt><dd>{quote?.customer.company || BLANK}</dd><dt>주소</dt><dd>{BLANK}</dd><dt>{clientRole}</dt><dd>{BLANK}　(서명 또는 인)</dd></dl></section>
-      <section><h3>을</h3><dl><dt>성명</dt><dd>{CONTRACTOR.name}　(서명 또는 인)</dd><dt>주소</dt><dd>{BLANK}</dd><dt>서비스명</dt><dd>{CONTRACTOR.brand}</dd></dl></section>
+      <section><h3>을</h3><dl><dt>성명</dt><dd>{BLANK}　(서명 또는 인)</dd><dt>주소</dt><dd>{BLANK}</dd><dt>서비스명</dt><dd>{CONTRACTOR.brand}</dd></dl></section>
     </div>
   </>;
 }
@@ -111,5 +111,5 @@ export function Signs({ quote, clientRole = "대표자" }: { quote: Quote | null
 /** 갑(고객)과 을(운영자)을 처음 소개하는 문장. */
 export function Parties({ quote, tail }: { quote: Quote | null; tail: string }) {
   const client = quote ? (quote.customer.company || quote.customer.name) : BLANK;
-  return <p className="st-contract-intro"><strong>{client}</strong>(이하 &ldquo;갑&rdquo;)와 <strong>{CONTRACTOR.name}</strong>({CONTRACTOR.brand}, 이하 &ldquo;을&rdquo;)은 {tail}</p>;
+  return <p className="st-contract-intro"><strong>{client}</strong>(이하 &ldquo;갑&rdquo;)와 <strong>{CONTRACTOR.brand}</strong>(이하 &ldquo;을&rdquo;)은 {tail}</p>;
 }
