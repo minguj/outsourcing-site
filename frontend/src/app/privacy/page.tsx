@@ -9,21 +9,21 @@ export const metadata: Metadata = { title: `개인정보처리방침 | ${SITE.na
 // 개인정보처리방침. 수집 항목·위탁 업체·보유 기간을 바꾸면 site-config.ts의 privacy 안내문과 시행일도 함께 바꾼다.
 const PROCESSORS = [
   { name: "Anthropic, PBC", country: "미국", work: "AI 상담 답변 생성", items: "AI 상담에 입력한 대화 내용", when: "AI 상담에서 메시지를 보낼 때마다 네트워크로 전송", keep: "답변 생성에 필요한 기간(업체의 데이터 보관 정책에 따름)", contact: "anthropic.com/legal/privacy" },
-  { name: "Google LLC", country: "미국", work: "접수 확인·견적 안내 메일 발송과 수신", items: "이름, 회사명, 이메일, 상담·의뢰 내용, 견적 정보", when: "접수·견적 메일을 보내거나 받을 때 네트워크로 전송", keep: "보유 기간 동안(제3조와 같음)", contact: "policies.google.com/privacy" },
+  { name: "Google LLC", country: "미국", work: "접수 확인·견적 안내 메일 발송과 수신", items: "이름, 회사명, 이메일, 상담·문의 내용, 견적 정보", when: "접수·견적 메일을 보내거나 받을 때 네트워크로 전송", keep: "보유 기간 동안(제3조와 같음)", contact: "policies.google.com/privacy" },
   { name: "Amazon Web Services, Inc.", country: "호주(시드니 리전)", work: "사이트 서버 운영과 상담 기록 보관", items: "제2조의 모든 항목", when: "상담 접수·견적 발행 시 서버에 저장", keep: "보유 기간 동안(제3조와 같음)", contact: "aws.amazon.com/privacy" },
 ];
 
 export default function PrivacyPage() {
   return <LegalPage title="개인정보처리방침" effective={POLICY_EFFECTIVE.privacy}>
-    <p className="st-legal-lead">{OPERATOR.representative}(이하 &ldquo;운영자&rdquo;)는 &lsquo;{OPERATOR.brand}&rsquo;라는 이름으로 운영하는 {OPERATOR.site}(이하 &ldquo;사이트&rdquo;)에서 개발 의뢰 상담과 견적·계약을 위해 개인정보를 처리하며, 개인정보 보호법에 따라 이용자의 개인정보를 보호하고 관련 고충을 처리하기 위하여 다음과 같이 개인정보처리방침을 둡니다.</p>
+    <p className="st-legal-lead">{OPERATOR.representative}(이하 &ldquo;운영자&rdquo;)는 &lsquo;{OPERATOR.brand}&rsquo;라는 이름으로 운영하는 {OPERATOR.site}(이하 &ldquo;사이트&rdquo;)에서 AI 상담 접수 시스템 데모 상담과 도입 문의, 견적·계약을 위해 개인정보를 처리하며, 개인정보 보호법에 따라 이용자의 개인정보를 보호하고 관련 고충을 처리하기 위하여 다음과 같이 개인정보처리방침을 둡니다.</p>
 
     <Section n={1} title="처리 목적">
-      <ul><li>개발 의뢰 상담 접수와 응대(AI 상담 포함)</li><li>AI 상담 답변 품질 개선과 자주 묻는 질문 보완</li><li>견적서 발행, 계약 체결과 이행, 대금 확인</li><li>접수 확인·견적 안내 등 필요한 연락</li><li>사이트 보안과 부정 이용 방지</li></ul>
+      <ul><li>데모 상담과 도입 문의 접수·응대(AI 상담 포함)</li><li>AI 상담 답변 품질 개선과 자주 묻는 질문 보완</li><li>견적서 발행, 계약 체결과 이행, 대금 확인</li><li>접수 확인·견적 안내 등 필요한 연락</li><li>사이트 보안과 부정 이용 방지</li></ul>
     </Section>
 
     <Section n={2} title="처리하는 개인정보 항목">
       <table className="st-table"><thead><tr><th>구분</th><th>항목</th></tr></thead><tbody>
-        <tr><td>상담 접수(필수)</td><td>이름, 이메일, 상담·의뢰 내용</td></tr>
+        <tr><td>상담 접수(필수)</td><td>이름, 이메일, 상담·문의 내용</td></tr>
         <tr><td>상담 접수(선택)</td><td>회사명, 전화번호, 첨부 파일, AI 상담 대화와 요약(함께 보내기를 선택한 경우)</td></tr>
         <tr><td>AI 상담</td><td>AI 상담에 입력한 대화 내용과 AI가 정리한 요약, 대화 시각(접수하지 않은 경우도 포함). 이름·연락처는 받지 않으며, 대화를 묶는 무작위 번호 외에 접속자를 알아볼 수 있는 정보는 함께 저장하지 않습니다.</td></tr>
         <tr><td>견적·계약</td><td>계약서에 적는 상호·주소·대표자 또는 성명, 입금 확인 정보(입금자명·금액·일자)</td></tr>

@@ -15,7 +15,8 @@ AI 상담 → 요약 → 접수 → 견적서 → 계약 → 결제 흐름을 �
 ## 구조
 - `frontend/` Next.js 16 App Router
   - `src/app/_site/` 랜딩(landing.tsx), AI 채팅(consult-chat.tsx), 문의 양식(inquiry-form.tsx), 문구(i18n.ts), 스타일(site.css), GA(analytics.tsx)
-  - `src/app/site-content.ts` 화면 FAQ·요금제 등 콘텐츠, `site-config.ts` 사이트 주소·GA ID·정책 시행일
+  - `src/app/site-content.ts` 화면 동작 흐름·기술 구조·FAQ 콘텐츠, `site-config.ts` 사이트 주소·GA ID·키워드·정책 시행일
+  - `src/app/contract/maintenance/` 유지보수 계약서(내용 유지, 공개 화면에서 링크하지 않음. 관리자 문서 바로가기로만 연다)
   - `src/app/admin/` 관리자 (상담 접수, AI 상담 기록 consult-log.tsx)
   - `src/app/quote`, `contract` 견적서·계약 (고객별 토큰 주소, GA 수집 제외)
   - `src/app/demo/` 작업 예시 데모 (tower: 입주기업 플랫폼 샘플, 브랜드명 쓰지 않음)
@@ -39,7 +40,9 @@ AI 상담 → 요약 → 접수 → 견적서 → 계약 → 결제 흐름을 �
 - 화면 FAQ를 바꾸면 backend/site_knowledge.py도 같이 맞춘다.
 
 ## 확인 방법
-- 백엔드 테스트 (저장소 루트, PowerShell):
-  `$env:DATA_DIR="$env:TEMP\fitagent-test"; python -m pytest -q backend/tests`
+- 백엔드 테스트 (저장소 루트, PowerShell). pytest는 설치되어 있지 않아서 `backend\.venv`의 unittest로 돌린다.
+  `$env:DATA_DIR="$env:TEMP\fitagent-test"; .\backend\.venv\Scripts\python.exe -c "import functools,sys,tempfile,unittest; T=tempfile.TemporaryDirectory; T.__init__=functools.partialmethod(T.__init__, ignore_cleanup_errors=True); r=unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromNames(['backend.tests.test_site','backend.tests.test_purchase_demo'])); sys.exit(not r.wasSuccessful())"`
+  - Windows에서는 테스트가 끝날 때 임시 폴더의 site.db가 잠겨 있어 정리 단계에서 `PermissionError`(WinError 32)가 난다. 위 명령은 이 정리 오류만 무시한다. 테스트 본문의 실패는 그대로 잡힌다.
+  - 테스트 파일을 새로 만들면 위 목록(`backend.tests.…`)에 추가한다.
 - 프론트 타입 검사: `cd frontend; npx tsc --noEmit`
 - 큰 변경은 Plan 모드로 계획을 먼저 보여 주고 승인받은 뒤 진행한다.

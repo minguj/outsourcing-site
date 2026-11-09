@@ -20,16 +20,17 @@ export const metadata: Metadata = {
   },
 };
 
-// 검색엔진이 서비스 성격과 자주 묻는 질문을 이해하도록 구조화 데이터를 함께 싣는다.
+// 검색엔진이 제품 성격과 자주 묻는 질문을 이해하도록 구조화 데이터를 함께 싣는다.
+// 가격은 공개하지 않으므로 offers는 넣지 않는다.
 function jsonLd() {
-  const { FAQ, SERVICES } = content("ko");
+  const { FAQ, FLOW } = content("ko");
   return [
     {
-      "@context": "https://schema.org", "@type": "ProfessionalService",
-      name: SITE.name, url: SITE_URL, description: SITE.description, email: OPERATOR.email,
-      areaServed: "KR", availableLanguage: "ko",
-      hasOfferCatalog: { "@type": "OfferCatalog", name: "개발 서비스",
-        itemListElement: SERVICES.map(s => ({ "@type": "Offer", itemOffered: { "@type": "Service", name: s.name } })) },
+      "@context": "https://schema.org", "@type": "SoftwareApplication",
+      name: SITE.name, url: SITE_URL, description: SITE.description,
+      applicationCategory: "BusinessApplication", operatingSystem: "Web", inLanguage: "ko",
+      featureList: FLOW.map(s => `${s.title}: ${s.text}`),
+      publisher: { "@type": "Organization", name: OPERATOR.brand, email: OPERATOR.email, url: SITE_URL },
     },
     {
       "@context": "https://schema.org", "@type": "FAQPage",

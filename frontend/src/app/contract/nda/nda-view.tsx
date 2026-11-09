@@ -8,7 +8,7 @@ export default function NdaView() {
   const { token, quote, error, ready } = useQuote(false);
   if (!ready) return <Loading error={error} />;
 
-  const subject = quote ? <>「{quote.title}」 개발 의뢰</> : <>개발 의뢰</>;
+  const subject = quote ? <>「{quote.title}」 도입·구축</> : <>AI 상담 접수 시스템 도입·구축</>;
   const articles: [string, ReactNode][] = [
     ["목적", <>이 계약은 갑과 을이 {subject}(이하 &ldquo;이 건&rdquo;)의 상담, 견적, 개발 수행을 위하여 서로에게 공개하는 비밀정보를 보호하는 것을 목적으로 한다.</>],
     ["비밀정보", <>비밀정보란 서면, 전자 파일, 구두 등 형태와 관계없이 한쪽이 이 건과 관련하여 상대방에게 제공한 업무 자료, 고객·거래 정보, 개인정보, 기술 정보, 시스템 접근 정보, 영업 정보를 말한다. 구두로 알린 정보는 알릴 때 비밀임을 밝힌 것에 한한다.</>],

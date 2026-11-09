@@ -3,7 +3,7 @@
 import { BANK } from "../../site-config";
 import { BLANK, DocShell, Loading, Signs, day, payments, useQuote, won } from "../doc-kit";
 
-// 완료(검수) 확인서. 외주 개발 계약서의 "완료와 검수"·"잔금"·"산출물 인도" 조항을 실제로 확인하는 문서다.
+// 완료(검수) 확인서. 도입 계약서(안)의 "완료와 검수"·"잔금"·"산출물 인도" 조항을 실제로 확인하는 문서다.
 const OUTPUTS = ["소스코드 (저장소 또는 압축 파일)", "운영 환경 배포", "설치·배포 방법", "운영 매뉴얼", "인수인계 문서"];
 
 export default function CompletionView() {

@@ -144,10 +144,10 @@ def clean_brief(brief):
 
 
 BRIEF_LABELS = {
-    "ko": [("project_type", "유형"), ("title", "제목"), ("summary", "요약"), ("current_process", "현재 업무"),
+    "ko": [("project_type", "도입 유형"), ("title", "제목"), ("summary", "요약"), ("current_process", "현재 업무"),
            ("goals", "목표"), ("data_and_systems", "문서·데이터·시스템"), ("users_and_scale", "사용자·규모"),
            ("budget", "예산"), ("timeline", "일정"), ("open_questions", "추가 확인")],
-    "en": [("project_type", "Type"), ("title", "Title"), ("summary", "Summary"), ("current_process", "Current process"),
+    "en": [("project_type", "Adoption type"), ("title", "Title"), ("summary", "Summary"), ("current_process", "Current process"),
            ("goals", "Goals"), ("data_and_systems", "Documents, data and systems"), ("users_and_scale", "Users and scale"),
            ("budget", "Budget"), ("timeline", "Timeline"), ("open_questions", "Open questions")],
 }
@@ -211,7 +211,7 @@ async def handle_inquiry(request, forms):
         raise HTTPException(422, "이메일 주소를 확인해 주세요.")
     brief = clean_brief(body.brief)
     if not brief and len(body.message.strip()) < 5:
-        raise HTTPException(422, "의뢰 내용을 조금만 더 적어 주세요.")
+        raise HTTPException(422, "문의 내용을 조금만 더 적어 주세요.")
     transcript = [m.model_dump() for m in body.transcript]
     inquiry_id = store.create_inquiry(body.name.strip(), body.company.strip(), email, body.phone.strip(),
                                       body.message.strip(), brief, transcript, body.lang)
