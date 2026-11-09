@@ -39,6 +39,14 @@ backend/tests/test_zeb_demo.py, backend/tests/fixtures/zeb/
 ## 브이월드
 - 키는 서버 `/etc/outsourcing-deploy/backend.env` 의 `VWORLD_API_KEY`, `VWORLD_DOMAIN`(키 발급 시 서비스 URL 과 동일).
   비어 있으면 샘플 필지로만 동작한다. 화면에서 샘플/실데이터를 고를 수 있다.
+- **브이월드는 해외·클라우드 IP 를 차단한다.** 운영 서버(시드니)에서 호출하면 502 가 난다.
+  그래서 기본값 `VWORLD_MODE=browser`: 방문자 브라우저(국내 IP)가 직접 조회하고(`_zeb/vworld.ts`, fetch 실패 시 JSONP),
+  원본 응답을 `/feasibility` 의 `vworld_raw` 로 보내면 서버가 `parse_land` 로 해석한다. 해석 규칙은 서버 한곳에만 있다.
+  - 키는 `/api/demo/zeb/meta` 로 페이지에 전달된다 (브이월드 지도 API 와 같은 방식, 등록 도메인에서만 동작).
+  - 해외에서 접속한 방문자는 실데이터 조회가 안 될 수 있다 (샘플·직접 입력은 가능).
+  - 로컬(localhost)에서는 키의 등록 도메인과 달라 실데이터 조회가 안 될 수 있다.
+- 국내 IP 서버에서 운영한다면 `VWORLD_MODE=server` 로 서버가 직접 조회한다 (키는 화면에 전달하지 않음).
+- 오류 문구는 화면까지 전달되므로 인증키가 들어가지 않게 만든다 (`test_error_messages_never_contain_api_key`).
 - 사용 API: 검색 API(지번 → PNU), 국가중점 API(토지특성: 면적·용도지역 / 토지이용계획: 지역·지구).
 - 토지이용계획은 관계(`cnflcAtNm`)별로 나눈다: **포함**(규제 대상) / **저촉**(대지 일부가 걸침) / **접함**(인접 필지 것, 규제 판단 제외).
   접함까지 규제로 보면 옆 필지의 정비구역·지구단위계획 때문에 잘못된 경고가 나간다 (실응답으로 확인, `VWorldRecordedResponseTests`).

@@ -91,17 +91,26 @@ class VWorldParcelProvider:
 
     async def _get(self, path: str, params: dict) -> dict:
         q = {"key": self.key, "domain": self.domain, "format": "json", **params}
+        # 오류 문구는 화면까지 전달된다. httpx 예외 문자열에는 요청 URL(인증키 포함)이 들어 있으므로
+        # 예외를 그대로 문자열로 만들지 않고, 상태 코드·예외 종류만 담은 문구를 직접 만든다.
         try:
             r = await self._client.get(path, params=q)
             r.raise_for_status()
             data = r.json()
-        except (httpx.HTTPError, ValueError) as e:
-            raise ProviderError(f"브이월드 호출 실패 ({path}): {e}") from e
+        except httpx.HTTPStatusError as e:
+            raise ProviderError(self._redact(f"브이월드 서버 응답 오류 (HTTP {e.response.status_code})")) from None
+        except httpx.HTTPError as e:
+            raise ProviderError(f"브이월드 서버에 연결하지 못했습니다 ({type(e).__name__})") from None
+        except ValueError:
+            raise ProviderError("브이월드 응답을 해석하지 못했습니다") from None
         status = _dig(data, ("response", "status"))
         if status and status not in ("OK", "NOT_FOUND"):
             err = _dig(data, ("response", "error", "text")) or status
-            raise ProviderError(f"브이월드 오류 ({path}): {err}")
+            raise ProviderError(self._redact(f"브이월드 오류: {err}"))
         return data
+
+    def _redact(self, text: str) -> str:
+        return text.replace(self.key, "***") if self.key else text
 
     async def search(self, query: str, limit: int = 10) -> list[ParcelSummary]:
         if not query.strip():
@@ -137,49 +146,62 @@ class VWorldParcelProvider:
             return cached
 
         lc = await self._get("/ned/data/getLandCharacteristics", {"pnu": pnu, "numOfRows": 10, "pageNo": 1})
-        rows = _as_list(_dig(lc, FIELD_MAP["lc_container"]))
-        if not rows:
+        if not _as_list(_dig(lc, FIELD_MAP["lc_container"])):
             return None
-        # 가장 최근 기준년도 행
-        row = max(rows, key=lambda r: str(_first(r, FIELD_MAP["lc_year"]) or ""))
-        area = _float(_first(row, FIELD_MAP["lc_area"]))
-        zone = _first(row, FIELD_MAP["lc_zone"])
-        if area is None or not zone:
-            raise ProviderError(
-                f"토지특성 응답에서 면적/용도지역을 찾지 못했습니다. FIELD_MAP 확인 필요: {list(row)[:12]}"
-            )
-
         lu = await self._get("/ned/data/getLandUseAttr", {"pnu": pnu, "numOfRows": 100, "pageNo": 1})
-        # 관계별로 나눈다. '접함'(인접 필지의 지역·지구)을 이 필지의 규제로 취급하면 잘못된 경고가 나간다.
-        by_rel: dict[str, set[str]] = {"포함": set(), "저촉": set(), "접함": set()}
-        for r in _as_list(_dig(lu, FIELD_MAP["lu_container"])):
-            name = _first(r, FIELD_MAP["lu_name"])
-            if not name:
-                continue
-            rel = str(_first(r, FIELD_MAP["lu_relation"]) or "포함")
-            by_rel.setdefault(rel, set()).add(str(name))
-        included = by_rel["포함"]
-        partial = by_rel["저촉"] - included
-        adjacent = by_rel["접함"] - included - partial
-
-        address = " ".join(
-            str(x) for x in (_first(row, FIELD_MAP["lc_address"]), _first(row, FIELD_MAP["lc_lot"])) if x
-        )
-        parcel = Parcel(
-            pnu=pnu,
-            address=address or pnu,
-            area_m2=area,
-            zone=normalize_zone(str(zone)),
-            land_use_plans=sorted(included),
-            partial_plans=sorted(partial),
-            adjacent_plans=sorted(adjacent),
-            land_category=_first(row, FIELD_MAP["lc_land_category"]),
-            secondary_zone=_zone2(row),
-            data_source="vworld",
-            reference_year=str(_first(row, FIELD_MAP["lc_year"]) or ""),
-        )
+        parcel = parse_land(pnu, lc, lu)
         self._cache.set(pnu, parcel)
         return parcel
+
+
+def parse_land(pnu: str, land_characteristics: dict, land_use_attr: dict) -> Parcel:
+    """토지특성 + 토지이용계획 원본 응답 → Parcel.
+
+    서버가 직접 조회한 응답(VWorldParcelProvider)과, 브라우저가 조회해 보낸 응답(브라우저 조회 모드)이
+    모두 이 함수 하나로 해석된다. 해석 규칙을 한곳에 두어 테스트가 두 경로를 함께 지킨다.
+    """
+    rows = [r for r in _as_list(_dig(land_characteristics, FIELD_MAP["lc_container"])) if isinstance(r, dict)]
+    rows = [r for r in rows if str(r.get("pnu", pnu)) == pnu] or rows
+    if not rows:
+        raise ProviderError("토지특성 정보가 없는 필지입니다.")
+    # 가장 최근 기준년도 행
+    row = max(rows, key=lambda r: str(_first(r, FIELD_MAP["lc_year"]) or ""))
+    area = _float(_first(row, FIELD_MAP["lc_area"]))
+    zone = _first(row, FIELD_MAP["lc_zone"])
+    if area is None or area <= 0 or not zone:
+        raise ProviderError("토지특성 응답에서 면적/용도지역을 찾지 못했습니다.")
+
+    # 관계별로 나눈다. '접함'(인접 필지의 지역·지구)을 이 필지의 규제로 취급하면 잘못된 경고가 나간다.
+    by_rel: dict[str, set[str]] = {"포함": set(), "저촉": set(), "접함": set()}
+    for r in _as_list(_dig(land_use_attr, FIELD_MAP["lu_container"])):
+        if not isinstance(r, dict):
+            continue
+        name = _first(r, FIELD_MAP["lu_name"])
+        if not name:
+            continue
+        rel = str(_first(r, FIELD_MAP["lu_relation"]) or "포함")
+        by_rel.setdefault(rel, set()).add(str(name)[:60])
+    included = by_rel["포함"]
+    partial = by_rel["저촉"] - included
+    adjacent = by_rel["접함"] - included - partial
+
+    address = " ".join(
+        str(x) for x in (_first(row, FIELD_MAP["lc_address"]), _first(row, FIELD_MAP["lc_lot"])) if x
+    )
+    category = _first(row, FIELD_MAP["lc_land_category"])
+    return Parcel(
+        pnu=pnu,
+        address=(address or pnu)[:100],
+        area_m2=area,
+        zone=normalize_zone(str(zone)),
+        land_use_plans=sorted(included),
+        partial_plans=sorted(partial),
+        adjacent_plans=sorted(adjacent),
+        land_category=str(category)[:20] if category else None,
+        secondary_zone=_zone2(row),
+        data_source="vworld",
+        reference_year=str(_first(row, FIELD_MAP["lc_year"]) or ""),
+    )
 
 
 def _float(v: Any) -> float | None:

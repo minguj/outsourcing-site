@@ -2,10 +2,17 @@
 
 도메인 계산은 zeb/domain 에 있고, 여기서는 입출력 변환만 한다.
 브이월드 키(VWORLD_API_KEY)가 없으면 데모 샘플 필지로만 동작한다.
+
+브이월드 조회 방식 (VWORLD_MODE)
+ - browser (기본): 브이월드는 해외·클라우드 IP 를 차단한다. 운영 서버(시드니)에서는 호출이 막히므로
+   방문자 브라우저(국내 IP)가 직접 조회하고, 원본 응답을 /feasibility 의 vworld_raw 로 보낸다.
+   해석은 서버의 parse_land 가 맡는다. 키는 브이월드 지도 API 처럼 페이지에 전달되며 등록 도메인으로 제한된다.
+ - server: 국내 IP 서버에서 운영할 때. 서버가 직접 조회한다.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import time
 from collections import deque
@@ -18,13 +25,14 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .adapters.base import Parcel, ParcelProvider, ProviderError
 from .adapters.sample import RedevelopmentCatalog, SampleParcelProvider
-from .adapters.vworld import VWorldParcelProvider
+from .adapters.vworld import VWorldParcelProvider, parse_land
 from .domain.feasibility import ENGINE_VERSION, PlanOptions, SiteInput, run_feasibility
 from .domain.rules import RuleBook, RuleNotFound
 
 router = APIRouter(prefix="/api/demo/zeb")
 
 Source = Literal["auto", "sample", "vworld"]
+MAX_RAW_CHARS = 300_000
 
 _sample = SampleParcelProvider()
 _redev = RedevelopmentCatalog()
@@ -37,12 +45,22 @@ _calls: deque[float] = deque()
 _calls_lock = Lock()
 
 
+def _vworld_mode() -> str:
+    return "server" if os.getenv("VWORLD_MODE", "browser").strip().lower() == "server" else "browser"
+
+
+def _vworld_domain() -> str:
+    return os.getenv("VWORLD_DOMAIN", "https://fitagent.co.kr")
+
+
 def _vworld_provider() -> VWorldParcelProvider | None:
     global _vworld, _vworld_key
     key = os.getenv("VWORLD_API_KEY") or None
+    if _vworld_mode() != "server":
+        key = None
     if key != _vworld_key:
         _vworld_key = key
-        _vworld = VWorldParcelProvider(key, os.getenv("VWORLD_DOMAIN", "https://fitagent.co.kr")) if key else None
+        _vworld = VWorldParcelProvider(key, _vworld_domain()) if key else None
     return _vworld
 
 
@@ -51,6 +69,8 @@ def _provider(source: Source) -> ParcelProvider:
         return _sample
     vw = _vworld_provider()
     if source == "vworld" and not vw:
+        if _vworld_mode() == "browser" and os.getenv("VWORLD_API_KEY"):
+            raise HTTPException(409, "브이월드는 브라우저 조회 방식으로 설정되어 있습니다.")
         raise HTTPException(503, "브이월드 키가 설정되지 않아 실데이터를 조회할 수 없습니다. 샘플 필지를 이용해 주세요.")
     return vw or _sample
 
@@ -75,9 +95,15 @@ def _parcel_dict(p: Parcel) -> dict:
 def meta():
     rb = RuleBook()
     grades, _ = rb.zeb_grades()
+    key = os.getenv("VWORLD_API_KEY") or None
+    mode = _vworld_mode()
     return {
         "engine_version": ENGINE_VERSION,
-        "parcel_source": "vworld" if _vworld_provider() else "sample",
+        "parcel_source": "vworld" if key else "sample",
+        "vworld_mode": mode if key else None,
+        # 브라우저 조회 모드에서만 내려준다. 브이월드 키는 등록 도메인에서만 동작한다.
+        "vworld_key": key if key and mode == "browser" else None,
+        "vworld_domain": _vworld_domain() if key else None,
         "building_uses": rb.building_uses(),
         "zones": rb.zone_names(),
         "grades": [g.__dict__ for g in grades],
@@ -136,11 +162,27 @@ class ManualSite(BaseModel):
     land_use_plans: list[str] = Field(default_factory=list, max_length=30)
 
 
+class VWorldRaw(BaseModel):
+    """브라우저가 브이월드에서 받아 그대로 넘긴 원본 응답 (브라우저 조회 모드)."""
+
+    model_config = ConfigDict(extra="forbid")
+    pnu: str = Field(pattern=r"^\d{19}$")
+    land_characteristics: dict
+    land_use_attr: dict
+
+    @model_validator(mode="after")
+    def _size(self):
+        if len(json.dumps([self.land_characteristics, self.land_use_attr], ensure_ascii=False)) > MAX_RAW_CHARS:
+            raise ValueError("브이월드 응답이 너무 큽니다")
+        return self
+
+
 class FeasibilityRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
     pnu: str | None = Field(None, max_length=19)
     source: Source = "auto"
     manual: ManualSite | None = None
+    vworld_raw: VWorldRaw | None = None
 
     building_use: str = Field("공동주택", max_length=20)
     height_limit_m: float | None = Field(None, gt=0, le=600)
@@ -151,15 +193,21 @@ class FeasibilityRequest(BaseModel):
 
     @model_validator(mode="after")
     def _one_site(self):
-        if bool(self.pnu) == bool(self.manual):
-            raise ValueError("pnu 또는 manual 중 하나만 지정하세요")
+        if sum(map(bool, (self.pnu, self.manual, self.vworld_raw))) != 1:
+            raise ValueError("pnu, manual, vworld_raw 중 하나만 지정하세요")
         return self
 
 
 @router.post("/feasibility")
 async def feasibility(req: FeasibilityRequest):
-    if req.pnu:
-        p = await _get_parcel(req.pnu, req.source)
+    if req.vworld_raw or req.pnu:
+        if req.vworld_raw:
+            try:
+                p = parse_land(req.vworld_raw.pnu, req.vworld_raw.land_characteristics, req.vworld_raw.land_use_attr)
+            except ProviderError as e:
+                raise HTTPException(422, str(e)) from None
+        else:
+            p = await _get_parcel(req.pnu, req.source)
         site = SiteInput(
             site_area_m2=p.area_m2,
             zone=p.zone,
