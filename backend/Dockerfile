@@ -6,6 +6,8 @@ RUN pip install --no-cache-dir -r requirements.txt \
     && useradd --create-home --uid 10001 app \
     && mkdir -p /app/data && chown app:app /app/data
 COPY --chown=app:app backend/*.py ./backend/
+# 초기 기획(ZEB) 데모: 하위 패키지와 규칙 YAML·샘플 데이터
+COPY --chown=app:app backend/zeb/ ./backend/zeb/
 COPY --chown=app:app frontend/public/samples/purchase-orders/ ./samples/purchase-orders/
 USER app
 EXPOSE 8000

@@ -1,0 +1,29 @@
+# 초기 기획용 가정값
+#
+# 이 값들은 법규가 아니라 "설계 전 단계에서 쓰는 추정치"다.
+# - 모든 값은 화면과 보고서에 '가정'으로 표시된다.
+# - 사용자는 요청 시 assumptions_override 로 덮어쓸 수 있다.
+# - 실설계 단계에서는 ECO2 등 인증 프로그램 결과로 대체해야 한다.
+schema_version: 1
+id: early-stage-assumptions
+version: "2026.11-demo"
+
+primary_energy_factor:
+  electricity: { value: 2.75, unit: "-", note: 전력 1차에너지 환산계수 (에너지효율등급 인증 기준값 사용) }
+  fuel:        { value: 1.1,  unit: "-", note: 연료(가스) 1차에너지 환산계수 }
+
+building_uses:
+  공동주택:
+    demand_intensity: { value: 110, unit: kWh/㎡·yr, note: 1차에너지 소요량 초기 추정치 (난방·냉방·급탕·조명·환기) }
+    floor_height:     { value: 3.0, unit: m }
+  업무시설:
+    demand_intensity: { value: 140, unit: kWh/㎡·yr, note: 1차에너지 소요량 초기 추정치 }
+    floor_height:     { value: 4.0, unit: m }
+  제1종근린생활시설:
+    demand_intensity: { value: 160, unit: kWh/㎡·yr, note: 1차에너지 소요량 초기 추정치 }
+    floor_height:     { value: 4.2, unit: m }
+
+site:
+  roof_usable_ratio:  { value: 0.5, unit: "-", note: 옥상 면적 중 설비·코어·조경 제외 후 태양광 설치 가능 비율 }
+  open_space_usable_ratio: { value: 0.6, unit: "-", note: 대지 내 공지 중 지열 천공 가능 비율 (주차·조경 고려) }
+  south_facade_usable_ratio: { value: 0.3, unit: "-", note: 남측 입면 중 BIPV 설치 가능 비율 (창호 제외) }

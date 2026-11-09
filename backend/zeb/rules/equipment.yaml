@@ -1,0 +1,51 @@
+# 신재생 설비 라이브러리 (초기 기획용 단가·성능 가정)
+#
+# 실제 견적이 아니다. 스토어/에너지 라이브러리 모듈이 붙으면
+# 이 파일 대신 제조사 데이터와 실견적으로 교체되는 자리다.
+#
+# production_per_unit 은 '1차에너지 기준 순생산량(kWh/yr)'을 계산하는 방식으로 정의한다.
+schema_version: 1
+id: equipment-library-demo
+version: "2026.11-demo"
+
+equipment:
+  - key: pv_roof
+    name: 태양광 (옥상)
+    unit: kWp
+    step: 1
+    unit_cost_krw: 1800000
+    specific_yield: { value: 1250, unit: kWh/kWp·yr, note: 국내 평균 일사 기준 경사 설치 연간 발전량 }
+    area_per_unit: { value: 10, unit: ㎡/kWp, note: 모듈 면적 + 음영 이격 }
+    output: electricity
+    limit: roof
+  - key: pv_bipv
+    name: 건물일체형 태양광 (남측 입면)
+    unit: kWp
+    step: 1
+    unit_cost_krw: 3500000
+    specific_yield: { value: 700, unit: kWh/kWp·yr, note: 수직면 설치로 옥상 대비 발전량 감소 }
+    area_per_unit: { value: 7, unit: ㎡/kWp }
+    output: electricity
+    limit: facade
+  - key: geothermal
+    name: 지열 히트펌프 (수직밀폐형)
+    unit: 공
+    step: 1
+    unit_cost_krw: 21000000
+    capacity_per_unit: { value: 10.5, unit: kW/공, note: 150m 천공 1공 약 3RT }
+    full_load_hours: { value: 1000, unit: h/yr }
+    cop: { value: 4.0, unit: "-" }
+    area_per_unit: { value: 25, unit: ㎡/공, note: 천공 간격 5m }
+    output: renewable_heat
+    limit: open_space
+  - key: fuel_cell
+    name: 건물용 연료전지
+    unit: kW
+    step: 1
+    unit_cost_krw: 25000000
+    operating_hours: { value: 7000, unit: h/yr }
+    electric_efficiency: { value: 0.40, unit: "-" }
+    heat_to_power_ratio: { value: 1.0, unit: "-" }
+    max_kw_per_gfa: { value: 0.01, unit: kW/㎡, note: 건물 열수요로 소화 가능한 용량 상한 가정 }
+    output: chp
+    limit: gfa
