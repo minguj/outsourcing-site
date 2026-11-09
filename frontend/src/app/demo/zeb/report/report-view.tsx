@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { EquipmentTable, LandUsePlans, ScenarioChart, ScenarioTable } from "../_zeb/results";
-import { api, Feasibility, requestFromParams } from "../_zeb/api";
+import { api, buildRequest, Feasibility } from "../_zeb/api";
 import { SOURCE_KIND, area, gradeLabel, krw, n } from "../_zeb/format";
 
 export default function ReportView() {
@@ -22,7 +22,10 @@ function Report() {
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    api.feasibility(requestFromParams(new URLSearchParams(qs))).then(setR).catch((e) => setErr(e.message));
+    buildRequest(new URLSearchParams(qs))
+      .then(api.feasibility)
+      .then(setR)
+      .catch((e) => setErr(e.message));
   }, [qs]);
 
   if (err) return <div className="zb-alert critical">{err}</div>;

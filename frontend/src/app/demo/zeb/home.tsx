@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { api, Meta, ParcelSummary, Redevelopment } from "./_zeb/api";
+import { api, Meta, ParcelSummary, Redevelopment, vworldConf } from "./_zeb/api";
+import { searchParcels as vworldSearch, type VWorldConf } from "./_zeb/vworld";
 import { area } from "./_zeb/format";
 
 type Tab = "parcel" | "redev" | "manual";
@@ -57,10 +58,7 @@ export default function ZebHome() {
           </span>
         </div>
         {tab === "parcel" && (
-          <ParcelSearch
-            key={meta?.parcel_source === "vworld" ? source : "sample"}
-            source={meta?.parcel_source === "vworld" ? source : "sample"}
-          />
+          <ParcelSearch key={searchSource(meta, source)} source={searchSource(meta, source)} conf={vworldConf(meta)} />
         )}
         {tab === "redev" && <RedevSearch />}
         {tab === "manual" && <ManualForm meta={meta} />}
@@ -85,7 +83,13 @@ function Explainer({ n, title, body }: { n: string; title: string; body: string 
   );
 }
 
-function ParcelSearch({ source }: { source: string }) {
+/** sample: 데모 필지 / browser: 브라우저가 브이월드 조회 / auto: 서버가 브이월드 조회 */
+function searchSource(meta: Meta | null, choice: "auto" | "sample") {
+  if (meta?.parcel_source !== "vworld" || choice === "sample") return "sample";
+  return meta.vworld_mode === "browser" ? "browser" : "auto";
+}
+
+function ParcelSearch({ source, conf }: { source: string; conf: VWorldConf | null }) {
   const [q, setQ] = useState("");
   const [items, setItems] = useState<ParcelSummary[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -95,7 +99,9 @@ function ParcelSearch({ source }: { source: string }) {
     setLoading(true);
     setErr(null);
     try {
-      setItems((await api.searchParcels(query, source)).items);
+      setItems(
+        source === "browser" && conf ? await vworldSearch(conf, query) : (await api.searchParcels(query, source)).items,
+      );
     } catch (e) {
       setErr((e as Error).message);
       setItems(null);

@@ -26,7 +26,7 @@ AI 상담 → 요약 → 접수 → 견적서 → 계약 → 결제 흐름을 �
   - `consult.py` Claude API 호출과 시스템 프롬프트
   - `site_knowledge.py` AI 상담이 아는 내용(FAQ·정책). 화면 FAQ(site-content.ts)와 내용을 맞춰 둔다
   - `site_api.py` API, `site_store.py` DB (AI 상담 기록은 기본 90일 보관, `CONSULT_RETENTION_DAYS`)
-  - `zeb/` 초기 기획 데모 계산 엔진·규칙 YAML·브이월드 어댑터 (`/api/demo/zeb`). 키가 없으면 샘플 필지로 동작. 자세한 내용: backend/zeb/README.md
+  - `zeb/` 초기 기획 데모 계산 엔진·규칙 YAML·브이월드 어댑터 (`/api/demo/zeb`). 키가 없으면 샘플 필지로 동작. 브이월드는 해외 서버 IP를 막으므로 브라우저가 조회하고 서버는 해석·계산만 한다. 자세한 내용: backend/zeb/README.md
 - `Caddyfile`, `compose.yaml` 배포 구성. `ops/` 백업 스크립트(서버 미설치)
 
 ## 배포

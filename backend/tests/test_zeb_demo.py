@@ -401,6 +401,25 @@ class VWorldContractTests(unittest.TestCase):
         with self.assertRaises(ProviderError):
             asyncio.run(_provider(lambda req: httpx.Response(503)).get(MAPO))
 
+    def test_error_messages_never_contain_api_key(self):
+        """오류 문구는 화면까지 전달된다. 인증키가 들어가면 공개 페이지에서 키가 노출된다 (실제로 발생했던 문제)."""
+
+        def bad_status(req):
+            return httpx.Response(502, request=req)
+
+        def conn_error(req):
+            raise httpx.ConnectError("boom " + str(req.url), request=req)
+
+        def key_in_body(req):
+            return httpx.Response(200, json={"response": {"status": "ERROR", "error": {"text": f"bad key {req.url}"}}})
+
+        for handler in (bad_status, conn_error, key_in_body):
+            with self.subTest(handler=handler.__name__):
+                with self.assertRaises(ProviderError) as cm:
+                    asyncio.run(_provider(handler).search("아현동"))
+                self.assertNotIn("TEST", str(cm.exception))
+                self.assertIsNone(cm.exception.__cause__)
+
 
 @unittest.skipUnless((FIX / "vworld_land_characteristics.recorded.json").exists(), "실응답 녹화 없음")
 class VWorldRecordedResponseTests(unittest.TestCase):
@@ -431,6 +450,75 @@ class VWorldRecordedResponseTests(unittest.TestCase):
             for plan in RB.override_plans():
                 if plan["keyword"] in name:
                     self.assertNotIn(plan["message"], messages, name)
+
+
+class BrowserModeTests(unittest.TestCase):
+    """브이월드가 해외·클라우드 IP(운영 서버: 시드니)를 차단해, 브라우저가 조회하고 원본을 서버로 보내는 방식."""
+
+    def setUp(self):
+        app = FastAPI()
+        app.include_router(zeb_router_module.router)
+        self.c = TestClient(app)
+        self.env = mock.patch.dict(os.environ, {"VWORLD_API_KEY": "KEY-123", "VWORLD_MODE": "", "VWORLD_DOMAIN": "https://fitagent.co.kr"})
+        self.env.start()
+
+    def tearDown(self):
+        self.env.stop()
+
+    def raw(self, recorded=False, pnu=MAPO):
+        return {
+            "pnu": pnu,
+            "land_characteristics": _load_fixture("vworld_land_characteristics", recorded),
+            "land_use_attr": _load_fixture("vworld_land_use_attr", recorded),
+        }
+
+    def post(self, body):
+        return self.c.post("/api/demo/zeb/feasibility", json=body)
+
+    def test_meta_hands_domain_bound_key_to_browser_by_default(self):
+        meta = self.c.get("/api/demo/zeb/meta").json()
+        self.assertEqual((meta["vworld_mode"], meta["vworld_key"]), ("browser", "KEY-123"))
+        self.assertEqual(meta["vworld_domain"], "https://fitagent.co.kr")
+
+    def test_server_mode_never_exposes_key(self):
+        with mock.patch.dict(os.environ, {"VWORLD_MODE": "server"}):
+            meta = self.c.get("/api/demo/zeb/meta").json()
+        self.assertEqual(meta["vworld_mode"], "server")
+        self.assertIsNone(meta["vworld_key"])
+
+    def test_no_key_means_sample_only(self):
+        with mock.patch.dict(os.environ, {"VWORLD_API_KEY": ""}):
+            meta = self.c.get("/api/demo/zeb/meta").json()
+        self.assertEqual(meta["parcel_source"], "sample")
+        self.assertIsNone(meta["vworld_key"])
+
+    def test_server_lookup_is_refused_in_browser_mode(self):
+        r = self.c.get("/api/demo/zeb/parcels/search", params={"q": "아현동", "source": "vworld"})
+        self.assertEqual(r.status_code, 409)
+
+    def test_feasibility_from_browser_raw_uses_same_parser(self):
+        r = self.post({"vworld_raw": self.raw()})
+        self.assertEqual(r.status_code, 200, r.text)
+        site = r.json()["site"]
+        self.assertEqual((site["site_area_m2"], site["data_source"]), (1000, "vworld"))
+        self.assertEqual(site["adjacent_plans"], ["정비구역", "제3종일반주거지역"])
+
+    @unittest.skipUnless((FIX / "vworld_land_characteristics.recorded.json").exists(), "실응답 녹화 없음")
+    def test_recorded_real_response_through_api(self):
+        lc = _load_fixture("vworld_land_characteristics", True)["landCharacteristicss"]["field"][0]
+        r = self.post({"vworld_raw": self.raw(recorded=True, pnu=lc["pnu"])})
+        self.assertEqual(r.status_code, 200, r.text)
+        codes = {w["code"] for w in r.json()["warnings"]}
+        if lc.get("lndcgrCodeNm") == "도로":
+            self.assertIn("LAND_CATEGORY", codes)
+
+    def test_raw_validation(self):
+        self.assertEqual(self.post({"vworld_raw": self.raw(), "pnu": MAPO}).status_code, 422)
+        self.assertEqual(self.post({"vworld_raw": {**self.raw(), "pnu": "123"}}).status_code, 422)
+        empty = {**self.raw(), "land_characteristics": {"landCharacteristicss": {"field": []}}}
+        self.assertEqual(self.post({"vworld_raw": empty}).status_code, 422)
+        huge = {**self.raw(), "land_use_attr": {"x": "가" * 300_001}}
+        self.assertEqual(self.post({"vworld_raw": huge}).status_code, 422)
 
 
 class SiteCheckTests(unittest.TestCase):

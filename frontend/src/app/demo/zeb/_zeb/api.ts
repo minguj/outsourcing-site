@@ -1,3 +1,5 @@
+import { fetchLand, type VWorldConf } from "./vworld";
+
 export type SourceRef = {
   id: string;
   title: string;
@@ -123,6 +125,9 @@ export type Redevelopment = {
 export type Meta = {
   engine_version: string;
   parcel_source: "sample" | "vworld";
+  vworld_mode: "browser" | "server" | null;
+  vworld_key: string | null;
+  vworld_domain: string | null;
   building_uses: string[];
   zones: string[];
   grades: { grade: string; label: string; min_self_sufficiency: number }[];
@@ -141,8 +146,14 @@ async function json<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+let metaPromise: Promise<Meta> | null = null;
+
 export const api = {
-  meta: () => fetch("/api/demo/zeb/meta").then(json<Meta>),
+  meta: () => {
+    metaPromise ??= fetch("/api/demo/zeb/meta").then(json<Meta>);
+    metaPromise.catch(() => (metaPromise = null));
+    return metaPromise;
+  },
   searchParcels: (q: string, source = "auto") =>
     fetch(`/api/demo/zeb/parcels/search?q=${encodeURIComponent(q)}&source=${source}`).then(
       json<{ source: string; items: ParcelSummary[] }>,
@@ -157,21 +168,39 @@ export const api = {
     }).then(json<Feasibility>),
 };
 
+export function vworldConf(meta: Meta | null): VWorldConf | null {
+  return meta?.vworld_key && meta.vworld_domain ? { key: meta.vworld_key, domain: meta.vworld_domain } : null;
+}
+
+/** 요청 본문 만들기. source=browser 면 브라우저가 브이월드 원본을 조회해 함께 보낸다. */
+export async function buildRequest(p: URLSearchParams) {
+  const pnu = p.get("pnu");
+  if (p.get("source") !== "browser" || !pnu) return requestFromParams(p);
+  const conf = vworldConf(await api.meta());
+  if (!conf) throw new Error("브이월드 키가 설정되지 않았습니다. 샘플 필지를 이용해 주세요.");
+  return { ...planOptions(p), vworld_raw: await fetchLand(conf, pnu) };
+}
+
 /** URL 쿼리 ↔ 요청 본문. 같은 URL 이면 같은 계산(calc_id)이 나오도록 모든 입력을 URL 에 둔다. */
-export function requestFromParams(p: URLSearchParams) {
-  const num = (k: string) => (p.get(k) ? Number(p.get(k)) : null);
-  const base = {
+const num = (p: URLSearchParams, k: string) => (p.get(k) ? Number(p.get(k)) : null);
+
+function planOptions(p: URLSearchParams) {
+  return {
     building_use: p.get("use") ?? "공동주택",
-    height_limit_m: num("h"),
-    floor_height_m: num("fh"),
+    height_limit_m: num(p, "h"),
+    floor_height_m: num(p, "fh"),
     is_public: p.get("pub") === "1",
     apply_zeb_incentive_grade: p.get("inc") || null,
   };
+}
+
+export function requestFromParams(p: URLSearchParams) {
+  const base = planOptions(p);
   if (p.get("pnu")) return { ...base, pnu: p.get("pnu"), source: p.get("source") ?? "auto" };
   return {
     ...base,
     manual: {
-      site_area_m2: num("area") ?? 0,
+      site_area_m2: num(p, "area") ?? 0,
       zone: p.get("zone") ?? "",
       jurisdiction: p.get("juris") || null,
       address: p.get("addr") || null,

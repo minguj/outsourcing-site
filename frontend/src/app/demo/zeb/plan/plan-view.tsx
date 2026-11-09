@@ -6,7 +6,7 @@ import { Suspense, useEffect, useState } from "react";
 import {
   EquipmentTable, LandUsePlans, MassingSketch, MassingSummary, ScenarioChart, ScenarioTable, TracePanel, Warnings,
 } from "../_zeb/results";
-import { api, Feasibility, Meta, requestFromParams } from "../_zeb/api";
+import { api, buildRequest, Feasibility, Meta } from "../_zeb/api";
 import { area } from "../_zeb/format";
 
 export default function PlanView() {
@@ -34,8 +34,8 @@ function Plan() {
 
   useEffect(() => {
     let alive = true;
-    api
-      .feasibility(requestFromParams(new URLSearchParams(qs)))
+    buildRequest(new URLSearchParams(qs))
+      .then(api.feasibility)
       .then((r) => alive && setRes({ qs, r, err: null }))
       .catch((e) => alive && setRes((prev) => ({ qs, r: prev?.r ?? null, err: (e as Error).message })));
     return () => {
