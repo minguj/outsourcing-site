@@ -151,6 +151,12 @@ export function ConsultChat({ onFallback, lang = "ko", onChange, sentElsewhere =
     setMessages([...messages, { role: "user", content: q }, { role: "assistant", content: a }]);
     setAsked([...asked, q]);
   }
+  // 체험 견적서로 이동한 뒤 뒤로 가기로 돌아오면 이동 직전의 진행 중 상태로 복원되므로(bfcache) 입력과 버튼을 다시 켠다.
+  useEffect(() => {
+    const restore = (e: PageTransitionEvent) => { if (e.persisted) setBusy(false); };
+    window.addEventListener("pageshow", restore);
+    return () => window.removeEventListener("pageshow", restore);
+  }, []);
   async function demo() {
     track("demo_quote_start", { from: "chat" });
     setBusy(true); setError("");
