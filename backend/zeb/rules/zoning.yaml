@@ -80,9 +80,27 @@ override_plans:
     message: 정비구역에 포함됩니다. 정비계획 결정 용적률이 우선 적용됩니다.
   - keyword: 특별계획구역
     message: 특별계획구역에 포함됩니다. 별도 세부개발계획을 확인해야 합니다.
+  # height_related: 높이를 제한하지만 높이값은 토지이용계획 데이터에 없다 → 고시문의 값을 '높이 제한(m)'에 입력해야 한다.
   - keyword: 가로구역별 최고높이
     severity: warning
+    height_related: true
     message: 가로구역별 최고높이 제한지역입니다. 고시된 최고높이를 '높이 제한(m)'에 입력해야 규모가 맞게 나옵니다.
+  - keyword: 고도지구
+    severity: warning
+    height_related: true
+    message: 고도지구(최고고도지구)입니다. 도시관리계획으로 정한 최고 높이·층수를 '높이 제한(m)'에 입력해야 규모가 맞게 나옵니다.
+  - keyword: 비행안전구역
+    severity: warning
+    height_related: true
+    message: 비행안전구역입니다. 군 비행장 주변 구역별 높이 제한이 있으므로 해당 높이를 '높이 제한(m)'에 입력하세요.
+  - keyword: 경관지구
+    severity: warning
+    height_related: true
+    message: 경관지구입니다. 지자체 조례로 건축물 높이·층수가 제한될 수 있으므로 확인 후 '높이 제한(m)'에 입력하세요.
+  - keyword: 대공방어협조구역
+    severity: info
+    height_related: true
+    message: 대공방어협조구역입니다. 일정 높이 이상 건축 시 관할 부대와 협의가 필요합니다.
 
 # 지목(토지대장상 토지 용도)에 따른 판단
 land_categories:

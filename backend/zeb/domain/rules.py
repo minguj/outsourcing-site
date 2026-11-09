@@ -172,6 +172,10 @@ class RuleBook:
     def override_plans(self) -> list[dict]:
         return self.zoning.get("override_plans", [])
 
+    def height_plan_keywords(self) -> list[str]:
+        """높이를 제한하지만 높이값은 데이터로 주어지지 않는 지역·지구 (고시문 확인 후 '높이 제한' 입력 필요)."""
+        return [p["keyword"] for p in self.override_plans() if p.get("height_related")]
+
     def land_category_check(self, category: str | None) -> dict | None:
         if not category:
             return None

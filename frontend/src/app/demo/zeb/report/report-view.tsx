@@ -83,7 +83,7 @@ function Report() {
         <h2>요약</h2>
         <table className="zb-avoid-break">
           <tbody>
-            <tr><th>계획 규모</th><td>지상 {m.floors}층, 연면적 {area(m.gfa_m2)}, 높이 약 {n(m.height_m, 1)}m (결정 조건: {m.binding_constraint})</td></tr>
+            <tr><th>계획 규모</th><td>지상 {m.floors}층, 연면적 {area(m.gfa_m2)}, 높이 약 {n(m.height_m, 1)}m, 건폐율 {m.bcr_used_pct}% 사용 (결정 조건: {m.binding_constraint}{m.target_floors ? ", 목표 층수 지정" : ""})</td></tr>
             <tr><th>ZEB 의무 등급</th><td>{r.energy.mandatory_grade ? `${gradeLabel(r.energy.mandatory_grade)} 이상` : "의무 대상 아님 (연면적 기준)"}</td></tr>
             <tr><th>의무 등급 충족 설비비</th><td>{mand ? (mand.feasible ? `${krw(mand.total_cost_krw)} (㎡당 ${n(mand.cost_per_gfa_krw)}원)` : `충족 불가 — ${mand.note}`) : "—"}</td></tr>
             <tr><th>도달 가능 최고 등급</th><td>{gradeLabel(r.energy.max_grade)} (설치 가능 최대 자립률 {r.energy.max_self_sufficiency_pct}%)</td></tr>

@@ -122,6 +122,87 @@ class GoldenMassingTests(unittest.TestCase):
         self.assertEqual(m["floors"], 4)
 
 
+class TargetFloorsTests(unittest.TestCase):
+    """목표 층수: 같은 연면적을 높게(건축면적 작게) 또는 낮게(연면적 일부 포기) 짓는 경우."""
+
+    AREA = 46640.6  # 가양동 대규모 아파트 단지 규모 (3종일반주거)
+
+    def calc(self, **opt):
+        return run_feasibility(SiteInput(self.AREA, "제3종일반주거지역", "11500", **opt.pop("site", {})), PlanOptions(**opt), RB)
+
+    def test_taller_keeps_gfa_and_shrinks_footprint(self):
+        """최대 연면적 = 46,640.6 × 2.5 = 116,601.5㎡, 최대 건축면적 = × 0.5 = 23,320.3㎡
+        최소 층수 = ceil(116,601.5 / 23,320.3) = 5층
+        13층: 건축면적 = 116,601.5 / 13 = 8,969.35㎡, 건폐율 사용 19.2%
+        옥상 태양광 최대 = floor(8,969.35 × 0.5 / 10) = 448 kWp (5층이면 floor(23,320.3 × 0.5 / 10) = 1,166)
+        """
+        r = self.calc(target_floors=13)
+        m = r["massing"]
+        self.assertEqual((m["floors"], m["gfa_m2"], m["building_area_m2"]), (13, 116601.5, 8969.35))
+        self.assertEqual((m["bcr_used_pct"], m["floors_min_full_far"], m["binding_constraint"]), (19.2, 5, "용적률"))
+        roof = next(o for o in r["energy"]["options"] if o["key"] == "pv_roof")
+        self.assertEqual(roof["max_units"], 448)
+        base_roof = next(o for o in self.calc()["energy"]["options"] if o["key"] == "pv_roof")
+        self.assertEqual(base_roof["max_units"], 1166)
+
+    def test_taller_building_costs_more_for_same_grade_and_says_so(self):
+        low = scenario(self.calc(), "5")["total_cost_krw"]
+        high = self.calc(target_floors=13)
+        self.assertGreater(scenario(high, "5")["total_cost_krw"], low)
+        self.assertTrue(any("옥상이 좁아" in t and "5층" in t for t in high["insights"]))
+
+    def test_lower_than_minimum_gives_up_floor_area(self):
+        """3층: 연면적 = 23,320.3 × 3 = 69,960.9㎡ → 용적률 60% 사용, 목표 층수가 결정 조건"""
+        r = self.calc(target_floors=3)
+        m = r["massing"]
+        self.assertEqual((m["gfa_m2"], m["binding_constraint"], m["far_utilization_pct"]), (69960.9, "목표 층수", 60.0))
+        self.assertIn("FAR_NOT_EXHAUSTED", {w["code"] for w in r["warnings"]})
+        self.assertFalse(any("옥상이 좁아" in t for t in r["insights"]))
+
+    def test_target_is_capped_by_height_limit(self):
+        """높이 제한 30m ÷ 층고 3m = 10층. 목표 13층 → 10층으로 계산하고 경고."""
+        r = self.calc(target_floors=13, height_limit_m=30)
+        m = r["massing"]
+        self.assertEqual((m["floors"], m["floors_max"], m["floors_max_reason"]), (10, 10, "높이"))
+        codes = {w["code"] for w in r["warnings"]}
+        self.assertIn("TARGET_FLOORS_CAPPED", codes)
+        # 10층 ≥ 최소 5층이므로 용적률은 다 쓴다 → '용적률 미사용' 경고가 나오면 안 된다 (화면에서 발견한 버그)
+        self.assertEqual((m["far_utilization_pct"], m["binding_constraint"]), (100.0, "용적률"))
+        self.assertNotIn("FAR_NOT_EXHAUSTED", codes)
+
+    def test_target_is_capped_by_zone_floor_limit(self):
+        r = run_feasibility(
+            SiteInput(600, "제2종일반주거지역(7층이하)", "11110"), PlanOptions(target_floors=12), RB
+        )
+        self.assertEqual((r["massing"]["floors"], r["massing"]["floors_max_reason"]), (7, "층수"))
+
+    def test_height_related_plans_are_listed_but_adjacent_ones_are_not(self):
+        r = self.calc(site={"land_use_plans": ("최고고도지구",), "adjacent_plans": ("가로구역별 최고높이 제한지역",)})
+        self.assertEqual(r["height_plans"], ["최고고도지구"])
+        self.assertTrue(any("고도지구" in w["message"] for w in r["warnings"]))
+
+    def test_random_targets_respect_all_limits(self):
+        rnd = random.Random(7)
+        for _ in range(200):
+            area = round(rnd.uniform(200, 30_000), 1)
+            zone = rnd.choice(RB.zone_names())
+            h = rnd.choice([None, round(rnd.uniform(9, 120), 1)])
+            t = rnd.randint(1, 60)
+            with self.subTest(area=area, zone=zone, h=h, t=t):
+                m = run_feasibility(SiteInput(area, zone, "11440"), PlanOptions(target_floors=t, height_limit_m=h), RB)["massing"]
+                self.assertLessEqual(m["building_area_m2"], m["max_building_area_m2"] + 0.01)
+                self.assertLessEqual(m["gfa_m2"], m["max_gfa_m2"] + 0.01)
+                if m["floors_max"] is not None:
+                    self.assertLessEqual(m["floors"], m["floors_max"])
+                if m["far_utilization_pct"] < 99.95:
+                    self.assertNotEqual(m["binding_constraint"], "용적률")
+                else:
+                    self.assertEqual(m["binding_constraint"], "용적률")
+                if t >= m["floors_min_full_far"] and (m["floors_max"] is None or t <= m["floors_max"]):
+                    self.assertEqual(m["floors"], t)
+                    self.assertAlmostEqual(m["gfa_m2"], m["max_gfa_m2"], places=1)
+
+
 class GoldenEnergyTests(unittest.TestCase):
     def test_e1_demand_and_unit_production(self):
         """G1 기준
@@ -334,6 +415,8 @@ class ApiTests(unittest.TestCase):
         self.assertEqual(post({"pnu": MAPO, "manual": {"site_area_m2": 1, "zone": "준주거지역"}}), 422)
         self.assertEqual(post({"manual": {"site_area_m2": 500, "zone": "없는지역"}}), 422)
         self.assertEqual(post({"manual": {"site_area_m2": 500, "zone": "준주거지역"}, "unknown": 1}), 422)
+        self.assertEqual(post({"pnu": MAPO, "source": "sample", "target_floors": 0}), 422)
+        self.assertEqual(post({"pnu": MAPO, "source": "sample", "target_floors": 201}), 422)
 
     def test_override_plan_warnings(self):
         nowon = self.c.post("/api/demo/zeb/feasibility", json={"pnu": "1135010500106450000", "source": "sample"}).json()

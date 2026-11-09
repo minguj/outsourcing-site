@@ -70,6 +70,7 @@ export type Feasibility = {
     building_use: string;
     height_limit_m: number | null;
     floor_height_m: number | null;
+    target_floors: number | null;
     is_public: boolean;
     apply_zeb_incentive_grade: string | null;
   };
@@ -86,7 +87,13 @@ export type Feasibility = {
     floor_height_m: number;
     binding_constraint: string;
     far_utilization_pct: number;
+    bcr_used_pct: number;
+    floors_min_full_far: number;
+    floors_max: number | null;
+    floors_max_reason: string | null;
+    target_floors: number | null;
   };
+  height_plans: string[];
   energy: {
     demand_intensity: number;
     demand_kwh: number;
@@ -189,6 +196,7 @@ function planOptions(p: URLSearchParams) {
     building_use: p.get("use") ?? "공동주택",
     height_limit_m: num(p, "h"),
     floor_height_m: num(p, "fh"),
+    target_floors: num(p, "fl"),
     is_public: p.get("pub") === "1",
     apply_zeb_incentive_grade: p.get("inc") || null,
   };
