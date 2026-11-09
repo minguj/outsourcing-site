@@ -1,0 +1,7 @@
+{"landUses": {"field": [
+  {"pnu": "1144012000101230004", "prposAreaDstrcCodeNm": "제2종일반주거지역", "cnflcAtNm": "포함"},
+  {"pnu": "1144012000101230004", "prposAreaDstrcCodeNm": "제3종일반주거지역", "cnflcAtNm": "접함"},
+  {"pnu": "1144012000101230004", "prposAreaDstrcCodeNm": "지구단위계획구역", "cnflcAtNm": "포함"},
+  {"pnu": "1144012000101230004", "prposAreaDstrcCodeNm": "정비구역", "cnflcAtNm": "접함"},
+  {"pnu": "1144012000101230004", "prposAreaDstrcCodeNm": "절대보호구역", "cnflcAtNm": "저촉"}
+]}}

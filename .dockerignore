@@ -1,6 +1,9 @@
 **
 !backend/
 !backend/*.py
+!backend/zeb/
+!backend/zeb/**
+backend/zeb/**/__pycache__
 !backend/requirements.txt
 !backend/Dockerfile
 !frontend/
