@@ -9,21 +9,21 @@ export const SEARCH_VERIFY = { google: "", naver: "7e1fbaa24af177e04b8477a9040b2
 
 // 검색 키워드. 네이버 등은 참고하고 Google은 무시하므로, 실제 검색 노출은 본문 문구가 좌우한다.
 export const KEYWORDS = [
-  "외주 개발", "AI 상담 에이전트", "AI 챗봇 개발", "업무 자동화", "문서 자동화", "엑셀 자동화", "PDF 변환",
-  "웹사이트 제작", "관리자 페이지 개발", "모바일 앱 개발", "결제 연동", "토스페이먼츠 연동", "프리랜서 개발자", "핏에이전트",
+  "AI 상담 접수", "AI 상담 시스템", "상담 자동화", "문의 응대 자동화", "AI 챗봇 상담", "상담 요약",
+  "견적서 자동화", "온라인 계약", "결제 연동", "고객 문의 관리", "핏에이전트",
 ];
 
 // 회사 정보는 이 파일 한 곳에서 바꿉니다. 백엔드 상담봇 이름은 서버 환경변수 COMPANY_NAME과 맞춰 주세요.
 export const SITE = {
   name: "핏에이전트",
-  tagline: "AI 상담·업무 자동화부터 웹사이트·앱 개발까지",
-  description: "AI 상담 에이전트와 문서·업무 자동화부터 웹사이트, 관리자 페이지, 모바일 앱, 결제 연동까지 회사에 맞춰 개발하는 외주 개발 서비스입니다.",
+  tagline: "문의 응대를 자동화하는 AI 상담 접수",
+  description: "AI가 고객 문의에 답하고 상담 내용을 요약해 접수한 뒤, 견적서·계약·결제까지 이어 주는 AI 상담 접수 시스템입니다. 실제로 동작하는 데모를 직접 써 볼 수 있습니다.",
   privacy: {
-    items: "이름, 회사명, 이메일, 전화번호(선택), 상담·의뢰 내용, 첨부 파일(선택)",
+    items: "이름, 회사명, 이메일, 전화번호(선택), 상담·문의 내용, 첨부 파일(선택)",
     // 수탁 업체 상세는 개인정보처리방침 페이지에 적는다:
     // Anthropic PBC(미국, AI 상담 답변 생성), Google LLC(미국, 메일 발송), Amazon Web Services(호주 시드니 리전, 서버 보관)
-    transfer: "상담 응대와 견적 안내를 위해 일부 처리를 외부 업체(국외 포함)에 맡깁니다. 업체와 국가 등 자세한 내용은 개인정보처리방침에서 확인하실 수 있습니다.",
-    purpose: "개발 의뢰 상담, 견적 안내와 연락",
+    transfer: "데모 상담 응대와 도입 문의 안내를 위해 일부 처리를 외부 업체(국외 포함)에 맡깁니다. 업체와 국가 등 자세한 내용은 개인정보처리방침에서 확인하실 수 있습니다.",
+    purpose: "AI 상담 접수 시스템 데모 상담·도입 문의 응대와 연락",
     retention: "상담 종료 후 1년 보관 후 파기 (삭제를 요청하시면 즉시 파기)",
   },
 };
@@ -31,12 +31,12 @@ export const SITE = {
 // 영문 사이트(/en)용. 회사명은 영문 표기가 정해지면 name을 바꾼다.
 export const SITE_EN = {
   name: "FitAgent",
-  tagline: "From AI agents and workflow automation to websites and apps",
-  description: "A development studio building AI consultation agents, document conversion and review tools, and internal system integrations tailored to your business.",
+  tagline: "AI consultation intake that automates inquiry handling",
+  description: "An AI consultation intake system that answers customer inquiries, summarizes them for your staff, and carries them through to quotes, contracts and payment. Try the working demo.",
   privacy: {
-    items: "Name, company, e-mail, phone (optional), consultation and request details, attachments (optional)",
-    transfer: "To answer inquiries and send quotes, some processing is entrusted to outside providers, including providers abroad. See the privacy policy for the providers and countries.",
-    purpose: "Consulting on development requests, sending quotes and contacting you",
+    items: "Name, company, e-mail, phone (optional), consultation and inquiry details, attachments (optional)",
+    transfer: "To answer demo consultations and adoption inquiries, some processing is entrusted to outside providers, including providers abroad. See the privacy policy for the providers and countries.",
+    purpose: "Answering demo consultations and adoption inquiries, and contacting you",
     retention: "Kept for one year after the consultation ends, then destroyed (destroyed immediately on request)",
   },
 };
@@ -65,7 +65,7 @@ export const OPERATOR = {
   email: "help@fitagent.co.kr",
   site: "fitagent.co.kr",
 };
-export const POLICY_EFFECTIVE = { privacy: "2026년 11월 4일", terms: "2026년 11월 2일" };
+export const POLICY_EFFECTIVE = { privacy: "2026년 11월 9일", terms: "2026년 11월 2일" };
 
 export const CONTRACTOR = {
   name: "진민구",

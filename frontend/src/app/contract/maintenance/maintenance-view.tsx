@@ -2,13 +2,14 @@
 
 import type { ReactNode } from "react";
 import { BANK } from "../../site-config";
-import { MAINTENANCE } from "../../site-content";
 import { Articles, BLANK, DocShell, Loading, Parties, Signs, useQuote } from "../doc-kit";
+import { MAINTENANCE } from "./maintenance-data";
 
 // 건별 요금 칸. 표 안에서 줄바꿈되지 않게 짧은 빈칸을 쓴다.
 const FEE = "　　　　　";
 
-// 월 구독형 유지보수 계약서. 플랜 구성은 메인의 '유지보수' 섹션(site-content.ts MAINTENANCE)과 같다.
+// 월 구독형 유지보수 계약서. 플랜 구성은 maintenance-data.ts에 있다.
+// 공개 화면(랜딩·FAQ·계약 문서 목록)에서는 링크하지 않고, 관리자 화면의 문서 바로가기로만 연다.
 export default function MaintenanceView() {
   const { token, quote, error, ready } = useQuote(false);
   if (!ready) return <Loading error={error} />;

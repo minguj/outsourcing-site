@@ -267,6 +267,15 @@ class SiteTests(unittest.TestCase):
         self.inquiry(transcript=[])
         self.assertIn("[AI 상담 대화]\n없음", self.sent[-1][1])
 
+    def test_consult_is_product_demo_guide(self):
+        prompt = consult.system_prompt()
+        self.assertIn("데모 안내자", prompt)
+        self.assertIn("/demo/purchase-orders", prompt)
+        for word in ("외주", "유지보수", "포인트"):
+            self.assertNotIn(word, prompt)
+        project_type = consult.BRIEF_TOOL["input_schema"]["properties"]["project_type"]["description"]
+        self.assertIn("우리 사이트에 맞춤 적용", project_type)
+
     def test_english_site_flow(self):
         fake = {"content": [{"type": "text", "text": "Got it."}]}
         with patch.object(consult, "call_claude", return_value=fake) as call:

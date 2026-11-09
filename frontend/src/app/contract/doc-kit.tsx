@@ -24,11 +24,11 @@ export const payments = (quote: Quote) => {
   return { deposit: quote.deposit, middle, balance: Math.max(quote.total - quote.deposit - middle, 0) };
 };
 
+// 유지보수 계약서(/contract/maintenance)는 공개 경로에서 숨기려고 목록에서 뺐다. 관리자 화면의 문서 바로가기로만 연다.
 export const DOCS = [
-  { href: "/contract", label: "외주 개발 계약서(안)" },
+  { href: "/contract", label: "도입 계약서(안)" },
   { href: "/contract/nda", label: "비밀유지계약서" },
   { href: "/contract/completion", label: "완료 확인서" },
-  { href: "/contract/maintenance", label: "유지보수 계약서" },
 ];
 
 export function useQuote(required: boolean) {
