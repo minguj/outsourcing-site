@@ -275,6 +275,15 @@ class SiteTests(unittest.TestCase):
             self.assertNotIn(word, prompt)
         project_type = consult.BRIEF_TOOL["input_schema"]["properties"]["project_type"]["description"]
         self.assertIn("우리 사이트에 맞춤 적용", project_type)
+        self.assertIn("데모 시연(기타 프로젝트)", project_type)
+
+    def test_consult_takes_other_projects_as_a_demo_instead_of_refusing(self):
+        prompt = consult.system_prompt()
+        self.assertIn("거절하지 않습니다", prompt)
+        self.assertIn("[시연 문의(C) 파악 항목]", prompt)
+        self.assertIn("같은 거절을 반복하지 않습니다", prompt)
+        self.assertIn("/demo/zeb", prompt)
+        self.assertNotIn("정중히 짧게 거절하고 상담으로 돌아옵니다", prompt)
 
     def test_english_site_flow(self):
         fake = {"content": [{"type": "text", "text": "Got it."}]}
