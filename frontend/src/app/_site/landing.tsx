@@ -33,6 +33,12 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
   // 계약서(안)는 견적 토큰이 있어야 열리므로 같은 토큰으로 /contract 를 연다. 견적서·계약서 화면은 새로 불러와 방문 분석이 따라가지 않는다.
   const [flowBusy, setFlowBusy] = useState(false);
   const [flowError, setFlowError] = useState("");
+  // 체험 견적서로 이동한 뒤 브라우저 뒤로 가기로 돌아오면 페이지가 이동 직전 상태(진행 중)로 복원된다(bfcache). 그때 버튼을 다시 켠다.
+  useEffect(() => {
+    const restore = (e: PageTransitionEvent) => { if (e.persisted) setFlowBusy(false); };
+    window.addEventListener("pageshow", restore);
+    return () => window.removeEventListener("pageshow", restore);
+  }, []);
   async function openDemo(kind: "quote" | "contract") {
     track("demo_quote_start", { from: kind === "contract" ? "flow_contract" : "flow" });
     setFlowBusy(true); setFlowError("");

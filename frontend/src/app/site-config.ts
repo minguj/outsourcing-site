@@ -55,7 +55,6 @@ export const BANK = {
   holder: "",
 };
 
-// 계약서(안)의 을(수급인). 프리랜서 계약이라 개인 이름으로 적는다.
 // 개인정보처리방침·이용약관에 표시하는 운영자 정보와 시행일. 사업자등록이 없는 개인 운영이라 "대표" 대신 운영자 이름으로 표시한다.
 // representative = 운영자(계약 당사자) 이름. 내용을 바꾸면 시행일도 함께 바꾼다.
 export const OPERATOR = {
@@ -67,8 +66,8 @@ export const OPERATOR = {
 };
 export const POLICY_EFFECTIVE = { privacy: "2026년 11월 9일", terms: "2026년 11월 2일" };
 
+// 계약서(안)의 을(수급인). 공개 데모 문서라 개인 이름은 넣지 않고 서비스명만 표시하고, 성명은 빈칸으로 둔다.
 export const CONTRACTOR = {
-  name: "진민구",
   brand: "핏에이전트",
 };
 
