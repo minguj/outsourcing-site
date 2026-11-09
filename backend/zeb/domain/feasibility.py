@@ -10,7 +10,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import UTC, date, datetime
 
 from .energy import build_options, build_scenarios, grade_for, max_potential
@@ -47,6 +47,7 @@ class PlanOptions:
     building_use: str = "공동주택"
     height_limit_m: float | None = None
     floor_height_m: float | None = None
+    target_floors: int | None = None
     is_public: bool = False
     apply_zeb_incentive_grade: str | None = None  # 예: "3" → 3등급 취득 가정 시 용적률 완화 반영
     assumptions_override: dict = field(default_factory=dict)
@@ -107,6 +108,7 @@ def run_feasibility(site: SiteInput, opts: PlanOptions, rules: RuleBook | None =
             floor_height_m=opts.floor_height_m,
             far_incentive_rate=incentive_rate,
             incentive_source=incentive_src,
+            target_floors=opts.target_floors,
         ),
         rules,
         ledger,
@@ -177,6 +179,9 @@ def run_feasibility(site: SiteInput, opts: PlanOptions, rules: RuleBook | None =
 
     # 5) 인사이트 ----------------------------------------------------------
     insights = _insights(scenarios, options, mandatory_grade, max_grade, massing, opts)
+    floor_comparison = _compare_with_min_floors(site, opts, rules, massing, scenarios, mandatory_grade)
+    if floor_comparison:
+        insights.insert(1, floor_comparison)
     if mandatory_grade:
         mand = next(s for s in scenarios if s.target_grade == mandatory_grade)
         if not mand.feasible:
@@ -198,6 +203,11 @@ def run_feasibility(site: SiteInput, opts: PlanOptions, rules: RuleBook | None =
         "engine_version": ENGINE_VERSION,
         "computed_at": datetime.now(UTC).isoformat(timespec="seconds"),
         "rule_versions": rules.versions(),
+        "height_plans": [
+            name
+            for name in (*site.land_use_plans, *site.partial_plans)
+            if any(k in name for k in rules.height_plan_keywords())
+        ],
         "site": {
             **site.__dict__,
             "land_use_plans": list(site.land_use_plans),
@@ -208,6 +218,7 @@ def run_feasibility(site: SiteInput, opts: PlanOptions, rules: RuleBook | None =
             "building_use": opts.building_use,
             "height_limit_m": opts.height_limit_m,
             "floor_height_m": opts.floor_height_m,
+            "target_floors": opts.target_floors,
             "is_public": opts.is_public,
             "apply_zeb_incentive_grade": opts.apply_zeb_incentive_grade,
         },
@@ -269,6 +280,31 @@ def _site_checks(site: SiteInput, rules: RuleBook, ledger: Ledger) -> None:
             ledger.warn("OVERRIDE_PLAN", plan["message"], severity)
         elif any(plan["keyword"] in p for p in site.partial_plans):
             ledger.warn("OVERRIDE_PLAN", f"(대지 일부가 걸침) {plan['message']}", severity)
+
+
+def _compare_with_min_floors(site, opts, rules, massing, scenarios, mandatory_grade) -> str | None:
+    """목표 층수를 정했을 때, 같은 대지를 가장 낮게(건폐율 최대) 지은 경우와 의무 등급 설비비를 비교한다."""
+    # 더 높게(건축면적은 작게) 지을 때만 비교한다. 더 낮게 지으면 연면적이 줄어드는 것이라 비교 의미가 다르다.
+    if not opts.target_floors or not mandatory_grade or massing.floors <= massing.floors_min_full_far:
+        return None
+    base = run_feasibility(site, replace(opts, target_floors=None), rules)
+    if base["massing"]["floors"] >= massing.floors:
+        return None
+    here = next(s for s in scenarios if s.target_grade == mandatory_grade)
+    there = next(s for s in base["scenarios"] if s["target_grade"] == mandatory_grade)
+    lo = f"{base['massing']['floors']}층(건폐율 {base['massing']['bcr_used_pct']}%)"
+    if not here.feasible:
+        return f"{massing.floors}층으로는 의무 등급({here.target_label})을 맞추기 어렵습니다. {lo}으로 지으면 " + (
+            f"{format_krw(there['total_cost_krw'])}으로 가능합니다." if there["feasible"] else "역시 어렵습니다."
+        )
+    if not there["feasible"] or there["total_cost_krw"] == 0:
+        return None
+    ratio = here.total_cost_krw / there["total_cost_krw"]
+    return (
+        f"{massing.floors}층(건폐율 {massing.bcr_used_pct}%)은 옥상이 좁아 의무 등급 설비비가 "
+        f"{format_krw(here.total_cost_krw)}입니다. 같은 연면적을 {lo}으로 지으면 "
+        f"{format_krw(there['total_cost_krw'])}이므로 {ratio:.1f}배입니다."
+    )
 
 
 def _insights(scenarios, options, mandatory_grade, max_grade, massing, opts) -> list[str]:

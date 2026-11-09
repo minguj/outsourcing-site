@@ -25,6 +25,7 @@ class MassingInput:
     floor_height_m: float | None = None
     far_incentive_rate: float = 0.0  # % (ZEB 인증 완화 등)
     incentive_source: Source | None = None
+    target_floors: int | None = None  # 목표 층수. 없으면 최대 건축면적 기준(최소 층수)
 
 
 @dataclass(frozen=True)
@@ -39,8 +40,13 @@ class MassingResult:
     gfa_m2: float
     height_m: float
     floor_height_m: float
-    binding_constraint: str  # "용적률" | "높이" | "층수"
+    binding_constraint: str  # "용적률" | "높이" | "층수" | "목표 층수"
     far_utilization_pct: float
+    bcr_used_pct: float  # 실제 사용 건폐율 (계획 건축면적 ÷ 대지면적)
+    floors_min_full_far: int  # 용적률을 모두 쓰는 최소 층수 (건폐율 최대 사용 시)
+    floors_max: int | None  # 높이·층수 제한에 따른 최대 층수 (제한이 없으면 None)
+    floors_max_reason: str | None
+    target_floors: int | None
 
     def to_dict(self) -> dict:
         return self.__dict__.copy()
@@ -190,11 +196,28 @@ def compute_massing(inp: MassingInput, rules: RuleBook, ledger: Ledger, floor_he
         )
         caps.append((zone_floor_cap, "층수"))
 
-    floors = floors_needed
-    binding = "용적률"
-    for cap, name in caps:
-        if cap < floors:
-            floors, binding = cap, name
+    floors_max, cap_reason = (min(caps) if caps else (None, None))
+
+    if inp.target_floors:
+        # 목표 층수: 같은 연면적을 더 높게(건축면적은 작게) 짓거나, 더 낮게(연면적 일부 포기) 짓는다.
+        ledger.record("floors_target", "목표 층수", inp.target_floors, "층", "입력값", sources=[INPUT])
+        floors = inp.target_floors
+        binding = "용적률" if floors >= floors_needed else "목표 층수"
+        if floors_max is not None and floors > floors_max:
+            ledger.warn(
+                "TARGET_FLOORS_CAPPED",
+                f"목표 {inp.target_floors}층은 {cap_reason} 제한({floors_max}층)을 넘어 {floors_max}층으로 계산했습니다.",
+            )
+            floors = floors_max
+            # 잘린 층수로도 용적률을 다 쓸 수 있으면 결정 조건은 여전히 용적률이다
+            binding = cap_reason if floors_max < floors_needed else "용적률"
+    else:
+        floors = floors_needed
+        binding = "용적률"
+        if floors_max is not None and floors_max < floors:
+            floors = floors_max
+            # 잘린 층수로도 용적률을 다 쓸 수 있으면 결정 조건은 여전히 용적률이다
+            binding = cap_reason if floors_max < floors_needed else "용적률"
 
     gfa = min(max_gfa, max_ba * floors)
     building_area = gfa / floors
@@ -205,8 +228,11 @@ def compute_massing(inp: MassingInput, rules: RuleBook, ledger: Ledger, floor_he
         "계획 층수",
         floors,
         "층",
-        "min(용적률 소진 층수, 높이·층수 제한)",
-        {"용적률 소진 층수": floors_needed, **{f"{n} 제한": c for c, n in caps}},
+        "min(목표 층수, 높이·층수 제한)" if inp.target_floors else "min(용적률 소진 층수, 높이·층수 제한)",
+        {
+            **({"목표 층수": inp.target_floors} if inp.target_floors else {"용적률 소진 층수": floors_needed}),
+            **{f"{n} 제한": c for c, n in caps},
+        },
     )
     ledger.record(
         "gfa",
@@ -227,7 +253,14 @@ def compute_massing(inp: MassingInput, rules: RuleBook, ledger: Ledger, floor_he
     ledger.record("height", "건물 높이(추정)", _r(height), "m", "계획 층수 × 층고", {"계획 층수": floors, "층고": fh})
 
     utilization = gfa / max_gfa * 100
-    if binding != "용적률":
+    if binding == "목표 층수":
+        ledger.warn(
+            "FAR_NOT_EXHAUSTED",
+            f"목표 {floors}층으로는 허용 용적률의 {utilization:.1f}%만 사용합니다. "
+            f"용적률을 모두 쓰려면 {floors_needed}층 이상이 필요합니다.",
+            "info",
+        )
+    elif binding != "용적률":
         ledger.warn(
             "FAR_NOT_EXHAUSTED",
             f"{binding} 제한 때문에 허용 용적률의 {utilization:.1f}%만 사용합니다. "
@@ -247,4 +280,9 @@ def compute_massing(inp: MassingInput, rules: RuleBook, ledger: Ledger, floor_he
         floor_height_m=fh,
         binding_constraint=binding,
         far_utilization_pct=_r(utilization, 1),
+        bcr_used_pct=_r(building_area / inp.site_area_m2 * 100, 1),
+        floors_min_full_far=floors_needed,
+        floors_max=floors_max,
+        floors_max_reason=cap_reason,
+        target_floors=inp.target_floors,
     )

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Feasibility, Scenario, TraceStep, Warning } from "./api";
 import { SOURCE_KIND, area, gradeLabel, krw, n } from "./format";
 
@@ -24,7 +25,11 @@ export function MassingSummary({ r }: { r: Feasibility }) {
   const m = r.massing;
   return (
     <div className="zb-grid zb-grid-3">
-      <Stat label="적용 건폐율 / 용적률" value={`${m.bcr_pct}% / ${m.far_effective_pct}%`} sub={m.far_effective_pct !== m.far_pct ? `인센티브 전 ${m.far_pct}%` : "조례·법정 상한 중 작은 값"} />
+      <Stat
+        label="적용 건폐율 / 용적률"
+        value={`${m.bcr_pct}% / ${m.far_effective_pct}%`}
+        sub={`건폐율 ${m.bcr_used_pct}% 사용${m.far_effective_pct !== m.far_pct ? ` · 인센티브 전 용적률 ${m.far_pct}%` : ""}`}
+      />
       <Stat label="계획 지상 연면적" value={area(m.gfa_m2)} sub={`최대 ${area(m.max_gfa_m2)} 중 ${m.far_utilization_pct}% 사용`} />
       <Stat label="규모" value={`지상 ${m.floors}층 · ${n(m.height_m, 1)}m`} sub={`기준층 ${area(m.building_area_m2)} · 결정 조건: ${m.binding_constraint}`} />
     </div>
@@ -244,6 +249,61 @@ export function LandUsePlans({ site }: { site: Feasibility["site"] }) {
             <strong>{label}</strong> {items.join(" · ")}
           </div>
         ))}
+    </div>
+  );
+}
+
+const CAP_LABEL: Record<string, string> = { 높이: "높이 제한", 층수: "용도지역 층수 제한" };
+
+/** 층수 선택. 범위는 1층 ~ 제한에 따른 최대 층수. 드래그 중에는 계산하지 않고 놓을 때 반영한다. */
+export function FloorControl({ r, onCommit }: { r: Feasibility; onCommit: (floors: string | null) => void }) {
+  const m = r.massing;
+  const max = m.floors_max ?? Math.max(60, m.floors_min_full_far * 3);
+  const [v, setV] = useState(m.floors);
+  const commit = (x: number) => x !== m.floors && onCommit(String(x));
+  const capText =
+    m.floors_max == null
+      ? "높이 제한을 입력하면 최대 층수가 정해져요"
+      : m.floors_max_reason === "높이"
+        ? `최대 ${m.floors_max}층 (높이 제한 ${r.options.height_limit_m}m ÷ 층고 ${m.floor_height_m}m)`
+        : `최대 ${m.floors_max}층 (${CAP_LABEL[m.floors_max_reason ?? ""] ?? m.floors_max_reason})`;
+  return (
+    <div className="zb-field" style={{ marginBottom: 16 }}>
+      <span style={{ display: "flex", justifyContent: "space-between", fontSize: 13, color: "var(--ink-2)", marginBottom: 4 }}>
+        <span>층수</span>
+        <strong style={{ color: "var(--ink)" }}>
+          {v}층 {v < m.floors_min_full_far && <span className="zb-pill warn">연면적 감소</span>}
+        </strong>
+      </span>
+      <input
+        type="range"
+        min={1}
+        max={max}
+        value={Math.min(v, max)}
+        aria-label="층수"
+        onChange={(e) => setV(Number(e.target.value))}
+        onPointerUp={() => commit(v)}
+        onKeyUp={() => commit(v)}
+        onBlur={() => commit(v)}
+      />
+      <div className="zb-small zb-muted">
+        용적률을 다 쓰는 최소 {m.floors_min_full_far}층 · {capText}
+      </div>
+      {r.options.target_floors != null && (
+        <button type="button" className="zb-btn-ghost zb-btn-small" onClick={() => onCommit(null)}>
+          최소 층수로 되돌리기
+        </button>
+      )}
+    </div>
+  );
+}
+
+/** 높이를 제한하지만 높이값이 데이터에 없는 지역·지구에 포함된 경우 안내 */
+export function HeightPlanHint({ plans }: { plans: string[] }) {
+  if (!plans.length) return null;
+  return (
+    <div className="zb-small" style={{ color: "var(--warn)", marginTop: 4 }}>
+      {plans.join(", ")}에 포함됩니다. 고시된 높이를 확인해 입력하세요.
     </div>
   );
 }

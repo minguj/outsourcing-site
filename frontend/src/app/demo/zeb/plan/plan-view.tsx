@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import {
-  EquipmentTable, LandUsePlans, MassingSketch, MassingSummary, ScenarioChart, ScenarioTable, TracePanel, Warnings,
+  EquipmentTable, FloorControl, HeightPlanHint, LandUsePlans, MassingSketch, MassingSummary, ScenarioChart, ScenarioTable, TracePanel, Warnings,
 } from "../_zeb/results";
 import { api, buildRequest, Feasibility, Meta } from "../_zeb/api";
 import { area } from "../_zeb/format";
@@ -96,11 +96,13 @@ function Plan() {
           <label className="zb-field">
             <span>높이 제한 (m) — 일조·사선 등 반영값</span>
             <DeferredInput key={`h:${params.get("h") ?? ""}`} value={params.get("h") ?? ""} onCommit={(v) => update("h", v)} placeholder="없음" />
+            <HeightPlanHint plans={r.height_plans ?? []} />
           </label>
           <label className="zb-field">
             <span>층고 (m)</span>
             <DeferredInput key={`fh:${params.get("fh") ?? ""}`} value={params.get("fh") ?? ""} onCommit={(v) => update("fh", v)} placeholder={`기본 ${r.massing.floor_height_m}`} />
           </label>
+          <FloorControl key={`fl:${r.calc_id}`} r={r} onCommit={(v) => update("fl", v)} />
           <label className="zb-check">
             <input type="checkbox" checked={params.get("pub") === "1"} onChange={(e) => update("pub", e.target.checked ? "1" : null)} />
             공공 건축물

@@ -187,6 +187,7 @@ class FeasibilityRequest(BaseModel):
     building_use: str = Field("공동주택", max_length=20)
     height_limit_m: float | None = Field(None, gt=0, le=600)
     floor_height_m: float | None = Field(None, gt=2, le=10)
+    target_floors: int | None = Field(None, ge=1, le=200)
     is_public: bool = False
     apply_zeb_incentive_grade: Literal["+", "1", "2", "3", "4", "5"] | None = None
     as_of: date | None = None
@@ -236,6 +237,7 @@ async def feasibility(req: FeasibilityRequest):
         building_use=req.building_use,
         height_limit_m=req.height_limit_m,
         floor_height_m=req.floor_height_m,
+        target_floors=req.target_floors,
         is_public=req.is_public,
         apply_zeb_incentive_grade=req.apply_zeb_incentive_grade,
         as_of=req.as_of,
