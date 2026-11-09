@@ -17,7 +17,7 @@ backend/zeb/
     feasibility.py   전체 흐름, 인사이트, calc_id
   rules/*.yaml       법령·조례·고시·가정값 (출처, checked_on, verified)
   adapters/          브이월드 / 샘플 필지
-  data/*.json        데모 샘플 필지·정비사업 (가상)
+  samples/*.json     데모 샘플 필지·정비사업 (가상). 'data' 폴더명은 .gitignore 에 걸리므로 쓰지 않는다
   check_vworld.py    키 발급 후 실제 응답 확인용
 frontend/src/app/demo/zeb/   검색(page) · 검토(plan) · 보고서(report), zb- 접두어 CSS
 backend/tests/test_zeb_demo.py, backend/tests/fixtures/zeb/
