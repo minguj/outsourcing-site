@@ -393,11 +393,12 @@
 
 /* 데모 모음 */
 .st-examples-section { background: var(--sheet); }
-/* 위 줄 카드 2개(AI 상담, 플랫폼 샘플), 아래 발주서 카드는 전체 폭(.st-example-wide) */
-.st-examples { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; border-top: 2px solid var(--ink); }
+/* 위 줄 카드 3개(AI 상담, 플랫폼 샘플, ZEB 기획), 아래 발주서 카드는 전체 폭(.st-example-wide) */
+.st-examples { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; border-top: 2px solid var(--ink); }
 .st-example { padding: 22px 24px 24px; border-bottom: 1px solid var(--rule); display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .st-example:first-child { padding-left: 0; }
-.st-example:nth-child(2):not(.st-example-wide) { border-left: 1px solid var(--rule); padding-right: 0; }
+.st-example:nth-child(-n+3):not(:first-child):not(.st-example-wide) { border-left: 1px solid var(--rule); }
+.st-example:nth-child(3):not(.st-example-wide) { padding-right: 0; }
 .st-example h3 { font-size: 18px; font-weight: 700; }
 .st-example p { color: #34413b; font-size: 14.5px; max-width: 36em; }
 .st-example .st-example-note { color: var(--muted); font-size: 13px; }
@@ -415,7 +416,7 @@
   .st-faq-grid { grid-template-columns: 1fr; gap: 12px; }
   .st-examples { grid-template-columns: minmax(0, 1fr); }
   .st-example { min-width: 0; }
-  .st-example, .st-example:first-child, .st-example:nth-child(2):not(.st-example-wide) { padding: 20px 0; border-left: 0; }
+  .st-example, .st-example:first-child, .st-example:nth-child(-n+3):not(:first-child):not(.st-example-wide) { padding: 20px 0; border-left: 0; }
 }
 @media (max-width: 720px) {
   .st-example-wide { flex-direction: column; align-items: flex-start; }
