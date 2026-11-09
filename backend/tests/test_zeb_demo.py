@@ -11,6 +11,7 @@ import asyncio
 import json
 import os
 import random
+import subprocess
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -219,6 +220,30 @@ class InvariantTests(unittest.TestCase):
             b = run_feasibility(site, opts, RB)
             self.assertEqual(a["calc_id"], b["calc_id"])
             self.assertEqual(a["scenarios"], b["scenarios"])
+
+
+class PackagingTests(unittest.TestCase):
+    """데모가 실행에 필요한 파일이 .gitignore 에 걸려 커밋·이미지에서 빠지지 않는지 확인한다.
+    (backend/zeb/data 가 저장소의 data/ 규칙에 걸려 배포 smoke 가 실패한 적이 있다)"""
+
+    def test_no_demo_file_is_git_ignored(self):
+        root = Path(__file__).resolve().parents[2]
+        files = [
+            p.relative_to(root).as_posix()
+            for base in (root / "backend" / "zeb", FIX)
+            for p in base.rglob("*")
+            if p.is_file() and "__pycache__" not in p.parts and not p.name.endswith(".recorded.json")
+        ]
+        try:
+            r = subprocess.run(
+                ["git", "check-ignore", "--no-index", "--stdin"], cwd=root, input="\n".join(files),
+                capture_output=True, text=True, timeout=20,
+            )
+        except (OSError, subprocess.SubprocessError):
+            self.skipTest("git 을 실행할 수 없음")
+        if r.returncode == 128:
+            self.skipTest("git 저장소가 아님")
+        self.assertEqual(r.stdout.strip(), "", f"gitignore 에 걸린 파일: {r.stdout}")
 
 
 class RuleIntegrityTests(unittest.TestCase):

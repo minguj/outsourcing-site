@@ -5,7 +5,8 @@ from pathlib import Path
 
 from .base import Parcel, ParcelSummary
 
-DATA = Path(__file__).resolve().parent.parent / "data"
+# 폴더 이름을 'data' 로 하면 저장소 .gitignore 의 data/ 규칙(운영 DB 폴더용)에 걸려 커밋에서 빠진다.
+DATA = Path(__file__).resolve().parent.parent / "samples"
 
 
 class SampleParcelProvider:
