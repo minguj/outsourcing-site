@@ -1,0 +1,103 @@
+name: Ordinance watch
+
+# 조례 개정 감지: 매일 법제처 API 로 조례 공포일을 확인하고, 바뀌었으면 조문에서 값을 뽑아
+# 용도지역 규칙(zoning.yaml) 수정안 PR 을 연다. 반영은 사람이 PR 을 확인하고 병합할 때만 된다.
+on:
+  schedule:
+    # 매일 06:23 (KST) = 전날 21:23 (UTC). 출근 전에 PR 이 열려 있도록 이른 아침에 돈다.
+    # 정각(:00)은 GitHub 예약 실행이 몰려 늦어지거나 건너뛰는 일이 있어 피했다.
+    # 변경이 없으면 목록 API 1회 호출로 끝난다. 미병합 PR 이 있으면 같은 브랜치(bot/ordinance-update)를 갱신하므로 PR 이 쌓이지 않는다.
+    - cron: "23 21 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ordinance-watch
+  cancel-in-progress: false
+
+jobs:
+  detect:
+    # 법제처 API 는 신청 때 등록한 서버 IP 에서만 응답한다 → 고정 IP 인 배포 서버 runner 에서 조회한다.
+    # 서버의 기본 python3 + PyYAML(cloud-init 의존성으로 설치돼 있음)만 쓴다. 표준 라이브러리로 HTTP 를 호출한다.
+    runs-on: [self-hosted, Linux, X64, outsourcing-deploy]
+    timeout-minutes: 10
+    outputs:
+      changed: ${{ steps.watch.outputs.changed }}
+      needs_review: ${{ steps.watch.outputs.needs_review }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check ordinances
+        id: watch
+        env:
+          LAW_OC: ${{ secrets.LAW_OC }}
+        run: |
+          mkdir -p out
+          python3 -c "import yaml" 2>/dev/null || python3 -m pip install --user -q pyyaml
+          python3 -m backend.zeb.ordinance.watch --rules backend/zeb/rules/zoning.yaml --report out/ordinance-report.md
+          cp backend/zeb/rules/zoning.yaml out/zoning.yaml
+      - name: Summary
+        if: always()
+        run: cat out/ordinance-report.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: steps.watch.outputs.changed == 'true'
+        with:
+          name: ordinance-proposal
+          path: out/
+          retention-days: 14
+
+  propose:
+    # 수정안으로 테스트를 돌려 결과를 PR 본문에 붙이고 PR 을 연다 (GitHub 호스트 runner).
+    needs: detect
+    if: needs.detect.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: ordinance-proposal
+          path: ${{ runner.temp }}/proposal
+      - name: Apply proposal
+        run: cp "$RUNNER_TEMP/proposal/zoning.yaml" backend/zeb/rules/zoning.yaml
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Run ZEB tests against the proposal
+        id: tests
+        continue-on-error: true
+        env:
+          DATA_DIR: ${{ runner.temp }}/data
+        run: |
+          pip install -q -r backend/requirements.txt
+          python -m unittest backend.tests.test_zeb_demo backend.tests.test_zeb_ordinance 2>&1 | tail -40 > "$RUNNER_TEMP/tests.txt"
+          test "${PIPESTATUS[0]}" -eq 0
+      - name: Build PR body
+        run: |
+          body="$RUNNER_TEMP/body.md"
+          cat "$RUNNER_TEMP/proposal/ordinance-report.md" > "$body"
+          {
+            echo
+            if [ "${{ steps.tests.outcome }}" = "success" ]; then
+              echo "### 테스트: 통과"
+            else
+              echo "### 테스트: 실패 — 값이 바뀌어 기준값(golden) 테스트를 함께 고쳐야 할 수 있습니다"
+              echo '```'
+              cat "$RUNNER_TEMP/tests.txt"
+              echo '```'
+            fi
+            echo
+            echo "_이 PR 은 조례 개정 감지 작업(ordinance-watch)이 만들었습니다. 봇이 연 PR 에는 기본 CI 가 돌지 않으니, 수정 커밋을 올리면 CI 가 실행됩니다._"
+          } >> "$body"
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          branch: bot/ordinance-update
+          delete-branch: true
+          add-paths: backend/zeb/rules/zoning.yaml
+          commit-message: 조례 개정 감지에 따른 용도지역 규칙 수정안
+          title: ${{ needs.detect.outputs.needs_review == 'true' && '[검토 필요] 조례 개정 감지 — 용도지역 규칙 수정안' || '조례 개정 감지 — 값 변화 없음, 확인한 판 기록' }}
+          body-path: ${{ runner.temp }}/body.md

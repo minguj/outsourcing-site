@@ -1,0 +1,152 @@
+# 용도지역별 건폐율·용적률 규칙
+#
+# 원칙
+#  - 법정 상한(national)과 지자체 조례(ordinances)를 분리해 관리한다.
+#  - 적용값 = min(조례값, 법정 상한). 조례가 등록되지 않은 지역은 법정 상한을 쓰되 경고를 남긴다.
+#  - 각 값에는 verified 플래그를 둔다. false 인 값은 화면/보고서에 "검토 필요"로 표시된다.
+#  - 값을 바꿀 때는 PR 에 근거 링크를 첨부하고 checked_on 을 갱신한다 (docs/adr/0002 참고).
+#  - 조례에 watch 가 있으면 개정 감지 작업(.github/workflows/ordinance-watch.yml)이 수정안 PR 을 자동으로 연다.
+#    자동으로 바뀐 값은 verified: false 로 들어가므로, 사람이 원문을 확인하고 true 로 고쳐야 '근거 확인'이 된다.
+
+schema_version: 1
+
+national:
+  id: kr-nat-zoning
+  title: 국토의 계획 및 이용에 관한 법률 시행령
+  ref: 제84조(용도지역안에서의 건폐율), 제85조(용도지역 안에서의 용적률)
+  url: https://www.eum.go.kr/web/in/dc/dcDictDet.jsp?termsNo=00363
+  checked_on: "2026-11-10"
+  # 확인 근거: 토지이음 용어사전(국토교통부, 시행령 제84·85조 인용), 법제처 조문정보(제85조), 법제처 해석례(제84조 원문)
+  # far 는 시행령 범위의 상한값(%). 16개 용도지역 모두 원문과 대조함.
+  zones:
+    제1종전용주거지역: { bcr: 50, far: 100, verified: true }
+    제2종전용주거지역: { bcr: 50, far: 150, verified: true }
+    제1종일반주거지역: { bcr: 60, far: 200, verified: true }
+    제2종일반주거지역: { bcr: 60, far: 250, verified: true }
+    제3종일반주거지역: { bcr: 50, far: 300, verified: true }
+    준주거지역:        { bcr: 70, far: 500, verified: true }
+    중심상업지역:      { bcr: 90, far: 1500, verified: true }
+    일반상업지역:      { bcr: 80, far: 1300, verified: true }
+    근린상업지역:      { bcr: 70, far: 900, verified: true }
+    유통상업지역:      { bcr: 80, far: 1100, verified: true }
+    전용공업지역:      { bcr: 70, far: 300, verified: true }
+    일반공업지역:      { bcr: 70, far: 350, verified: true }
+    준공업지역:        { bcr: 70, far: 400, verified: true }
+    보전녹지지역:      { bcr: 20, far: 80, verified: true }
+    생산녹지지역:      { bcr: 20, far: 100, verified: true }
+    자연녹지지역:      { bcr: 20, far: 100, verified: true }
+  aliases:
+    제2종일반주거지역(7층이하): 제2종일반주거지역
+
+ordinances:
+  - id: seoul-urban-planning-ordinance
+    jurisdiction: "11"            # 시도코드 (PNU 앞 2자리)
+    jurisdiction_name: 서울특별시
+    title: 서울특별시 도시계획 조례
+    # 2024년 전부개정으로 조문 번호가 바뀌었다 (구 제54조 건폐율 → 제44조, 구 제55조 용적률 → 제48~51조).
+    # 서울시 고시 제2026-295호도 '도시계획조례 제48조, 제49조제3항, 제50조…에 따른 용도지역 용적률'로 새 번호를 쓴다.
+    ref: 제44조(용도지역안에서의 건폐율), 제48조~제51조(용도지역별 용적률) — 2024년 전부개정 후 조문
+    url: https://www.elis.go.kr/allalr/selectAlrBdtOne?alrNo=11000131000007
+    effective_from: null          # 조항별 시행일 대신 확인일(checked_on) 기준
+    checked_on: "2026-11-10"
+    # 개정 감지 (backend/zeb/ordinance). 매일 법제처 API 로 공포일을 확인해, 바뀌면 조문을 받아 수정안 PR 을 연다.
+    #  promulgated_on: 값을 확인한 판의 공포일. null 이면 첫 실행 때 전체 조문과 대조한다.
+    watch:
+      law_name: 서울특별시 도시계획 조례
+      org: "6110000"              # 법제처 지자체코드 (서울특별시)
+      promulgated_on: null
+    # 확인 근거: 자치법규정보시스템(elis.go.kr) 조례 본문, 서울시의회 전부개정조례안(대안, 2024.6.26 제안),
+    #           서울시 내 손안에 서울(용도지역 세분 기준), 서울시 주택분야 누리집(용적률 비교표)
+    zones:
+      제1종전용주거지역: { bcr: 50, far: 100, verified: true }
+      제2종전용주거지역: { bcr: 40, far: 120, verified: true }
+      제1종일반주거지역: { bcr: 60, far: 150, max_floors: 4, verified: true, note: "4층 이하 (국토계획법 시행령 별표 4, 서울시 일반주거지역 세분 기준)" }
+      제2종일반주거지역: { bcr: 60, far: 200, verified: true }
+      제2종일반주거지역(7층이하):
+        bcr: 60
+        far: 200
+        max_floors: 7
+        verified: true
+        note: 정비사업·지구단위계획으로 공동주택을 지을 때는 최고 25층까지 허용하는 서울시 규제 완화가 있음 (사업 유형별 확인 필요)
+      제3종일반주거지역: { bcr: 50, far: 250, verified: true }
+      준주거지역:        { bcr: 60, far: 400, verified: true }
+      중심상업지역:      { bcr: 60, far: 1000, verified: true }
+      일반상업지역:      { bcr: 60, far: 800, verified: true }
+      근린상업지역:      { bcr: 60, far: 600, verified: true }
+      유통상업지역:      { bcr: 60, far: 600, verified: true }
+      전용공업지역:      { bcr: 60, far: 200, verified: true }
+      일반공업지역:      { bcr: 60, far: 200, verified: true }
+      준공업지역:        { bcr: 60, far: 400, verified: true }
+      보전녹지지역:      { bcr: 20, far: 50, verified: true }
+      생산녹지지역:      { bcr: 20, far: 50, verified: true }
+      자연녹지지역:      { bcr: 20, far: 50, verified: true }
+    # 용도(건축물 용도)에 따라 달라지는 값
+    use_overrides:
+      준공업지역:
+        공동주택:
+          far: 250
+          verified: true
+          note: 공동주택·노인복지주택·오피스텔 등 250%. 지구단위계획으로 공공시설 등을 제공하면 시장이 정하는 바에 따라 400%까지 (기본값에는 미반영)
+    # 같은 지자체 안에서도 구역에 따라 달라지는 값. 경계가 구 단위와 일치하지 않으므로 자동 적용하지 않고 경고한다.
+    subareas:
+      - name: 서울도심
+        jurisdictions: ["11110", "11140"]   # 종로구, 중구 (한양도성 일대가 걸치는 구)
+        verified: true
+        note: 서울도심(한양도성 일대)은 상업지역 용적률이 낮게 정해져 있음
+        far:
+          중심상업지역: 800
+          일반상업지역: 600
+          근린상업지역: 500
+          유통상업지역: 500
+
+# 토지이용계획(지역·지구)에 따른 경고.
+#  - 필지에 '포함'되거나 일부 '저촉'되는 항목만 본다. '접함'(인접 필지)은 이 필지의 규제가 아니다.
+#  - severity 기본값 critical: 자동 계산값을 확정값처럼 쓰면 안 되는 경우.
+override_plans:
+  - keyword: 지구단위계획구역
+    message: 지구단위계획구역에 포함됩니다. 기준·허용·상한 용적률은 해당 지구단위계획 결정고시가 우선하므로 고시문을 확인해야 합니다.
+  - keyword: 정비구역
+    message: 정비구역에 포함됩니다. 정비계획 결정 용적률이 우선 적용됩니다.
+  - keyword: 특별계획구역
+    message: 특별계획구역에 포함됩니다. 별도 세부개발계획을 확인해야 합니다.
+  # height_related: 높이를 제한하지만 높이값은 토지이용계획 데이터에 없다 → 고시문의 값을 '높이 제한(m)'에 입력해야 한다.
+  - keyword: 가로구역별 최고높이
+    severity: warning
+    height_related: true
+    message: 가로구역별 최고높이 제한지역입니다. 고시된 최고높이를 '높이 제한(m)'에 입력해야 규모가 맞게 나옵니다.
+  - keyword: 고도지구
+    severity: warning
+    height_related: true
+    message: 고도지구(최고고도지구)입니다. 도시관리계획으로 정한 최고 높이·층수를 '높이 제한(m)'에 입력해야 규모가 맞게 나옵니다.
+  - keyword: 비행안전구역
+    severity: warning
+    height_related: true
+    message: 비행안전구역입니다. 군 비행장 주변 구역별 높이 제한이 있으므로 해당 높이를 '높이 제한(m)'에 입력하세요.
+  # 공항 장애물제한표면: 토지이용계획에는 "수평표면구역" 등으로 나온다 (「공항시설법 시행규칙」 [별표 2])
+  - keyword: 표면구역
+    severity: warning
+    height_related: true
+    message: 공항 장애물제한표면(수평·원추·진입·전이표면) 구역입니다. 공항 표점 높이를 기준으로 높이가 제한되므로(수평표면은 표점 +45m) 해당 높이를 '높이 제한(m)'에 입력하세요.
+  - keyword: 중요시설물보호지구
+    severity: warning
+    height_related: true
+    message: 중요시설물보호지구입니다. 공항 등 시설 보호를 위해 도시관리계획·조례로 높이가 제한될 수 있으므로 확인 후 '높이 제한(m)'에 입력하세요.
+  - keyword: 경관지구
+    severity: warning
+    height_related: true
+    message: 경관지구입니다. 지자체 조례로 건축물 높이·층수가 제한될 수 있으므로 확인 후 '높이 제한(m)'에 입력하세요.
+  - keyword: 대공방어협조구역
+    severity: info
+    height_related: true
+    message: 대공방어협조구역입니다. 일정 높이 이상 건축 시 관할 부대와 협의가 필요합니다.
+
+# 지목(토지대장상 토지 용도)에 따른 판단
+land_categories:
+  not_buildable:
+    values: [도로, 철도용지, 제방, 하천, 구거, 유지, 수도용지]
+    severity: critical
+    message: "지목이 '{category}'입니다. 일반적인 건축 대상지가 아니므로 이 계산은 참고용입니다 (도시계획시설·지목 변경 여부 확인 필요)."
+  conversion_required:
+    values: [전, 답, 과수원, 목장용지, 임야]
+    severity: warning
+    message: "지목이 '{category}'입니다. 건축하려면 농지·산지 전용 등 개발행위허가가 필요합니다."
