@@ -166,6 +166,17 @@ class CollectOneTests(unittest.TestCase):
         r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
         self.assertEqual(r.zones["중심상업지역"]["far"], 1200)
 
+    def test_korean_thousand_with_digits(self):
+        """법령식 표기 '1천300퍼센트'(= 1300). 쉼표 보강 뒤에도 상업지역이 빠진 지자체의 다음 원인 후보."""
+        api = FakeLaw()
+        bcr, far = standard()
+        b = body("109", "수원시 도시계획 조례", bcr, far)
+        art = b["LawService"]["조문"]["조"][2]
+        art["조내용"] = art["조내용"].replace("중심상업지역: 1200퍼센트", "중심상업지역: 1천200퍼센트").replace("일반상업지역: 1040퍼센트", "일반상업지역: 1천40퍼센트")
+        api.add("수원시 도시계획 조례", "경기도 수원시", "109", "20250301", b)
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertEqual((r.zones["중심상업지역"]["far"], r.zones["일반상업지역"]["far"]), (1200, 1040))
+
     def test_not_found_zones_are_reported(self):
         api = FakeLaw()
         bcr, far = standard()
@@ -173,6 +184,18 @@ class CollectOneTests(unittest.TestCase):
         api.add("수원시 도시계획 조례", "경기도 수원시", "108", "20250301", body("108", "수원시 도시계획 조례", bcr, far))
         r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
         self.assertIn("용적률 못 찾음: 유통상업지역", r.issues)
+        self.assertIn("조문에 이름 없음", r.diagnostics[0])
+
+    def test_diagnostics_show_unreadable_wording(self):
+        api = FakeLaw()
+        bcr, far = standard()
+        b = body("110", "수원시 도시계획 조례", bcr, far)
+        art = b["LawService"]["조문"]["조"][2]
+        art["조내용"] = art["조내용"].replace("준주거지역: 400퍼센트", "준주거지역은 400퍼센트 이상 500퍼센트 이하")
+        api.add("수원시 도시계획 조례", "경기도 수원시", "110", "20250301", b)
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertTrue(any("준주거지역은400퍼센트" in d for d in r.diagnostics))
+        self.assertIn("못 찾은 용도지역 진단", collect.report([r], []))
 
     def test_not_found_and_no_article(self):
         api = FakeLaw()
