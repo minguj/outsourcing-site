@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { api, Meta, ParcelSummary, Redevelopment, vworldConf } from "./_zeb/api";
 import { searchParcels as vworldSearch, type VWorldConf } from "./_zeb/vworld";
 import { area } from "./_zeb/format";
+import { Spinner } from "./_zeb/loading";
 
 type Tab = "parcel" | "redev" | "manual";
 
@@ -94,6 +95,8 @@ function ParcelSearch({ source, conf }: { source: string; conf: VWorldConf | nul
   const [items, setItems] = useState<ParcelSummary[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // 결과를 누른 뒤 계산 화면이 뜰 때까지 표시 (여러 번 누르는 것 방지)
+  const [opening, setOpening] = useState<string | null>(null);
 
   const run = async (query: string) => {
     setLoading(true);
@@ -133,17 +136,24 @@ function ParcelSearch({ source, conf }: { source: string; conf: VWorldConf | nul
         style={{ display: "flex", gap: 8 }}
       >
         <input placeholder="예: 서울특별시 마포구 아현동 123-4" value={q} onChange={(e) => setQ(e.target.value)} />
-        <button disabled={loading}>{loading ? "검색 중" : "검색"}</button>
+        <button disabled={loading}>{loading ? <Spinner label="검색 중" /> : "검색"}</button>
       </form>
       {err && <div className="zb-alert critical" style={{ marginTop: 12 }}>{err}</div>}
       <div style={{ marginTop: 14 }}>
         {items?.length === 0 && <div className="zb-empty">검색 결과가 없습니다</div>}
-        {items?.map((p) => (
-          <Link key={p.pnu} className="zb-result-row" href={`/demo/zeb/plan?pnu=${p.pnu}&source=${source}`}>
-            <span>{p.address}</span>
-            <span className="zb-mono zb-muted">{p.pnu}</span>
-          </Link>
-        ))}
+        <div className={opening ? "zb-opening" : undefined}>
+          {items?.map((p) => (
+            <Link
+              key={p.pnu}
+              className={`zb-result-row${opening === p.pnu ? " is-opening" : ""}`}
+              href={`/demo/zeb/plan?pnu=${p.pnu}&source=${source}`}
+              onClick={() => setOpening(p.pnu)}
+            >
+              <span>{p.address}</span>
+              {opening === p.pnu ? <Spinner label="불러오는 중…" /> : <span className="zb-mono zb-muted">{p.pnu}</span>}
+            </Link>
+          ))}
+        </div>
       </div>
     </>
   );
@@ -152,6 +162,7 @@ function ParcelSearch({ source, conf }: { source: string; conf: VWorldConf | nul
 function RedevSearch() {
   const [items, setItems] = useState<Redevelopment[]>([]);
   const [q, setQ] = useState("");
+  const [opening, setOpening] = useState<string | null>(null);
   useEffect(() => {
     api.searchRedevelopment(q).then((r) => setItems(r.items));
   }, [q]);
@@ -161,8 +172,14 @@ function RedevSearch() {
       <p className="zb-small zb-muted" style={{ margin: "8px 0 12px" }}>
         데모 목록입니다. 실서비스에서는 지자체 정비사업 공개 데이터와 연동하는 자리입니다.
       </p>
+      <div className={opening ? "zb-opening" : undefined}>
       {items.map((p) => (
-        <Link key={p.id} className="zb-result-row" href={`/demo/zeb/plan?pnu=${p.representative_pnu}&source=sample`}>
+        <Link
+          key={p.id}
+          className={`zb-result-row${opening === p.id ? " is-opening" : ""}`}
+          href={`/demo/zeb/plan?pnu=${p.representative_pnu}&source=sample`}
+          onClick={() => setOpening(p.id)}
+        >
           <span>
             <strong>{p.name}</strong>
             <br />
@@ -170,9 +187,10 @@ function RedevSearch() {
               {p.district} · {p.stage} · 대표필지 {area(p.area_m2)}
             </span>
           </span>
-          <span className="zb-pill">{p.type}</span>
+          {opening === p.id ? <Spinner label="불러오는 중…" /> : <span className="zb-pill">{p.type}</span>}
         </Link>
       ))}
+      </div>
     </>
   );
 }
@@ -180,11 +198,13 @@ function RedevSearch() {
 function ManualForm({ meta }: { meta: Meta | null }) {
   const router = useRouter();
   const [f, setF] = useState({ area: "1000", zone: "제2종일반주거지역", juris: "11", addr: "" });
+  const [opening, setOpening] = useState(false);
   return (
     <form
       onSubmit={(e) => {
         e.preventDefault();
         const p = new URLSearchParams({ area: f.area, zone: f.zone, juris: f.juris, addr: f.addr });
+        setOpening(true);
         router.push(`/demo/zeb/plan?${p}`);
       }}
     >
@@ -210,7 +230,7 @@ function ManualForm({ meta }: { meta: Meta | null }) {
           <input value={f.addr} onChange={(e) => setF({ ...f, addr: e.target.value })} placeholder="예: OO동 검토 부지" />
         </label>
       </div>
-      <button>검토 시작</button>
+      <button disabled={opening}>{opening ? <Spinner label="계산 화면 여는 중…" /> : "검토 시작"}</button>
     </form>
   );
 }
