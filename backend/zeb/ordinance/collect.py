@@ -19,6 +19,7 @@ import argparse
 import datetime as dt
 import json
 import os
+import re
 import sys
 import time
 from dataclasses import dataclass, field
@@ -140,7 +141,10 @@ def collect_one(a: dict, client: LawClient, national: dict) -> Collected:
         for zone in national:
             values = ext.values.get(kind, {}).get(zone, [])
             if not values:
-                if ext.texts.get(kind) and zone not in ext.texts[kind]:
+                text = ext.texts.get(kind, "")
+                other = ext.values.get("far" if kind == "bcr" else "bcr", {}).get(zone)
+                if text and (zone not in text or (not other and _only_in_sentences(text, zone))):
+                    # 이름이 없거나, 단서 문장에만 나온다 (울릉: '근린상업지역 중 방화지구의 건축물…은 90퍼센트')
                     out.absent[kind].append(zone)
                 else:
                     not_found.append(zone)
@@ -208,13 +212,23 @@ def _strip_item_number(value: int, cap: float) -> int | None:
     return None
 
 
+# 용도지역 이름 뒤에 이런 말이 오면 목록 항목이 아니라 단서 문장이다 ('준주거지역에 위치한 시장의 용적률은 …')
+# ('제1종ㆍ제2종…: 50퍼센트' 처럼 묶어 쓴 목록을 '지정 안 됨'으로 숨기지 않도록 구분 기호·조사는 넣지 않는다)
+_SENTENCE_AFTER = re.compile(r"중|에서|에위치|에있는|에건축|안에서|안의")
+
+
+def _only_in_sentences(text: str, zone: str) -> bool:
+    return all(_SENTENCE_AFTER.match(text, m.end()) for m in re.finditer(re.escape(zone), text))
+
+
 def _diagnose(kind: str, zone: str, text: str) -> str:
-    """못 찾은 용도지역: 조문에 이름이 없으면 그 지역이 지정되지 않은 경우가 많고, 있으면 뒤따르는 문구를 보여 준다."""
-    i = text.find(zone)
-    if i < 0:
+    """못 찾은 용도지역: 조문에 이름이 없으면 그 지역이 지정되지 않은 경우가 많고, 있으면 나오는 곳을 3군데까지 보여 준다."""
+    hits = [m.start() for m in re.finditer(re.escape(zone), text)]
+    if not hits:
         return f"{kind_label(kind)} {zone}: 조문에 이름 없음 (이 지자체에 지정되지 않은 용도지역일 수 있음)"
-    snippet = text[i : i + len(zone) + 40].replace("|", "/")
-    return f"{kind_label(kind)} {zone}: `{snippet}`"
+    snippets = [f"`{text[i : i + len(zone) + 40].replace('|', '/')}`" for i in hits[:3]]
+    more = f" 외 {len(hits) - 3}곳" if len(hits) > 3 else ""
+    return f"{kind_label(kind)} {zone}: " + " / ".join(snippets) + more
 
 
 def kind_label(kind: str) -> str:
