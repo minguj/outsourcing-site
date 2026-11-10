@@ -63,7 +63,7 @@ equipment:
     unit: kW
     step: 1
     unit_cost_krw: 25000000
-    operating_hours: { value: 7415, unit: h/yr, note: 규정 별표 2 PEMFC 단위 에너지 생산량 7,415 kWh/kW·yr 를 전부하 발전시간으로 해석 }
+    operating_hours: { value: 7415, unit: h/yr, note: "규정 별표 2 PEMFC 단위 에너지 생산량 7,415 kWh/kW·yr 를 전부하 발전시간으로 해석" }
     electric_efficiency: { value: 0.40, unit: "-", note: 가정 }
     heat_to_power_ratio: { value: 1.0, unit: "-", note: 가정 }
     max_kw_per_gfa: { value: 0.01, unit: kW/㎡, note: 건물 열수요로 소화 가능한 용량 상한 (가정) }

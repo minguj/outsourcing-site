@@ -19,8 +19,10 @@ backend/zeb/
   adapters/          브이월드 / 샘플 필지
   samples/*.json     데모 샘플 필지·정비사업 (가상). 'data' 폴더명은 .gitignore 에 걸리므로 쓰지 않는다
   check_vworld.py    키 발급 후 실제 응답 확인용
+  ordinance/         조례 개정 감지 (법제처 API → 조문 수집 → 값 추출 → zoning.yaml 수정안). 표준 라이브러리 + PyYAML 만 사용
 frontend/src/app/demo/zeb/   검색(page) · 검토(plan) · 보고서(report), zb- 접두어 CSS
-backend/tests/test_zeb_demo.py, backend/tests/fixtures/zeb/
+backend/tests/test_zeb_demo.py, backend/tests/test_zeb_ordinance.py, backend/tests/fixtures/zeb/
+.github/workflows/ordinance-watch.yml   매일 조례 개정 감지 → 수정안 PR
 ```
 
 ## 설계 원칙
@@ -35,6 +37,25 @@ backend/tests/test_zeb_demo.py, backend/tests/fixtures/zeb/
 - 근거 URL·조항을 PR 에 적고 `checked_on` 을 갱신한다. 원문으로 확인한 값만 `verified: true`.
 - 영향받는 골든 테스트는 손계산으로 기대값을 다시 정한다 (엔진 출력을 복사하지 않는다).
 - `RuleIntegrityTests` 가 "조례값 ≤ 법정 상한", "출처 필드 존재" 를 강제한다.
+
+## 조례 개정 감지
+조례 값은 결과를 낼 때 검색하지 않는다. 원문으로 확인한 값을 규칙 파일에 두고(재현성), 조례가 바뀌면 자동으로 알아차려 수정안을 만든다.
+
+```
+매일 06:23    ordinance-watch.yml
+ detect  (배포 서버 runner, 등록 IP)  법제처 자치법규 목록 API → 공포일이 watch.promulgated_on 과 다르면
+                                      본문 API → 조 제목('건폐율'·'용적률')으로 조문 선택 → 용도지역별 % 추출 → zoning.yaml 수정
+ propose (GitHub runner)              수정안으로 ZEB 테스트 실행 → 보고서 + 테스트 결과로 PR(bot/ordinance-update) 생성
+ 사람                                 원문 확인 → verified: true 로 고치고 병합 → 배포
+```
+
+- 판단: 조문 값 = 지금 값이면 그대로. 값이 하나뿐이고 다르면 새 값 + `verified: false`. 못 찾았거나 여러 개면 값 유지 + `verified: false`.
+  따라서 PR 을 그대로 병합해도 사람이 확인하기 전까지 화면에 '미검증'으로 보인다.
+- 조 번호가 아니라 제목으로 찾으므로 전부개정으로 번호가 바뀌어도 동작한다. 이름 바로 뒤 숫자("제3종일반주거지역 : 250퍼센트")만 값으로 인정하고 완화·단서 문장의 숫자는 잡지 않는다.
+- YAML 은 줄 단위로만 고쳐 근거 주석을 보존한다.
+- 필요한 설정: 법제처 Open API(open.law.go.kr) 신청 시 배포 서버 공인 IP 등록 → 받은 인증값을 GitHub Secrets `LAW_OC` 로 등록 →
+  저장소 Settings › Actions › General 에서 "Allow GitHub Actions to create and approve pull requests" 허용.
+- 수동 실행: Actions › Ordinance watch › Run workflow. 첫 실행은 `promulgated_on: null` 이라 전체 조문과 대조하는 기준선 PR 이 열린다.
 
 ## 브이월드
 - 키는 서버 `/etc/outsourcing-deploy/backend.env` 의 `VWORLD_API_KEY`, `VWORLD_DOMAIN`(키 발급 시 서비스 URL 과 동일).

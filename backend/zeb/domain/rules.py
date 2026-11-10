@@ -130,7 +130,7 @@ class RuleBook:
                     id=ord_rule["id"],
                     title=ord_rule["title"],
                     kind="ordinance",
-                    ref=ord_rule["ref"],
+                    ref=_ordinance_ref(ord_rule),
                     url=ord_rule.get("url"),
                     verified=bool(oz.get("verified", False)),
                     note=oz.get("note"),
@@ -288,3 +288,14 @@ class RuleBook:
 @lru_cache(maxsize=8)
 def rulebook(as_of: date | None = None) -> RuleBook:
     return RuleBook(as_of)
+
+
+def _ordinance_ref(o: dict) -> str:
+    """조문 + 어느 판을 언제 확인했는지. 개정 감지로 바뀐 판이면 공포일이 함께 보인다."""
+    parts = []
+    promulgated = (o.get("watch") or {}).get("promulgated_on")
+    if promulgated:
+        parts.append(f"{promulgated} 공포판")
+    if o.get("checked_on"):
+        parts.append(f"{o['checked_on']} 확인")
+    return f"{o['ref']} ({', '.join(parts)})" if parts else o["ref"]
