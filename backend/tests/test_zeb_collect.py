@@ -132,18 +132,47 @@ class CollectOneTests(unittest.TestCase):
         api.add("고성군 군계획 조례", "강원도 고성군", "203", "20200101", body("203", "고성군 군계획 조례", bcr, far))
         self.assertIsNone(collect.collect_one(GOSEONG_GW, LawClient("x", api), NATIONAL).error)
 
-    def test_values_above_cap_or_ambiguous_are_left_out(self):
+    def test_value_above_cap_is_left_out(self):
         api = FakeLaw()
         bcr, far = standard()
-        extra = "17. 준주거지역: 450퍼센트"  # 같은 조에 준주거 값이 하나 더
         api.add("수원시 도시계획 조례", "경기도 수원시", "103", "20250301",
-                body("103", "수원시 도시계획 조례", {**bcr, "자연녹지지역": 30}, far, extra))
+                body("103", "수원시 도시계획 조례", {**bcr, "자연녹지지역": 30}, far))
         r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
         self.assertNotIn("bcr", r.zones["자연녹지지역"])  # 30% > 법정 상한 20%
-        self.assertNotIn("far", r.zones["준주거지역"])
-        self.assertEqual(r.counts, (15, 15))
+        self.assertEqual(r.counts, (15, 16))
         self.assertTrue(any("법정 상한" in i for i in r.issues))
-        self.assertTrue(any("여러 개" in i for i in r.issues))
+
+    def test_exception_clause_values_do_not_replace_base_value(self):
+        """실제 경기 수집에서 나온 형식: 제1항 기본값 뒤 ②항에 주상복합 주거비율별 값(부천), '다만' 뒤 완화값(이천)."""
+        api = FakeLaw()
+        bcr, far = standard()
+        extra = ("② 상업지역에서 주상복합건축물의 용적률은 다음과 같다. 1. 일반상업지역: 600퍼센트 2. 일반상업지역: 650퍼센트"
+                 " 다만, 취락지구 안의 제2종일반주거지역: 70퍼센트")
+        api.add("수원시 도시계획 조례", "경기도 수원시", "106", "20250301", body("106", "수원시 도시계획 조례", bcr, far, extra))
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertEqual(r.zones["일반상업지역"]["far"], 1040)
+        self.assertIn("600·650", r.zones["일반상업지역"]["note"])
+        self.assertEqual(r.counts, (16, 16))
+        self.assertTrue(any("다른 값" in i for i in r.issues))
+
+    def test_thousands_separator(self):
+        """실제 경기 수집에서 상업지역 용적률이 대거 빠진 원인: '1,300퍼센트' 표기."""
+        api = FakeLaw()
+        bcr, far = standard()
+        b = body("107", "수원시 도시계획 조례", bcr, far)
+        art = b["LawService"]["조문"]["조"][2]
+        art["조내용"] = art["조내용"].replace("중심상업지역: 1200퍼센트", "중심상업지역: 1,200퍼센트")
+        api.add("수원시 도시계획 조례", "경기도 수원시", "107", "20250301", b)
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertEqual(r.zones["중심상업지역"]["far"], 1200)
+
+    def test_not_found_zones_are_reported(self):
+        api = FakeLaw()
+        bcr, far = standard()
+        far.pop("유통상업지역")
+        api.add("수원시 도시계획 조례", "경기도 수원시", "108", "20250301", body("108", "수원시 도시계획 조례", bcr, far))
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertIn("용적률 못 찾음: 유통상업지역", r.issues)
 
     def test_not_found_and_no_article(self):
         api = FakeLaw()
