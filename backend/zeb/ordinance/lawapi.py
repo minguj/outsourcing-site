@@ -109,14 +109,27 @@ class LawClient:
             params["org"] = org
         data = self._get("lawSearch.do", params)
         want = name.replace(" ", "")
-        hits = []
+        hits, other_agency, similar = [], [], []
         for d in _walk(data):
             row = {_norm_key(k): v for k, v in d.items()}
-            same_name = str(row.get("자치법규명", "")).replace(" ", "") == want and row.get("자치법규ID")
-            if same_name and (agency_ok is None or agency_ok(str(row.get("지자체기관명", "")))):
-                hits.append(row)
+            if not row.get("자치법규ID"):
+                continue
+            title = str(row.get("자치법규명", ""))
+            if title.replace(" ", "") == want:
+                if agency_ok is None or agency_ok(str(row.get("지자체기관명", ""))):
+                    hits.append(row)
+                else:
+                    other_agency.append(str(row.get("지자체기관명", "")))
+            else:
+                similar.append(f"{title}({row.get('지자체기관명', '')})")
         if not hits:
-            raise LawApiError(f"자치법규를 찾지 못했습니다: {name}")
+            # 원인 진단용: 같은 이름인데 기관명이 달랐는지(도 이름 변경 등), 비슷한 이름이 있었는지
+            hint = ""
+            if other_agency:
+                hint = f" — 같은 이름이 다른 기관명으로 있음: {', '.join(sorted(set(other_agency))[:3])}"
+            elif similar:
+                hint = f" — 검색 결과: {', '.join(similar[:3])}"
+            raise LawApiError(f"자치법규를 찾지 못했습니다: {name}{hint}")
         row = max(hits, key=lambda r: str(r.get("공포일자", "")))
         return OrdinanceVersion(
             name=name,

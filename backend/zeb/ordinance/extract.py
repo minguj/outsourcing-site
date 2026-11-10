@@ -32,8 +32,10 @@ ZONE = (
 # 공백을 모두 지운 문장에서 찾는다 ("제3종 일반주거지역 : 250 퍼센트" 같은 띄어쓰기 차이 흡수)
 # 이름과 숫자 사이에 '일반건축은', '일반건축물:' 이 끼는 형식도 받는다 (수원: "제2종일반주거지역: 일반건축은 250퍼센트 이하(다만, 공동주택…)")
 _LABEL = r"(?:일반건축물?(?:은|는|[:：])?)?"
-_VALUE = re.compile(rf"({ZONE})[:：]?{_LABEL}(\d{{1,4}})(?:퍼센트|%)")
-_SUBAREA = re.compile(rf"({ZONE})[:：]?\d{{1,4}}(?:퍼센트|%)\(단,([^:：()]+)[:：](\d{{1,4}})(?:퍼센트|%)\)")
+# 단위: 퍼센트·%. 실제 조문의 오타 '퍼센터'(아산), '센트'(옥천)도 받는다
+_UNIT = r"(?:퍼센트|퍼센터|센트|%)"
+_VALUE = re.compile(rf"({ZONE})[:：]?{_LABEL}(\d{{1,4}}){_UNIT}")
+_SUBAREA = re.compile(rf"({ZONE})[:：]?\d{{1,4}}{_UNIT}\(단,([^:：()]+)[:：](\d{{1,4}}){_UNIT}\)")
 
 KINDS = {"bcr": "건폐율", "far": "용적률"}
 
@@ -62,7 +64,7 @@ def extract(articles: list[Article]) -> Extracted:
         chosen = [a for a in candidates if "용도지역" in a.title]
         for a in chosen:
             out.articles[kind].append(f"제{a.number}조({a.title})")
-            flat = _normalize_numbers(re.sub(r"\s+", "", a.text))
+            flat = _normalize_numbers(re.sub(r"\s+", "", _normalize_spaced(a.text)))
             for zone, pct in _VALUE.findall(flat):
                 v = int(pct)
                 if v not in found[zone]:
@@ -82,11 +84,16 @@ def extract(articles: list[Article]) -> Extracted:
     return out
 
 
-def _normalize_numbers(s: str) -> str:
-    """'1,300퍼센트' → '1300퍼센트', '1천퍼센트'·'1천2백퍼센트' → '1000퍼센트'·'1200퍼센트'."""
+def _normalize_spaced(s: str) -> str:
+    """공백을 지우기 전에 처리해야 하는 표기. 공백을 먼저 지우면 다음 호 번호가 숫자에 붙는다
+    (전주: '100분의 40 2. 제2종…' → '100분의402' 로 읽혀 402% 가 됐다)."""
     s = re.sub(r"(\d),(\d{3})(?!\d)", r"\1\2", s)
-    # 100분의 60 = 60퍼센트 (공백은 이미 지웠으므로 "100분 의 280" 도 "100분의280")
-    s = re.sub(r"100분의(\d{1,4})", r"\1퍼센트", s)
+    # 100분의 60 = 60퍼센트 ("100분 의 280" 처럼 띄어 써도)
+    return re.sub(r"100\s*분\s*의\s*(\d{1,4})(?!\d)", r"\1퍼센트", s)
+
+
+def _normalize_numbers(s: str) -> str:
+    """'1천퍼센트'·'1천300퍼센트'·'1천2백퍼센트' → '1000퍼센트'·'1300퍼센트'·'1200퍼센트'."""
     # 법령 표기: 1천500 = 1500, 1천50 = 1050 (천 뒤 숫자가 바로 붙는 형식)
     s = re.sub(r"(\d+)천(\d{1,3})(?=퍼센트|%)", lambda m: str(int(m[1]) * 1000 + int(m[2])), s)
     s = re.sub(r"(\d+)천(\d+)백", lambda m: str(int(m[1]) * 1000 + int(m[2]) * 100), s)
