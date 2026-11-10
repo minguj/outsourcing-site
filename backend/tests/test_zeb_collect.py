@@ -295,6 +295,38 @@ class CollectOneTests(unittest.TestCase):
         r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
         self.assertTrue(any("자연녹지지역" in d and "30퍼센트" in d for d in r.diagnostics))
 
+    def test_item_number_glued_before_unit_jeonju(self):
+        """전주 실제 결과 형식: '제1종전용주거지역：402퍼센트.제2종전용주거지역：403퍼센트 … 근린상업지역：6010퍼센트'."""
+        api = FakeLaw()
+        bcr, far = standard()
+        real = {z: int(v["bcr"]) for z, v in NATIONAL.items()}  # 실제 조례값처럼 10 단위
+        text = "제44조(용도지역 안에서의 건폐율) 건폐율은 다음과 같다." + "".join(
+            f"{z}：{v}{i + 1}퍼센트." for i, (z, v) in enumerate(real.items(), 1))
+        b = body("124", "수원시 도시계획 조례", bcr, far)
+        b["LawService"]["조문"]["조"][1]["조내용"] = text
+        api.add("수원시 도시계획 조례", "경기도 수원시", "124", "20250301", b)
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertEqual((r.zones["제1종전용주거지역"]["bcr"], r.zones["근린상업지역"]["bcr"]), (50, 70))
+        self.assertTrue(r.complete, r.issues)
+        self.assertTrue(any("호 번호로 보고 뗌" in i for i in r.issues))
+
+    def test_strip_item_number_only_when_over_cap(self):
+        self.assertEqual(collect._strip_item_number(402, 50), 40)
+        self.assertEqual(collect._strip_item_number(6010, 70), 60)
+        self.assertIsNone(collect._strip_item_number(45, 50))  # 상한 이하는 그대로
+        self.assertIsNone(collect._strip_item_number(999, 50))  # 99·9 는 상한 초과 → 못 고침
+
+    def test_kind_with_no_values_is_diagnosed(self):
+        """여수 건폐율 0/16: 조문은 있는데 값을 하나도 못 읽으면 조문 앞부분을 보여 준다."""
+        api = FakeLaw()
+        bcr, far = standard()
+        b = body("125", "수원시 도시계획 조례", bcr, far)
+        b["LawService"]["조문"]["조"][1]["조내용"] = "제44조(용도지역 안에서의 건폐율) 제1종전용주거지역 등 용도지역별 건폐율은 아래 표와 같이 한다."
+        api.add("수원시 도시계획 조례", "경기도 수원시", "125", "20250301", b)
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertIn("건폐율 조문에서 값을 하나도 못 읽음", r.issues)
+        self.assertTrue(any(d.startswith("건폐율 조문 앞부분") for d in r.diagnostics))
+
     def test_failure_lists_related_articles(self):
         api = FakeLaw()
         api.add("수원시 도시계획 조례", "경기도 수원시", "112", "20250301", {"LawService": {"조문": {"조": [

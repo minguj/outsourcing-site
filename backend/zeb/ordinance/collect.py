@@ -136,6 +136,11 @@ def collect_one(a: dict, client: LawClient, national: dict) -> Collected:
             head = ext.primary.get(kind, {}).get(zone) or values
             value, others = head[0], [v for v in values if v != head[0]]
             cap = national[zone][kind]
+            fixed = _strip_item_number(value, cap)
+            if fixed is not None:
+                out.issues.append(f"{zone} {kind_label(kind)} {value}% → {fixed}% (뒤에 붙은 호 번호로 보고 뗌)")
+                others = [v for v in others if v != fixed]
+                value = fixed
             if value > cap:
                 out.issues.append(f"{zone} {kind_label(kind)} {value}%가 법정 상한 {cap}%를 넘음 — 비워 둠")
                 out.diagnostics.append(_diagnose(kind, zone, ext.texts.get(kind, "")))
@@ -146,11 +151,18 @@ def collect_one(a: dict, client: LawClient, national: dict) -> Collected:
                 note = f"{kind_label(kind)}: 조문에 다른 값도 있음({'·'.join(map(str, others))}%) — 제1항 첫 값 사용"
                 z["note"] = f"{z['note']} / {note}" if "note" in z else note
                 out.issues.append(f"{zone} {kind_label(kind)} {value}% 사용 (다른 값 {'·'.join(map(str, others))}%)")
+        if not any(kind in z for z in out.zones.values()) and ext.texts.get(kind):
+            # 조문은 찾았는데 값을 하나도 못 읽은 경우 (여수 건폐율 0/16). '지정 안 됨'으로 세지 않는다.
+            out.absent[kind] = []
+            out.issues.append(f"{kind_label(kind)} 조문에서 값을 하나도 못 읽음")
+            out.diagnostics.append(f"{kind_label(kind)} 조문 앞부분: `{ext.texts[kind][:200].replace('|', '/')}`")
+            continue
         if out.absent[kind] and len(out.absent[kind]) < len(national):
             out.issues.append(f"{kind_label(kind)} 조문에 없음(지정 안 된 듯): {', '.join(out.absent[kind])}")
         if not_found and len(not_found) < len(national):
             out.issues.append(f"{kind_label(kind)} 못 찾음: {', '.join(not_found)}")
             out.diagnostics += [_diagnose(kind, z, ext.texts.get(kind, "")) for z in not_found]
+
     if not out.zones:
         related = [f"제{a.number}조({a.title})" for a in articles if "건폐율" in a.title or "용적률" in a.title]
         out.error = "용도지역 조문에서 값을 찾지 못함 (별표로 정했거나 조 제목·문구 형식이 다름). 관련 조: " + (
@@ -167,6 +179,20 @@ def collect_one(a: dict, client: LawClient, national: dict) -> Collected:
     for name in ext.subareas.get("far", {}):
         out.issues.append(f"구역별 별도 용적률 '{name}' 있음 — 자동 반영 안 함")
     return out
+
+
+def _strip_item_number(value: int, cap: float) -> int | None:
+    """법정 상한을 크게 넘는 값이 '값 + 다음 호 번호'가 붙은 것으로 보이면 앞자리를 돌려준다.
+    전주 실제 결과: '제1종전용주거지역：402퍼센트.제2종…：403퍼센트 … 근린상업지역：6010퍼센트' (40·60 뒤에 2·3·…·10).
+    상한을 넘는 값에만 적용하고, 뗀 사실은 보고서에 남긴다."""
+    if value <= cap:
+        return None
+    s = str(value)
+    for n in (1, 2):
+        head, tail = s[:-n], s[-n:]
+        if head and 2 <= int(tail) <= 40 and not tail.startswith("0") and int(head) <= cap and int(head) % 5 == 0:
+            return int(head)
+    return None
 
 
 def _diagnose(kind: str, zone: str, text: str) -> str:
