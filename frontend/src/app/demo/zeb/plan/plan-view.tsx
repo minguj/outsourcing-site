@@ -8,10 +8,11 @@ import {
 } from "../_zeb/results";
 import { api, buildRequest, Feasibility, Meta } from "../_zeb/api";
 import { area } from "../_zeb/format";
+import { BusyBar, LoadingCard, Spinner } from "../_zeb/loading";
 
 export default function PlanView() {
   return (
-    <Suspense fallback={<div className="zb-empty">불러오는 중…</div>}>
+    <Suspense fallback={<LoadingCard label="대상지 정보를 불러오는 중…" />}>
       <Plan />
     </Suspense>
   );
@@ -25,8 +26,13 @@ function Plan() {
   // 마지막 응답을 요청 쿼리와 함께 보관한다. 새 쿼리를 계산하는 동안에는 이전 결과를 그대로 보여 준다.
   const [res, setRes] = useState<{ qs: string; r: Feasibility | null; err: string | null } | null>(null);
   const [traceTab, setTraceTab] = useState<"massing" | "energy" | "all">("massing");
+  // 조건을 바꾸면 주소(URL)가 바뀌기 전에 바로 '바꾸려는 쿼리'를 기억한다.
+  // 입력칸에서 바로 '보고서 출력'을 누르는 경우(포커스 아웃 → 반영 → 클릭) 예전 조건으로 보고서가 열리는 것을 막는다.
+  // from: 바꿀 때의 주소 쿼리. 주소가 바뀌면(반영 완료·뒤로 가기) 기억한 값은 자동으로 쓰지 않는다.
+  const [pending, setPending] = useState<{ from: string; to: string } | null>(null);
 
-  const qs = params.toString();
+  const urlQs = params.toString();
+  const qs = pending && pending.from === urlQs ? pending.to : urlQs;
 
   useEffect(() => {
     api.meta().then(setMeta).catch(() => {});
@@ -51,6 +57,8 @@ function Plan() {
     const p = new URLSearchParams(qs);
     if (v === null || v === "") p.delete(k);
     else p.set(k, v);
+    if (p.toString() === qs) return;
+    setPending({ from: urlQs, to: p.toString() });
     router.replace(`${pathname}?${p}`, { scroll: false });
   };
 
@@ -62,12 +70,13 @@ function Plan() {
       </div>
     );
   }
-  if (!r) return <div className="zb-empty">계산 중…</div>;
+  if (!r) return <LoadingCard label="필지 정보를 불러와 계산하는 중… (브이월드 조회 포함, 몇 초 걸릴 수 있어요)" />;
 
   const massingKeys = new Set(["site_area", "bcr", "far", "far_effective", "incentive_rate", "max_building_area", "max_gfa", "floor_height", "floors_by_far", "floors_by_height", "floors_by_zone", "floors", "gfa", "building_area", "height"]);
 
   return (
     <>
+      <BusyBar show={loading} />
       <div className="zb-card-head" style={{ marginBottom: 18 }}>
         <div>
           <Link href="/demo/zeb" className="zb-small">← 대상지 검색</Link>
@@ -81,7 +90,13 @@ function Plan() {
             </span>
           </div>
         </div>
-        <Link className="zb-btn" href={`/demo/zeb/report?${qs}`}>보고서 출력</Link>
+        {loading ? (
+          <button disabled title="바뀐 조건으로 다시 계산하는 중입니다">
+            <Spinner label="다시 계산 중…" />
+          </button>
+        ) : (
+          <Link className="zb-btn" href={`/demo/zeb/report?${qs}`}>보고서 출력</Link>
+        )}
       </div>
 
       <div className="zb-layout">
@@ -127,11 +142,11 @@ function Plan() {
             계산 ID <span className="zb-mono">{r.calc_id}</span>
             <br />
             규칙 {r.rule_versions.fingerprint} · 엔진 v{r.engine_version}
-            {loading && <div>다시 계산 중…</div>}
+            {loading && <div style={{ marginTop: 6 }}><Spinner label="다시 계산 중…" /></div>}
           </div>
         </aside>
 
-        <div>
+        <div className={loading ? "zb-stale" : undefined} aria-busy={loading}>
           <Warnings items={r.warnings} />
 
           <section className="zb-card" style={{ marginTop: r.warnings.length ? 16 : 0 }}>

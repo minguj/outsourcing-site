@@ -6,10 +6,11 @@ import { Suspense, useEffect, useState } from "react";
 import { EquipmentTable, LandUsePlans, ScenarioChart, ScenarioTable } from "../_zeb/results";
 import { api, buildRequest, Feasibility } from "../_zeb/api";
 import { SOURCE_KIND, area, gradeLabel, krw, n } from "../_zeb/format";
+import { BusyBar, LoadingCard, Spinner } from "../_zeb/loading";
 
 export default function ReportView() {
   return (
-    <Suspense fallback={<div className="zb-empty">불러오는 중…</div>}>
+    <Suspense fallback={<LoadingCard label="보고서를 준비하는 중…" />}>
       <Report />
     </Suspense>
   );
@@ -18,18 +19,24 @@ export default function ReportView() {
 function Report() {
   const params = useSearchParams();
   const qs = params.toString();
-  const [r, setR] = useState<Feasibility | null>(null);
-  const [err, setErr] = useState<string | null>(null);
+  // 응답을 요청 쿼리와 함께 보관한다. 쿼리와 다른(이전) 결과가 보이는 동안에는 저장·인쇄를 막는다.
+  const [res, setRes] = useState<{ qs: string; r: Feasibility | null; err: string | null } | null>(null);
 
   useEffect(() => {
+    let alive = true;
     buildRequest(new URLSearchParams(qs))
       .then(api.feasibility)
-      .then(setR)
-      .catch((e) => setErr(e.message));
+      .then((r) => alive && setRes({ qs, r, err: null }))
+      .catch((e) => alive && setRes({ qs, r: null, err: (e as Error).message }));
+    return () => {
+      alive = false;
+    };
   }, [qs]);
 
-  if (err) return <div className="zb-alert critical">{err}</div>;
-  if (!r) return <div className="zb-empty">보고서 생성 중…</div>;
+  const loading = res?.qs !== qs;
+  const r = res?.r ?? null;
+  if (!loading && res?.err) return <div className="zb-alert critical">{res.err}</div>;
+  if (!r) return <LoadingCard label="보고서를 생성하는 중…" />;
 
   const m = r.massing;
   const mand = r.scenarios.find((s) => s.mandatory);
@@ -39,11 +46,13 @@ function Report() {
 
   return (
     <>
+      <BusyBar show={loading} />
       <div className="zb-no-print" style={{ display: "flex", gap: 8, justifyContent: "space-between", maxWidth: 860, margin: "0 auto 14px" }}>
         <Link href={`/demo/zeb/plan?${qs}`}>← 검토 화면으로</Link>
         <div style={{ display: "flex", gap: 8 }}>
           <button
             className="zb-btn-ghost"
+            disabled={loading}
             onClick={() => {
               const blob = new Blob([JSON.stringify(r, null, 2)], { type: "application/json" });
               const a = document.createElement("a");
@@ -54,11 +63,13 @@ function Report() {
           >
             계산 스냅샷(JSON)
           </button>
-          <button onClick={() => window.print()}>PDF로 저장 / 인쇄</button>
+          <button disabled={loading} onClick={() => window.print()}>
+            {loading ? <Spinner label="보고서 갱신 중…" /> : "PDF로 저장 / 인쇄"}
+          </button>
         </div>
       </div>
 
-      <article className="zb-report">
+      <article className={`zb-report${loading ? " zb-stale" : ""}`} aria-busy={loading}>
         <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16 }}>
           <div>
             <div className="zb-small zb-muted">초기 기획 검토 보고서</div>
