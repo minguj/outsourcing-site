@@ -114,6 +114,15 @@ override_plans:
     severity: warning
     height_related: true
     message: 비행안전구역입니다. 군 비행장 주변 구역별 높이 제한이 있으므로 해당 높이를 '높이 제한(m)'에 입력하세요.
+  # 공항 장애물제한표면: 토지이용계획에는 "수평표면구역" 등으로 나온다 (「공항시설법 시행규칙」 [별표 2])
+  - keyword: 표면구역
+    severity: warning
+    height_related: true
+    message: 공항 장애물제한표면(수평·원추·진입·전이표면) 구역입니다. 공항 표점 높이를 기준으로 높이가 제한되므로(수평표면은 표점 +45m) 해당 높이를 '높이 제한(m)'에 입력하세요.
+  - keyword: 중요시설물보호지구
+    severity: warning
+    height_related: true
+    message: 중요시설물보호지구입니다. 공항 등 시설 보호를 위해 도시관리계획·조례로 높이가 제한될 수 있으므로 확인 후 '높이 제한(m)'에 입력하세요.
   - keyword: 경관지구
     severity: warning
     height_related: true
