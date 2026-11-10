@@ -36,10 +36,12 @@ COLLECTED_FILE = "zoning_collected.yaml"
 
 # 법제처 지자체기관명은 '경기도 수원시', '강원특별자치도 고성군'처럼 온다. 도 이름이 바뀐 곳은 옛 이름도 받는다.
 SIDO_ALIASES = {
+    # 광주·전남 행정통합(2026): 전남 시·군 기관명이 '전남광주통합특별시 ○○'로, 광주 조례는 '(구)광주광역시'로 남아 있다
+    "29": ("광주광역시", "(구)광주광역시"),
     "41": ("경기도",),
     "43": ("충청북도",),
     "44": ("충청남도",),
-    "46": ("전라남도",),
+    "46": ("전남광주통합특별시", "전라남도"),
     "47": ("경상북도",),
     "48": ("경상남도",),
     "51": ("강원특별자치도", "강원도"),
@@ -61,8 +63,10 @@ def agency_predicate(sido: str, sido_name: str, local: str) -> Callable[[str], b
 
 
 def candidate_names(a: dict) -> list[str]:
+    """군은 이름이 제각각이다: '군계획 조례', '계획 조례'·'계획조례'(공백은 비교 때 무시), '관리계획 조례'(장흥·무안)."""
     if a["kind"] == "county":
-        return [f"{a['name']} 군계획 조례", f"{a['name']} 도시계획 조례"]
+        n = a["name"]
+        return [f"{n} 군계획 조례", f"{n} 계획 조례", f"{n} 도시계획 조례", f"{n} 관리계획 조례"]
     return [f"{a['name']} 도시계획 조례"]
 
 
@@ -109,6 +113,8 @@ def collect_one(a: dict, client: LawClient, national: dict) -> Collected:
         out.error = "조례를 찾지 못함 (" + " / ".join(candidate_names(a)) + ")" + (f" {hints[0]}" if hints else "")
         return out
     out.version = version
+    if str(version.org or "").startswith("(구)"):
+        out.issues.append(f"통합 전 기관({version.org}) 조례 — 새 조례 제정 전 경과 적용으로 보고 수집")
     try:
         articles = client.articles(version)
     except LawApiError as e:
@@ -132,6 +138,7 @@ def collect_one(a: dict, client: LawClient, national: dict) -> Collected:
             cap = national[zone][kind]
             if value > cap:
                 out.issues.append(f"{zone} {kind_label(kind)} {value}%가 법정 상한 {cap}%를 넘음 — 비워 둠")
+                out.diagnostics.append(_diagnose(kind, zone, ext.texts.get(kind, "")))
                 continue
             z = out.zones.setdefault(zone, {})
             z[kind] = value
@@ -150,7 +157,12 @@ def collect_one(a: dict, client: LawClient, national: dict) -> Collected:
             ", ".join(related[:6]) if related else "제목에 건폐율·용적률이 들어간 조 없음"
         )
         sample = ext.texts.get("bcr") or ext.texts.get("far")
-        if sample:
+        if sample and "별표" in sample:
+            out.error = (
+                "값을 별표로 정함 (법제처 API 는 서울 외 별표를 주지 않음) — 원문 확인 후 zoning.yaml 에 수동 입력 대상. 관련 조: "
+                + ", ".join(related[:3])
+            )
+        elif sample:
             out.error += f". 조문 앞부분: `{sample[:160].replace('|', '/')}`"
     for name in ext.subareas.get("far", {}):
         out.issues.append(f"구역별 별도 용적률 '{name}' 있음 — 자동 반영 안 함")

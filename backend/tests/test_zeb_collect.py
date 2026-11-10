@@ -257,6 +257,44 @@ class CollectOneTests(unittest.TestCase):
         r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
         self.assertIn("다른 기관명으로 있음: 새이름특별시 수원시", r.error)
 
+    def test_gwangju_jeonnam_integration_agency_names(self):
+        """2026 광주·전남 통합: '전남광주통합특별시 목포시', '(구)광주광역시'."""
+        api = FakeLaw()
+        bcr, far = standard()
+        api.add("목포시 도시계획 조례", "전남광주통합특별시 목포시", "118", "20260801", body("118", "목포시 도시계획 조례", bcr, far))
+        api.add("광주광역시 도시계획 조례", "(구)광주광역시", "119", "20260101", body("119", "광주광역시 도시계획 조례", bcr, far))
+        mokpo = collect.collect_one(auth("4611", "46", "전라남도", "목포시", "city"), LawClient("x", api), NATIONAL)
+        gwangju = collect.collect_one(auth("29", "29", "광주광역시", "광주광역시", "metro"), LawClient("x", api), NATIONAL)
+        self.assertIsNone(mokpo.error)
+        self.assertIsNone(gwangju.error)
+        self.assertTrue(any("통합 전 기관" in i for i in gwangju.issues))
+
+    def test_county_name_variants_and_title_suffix(self):
+        api = FakeLaw()
+        bcr, far = standard()
+        api.add("가평군 계획조례", "경기도 가평군", "120", "20250101", body("120", "가평군 계획조례", bcr, far))
+        api.add("연천군 군계획 조례 [제명개정 2020. 10. 5.]", "경기도 연천군", "121", "20250101", body("121", "연천군 군계획 조례", bcr, far))
+        gp = collect.collect_one(auth("4182", "41", "경기도", "가평군", "county"), LawClient("x", api), NATIONAL)
+        yc = collect.collect_one(YEONCHEON, LawClient("x", api), NATIONAL)
+        self.assertEqual((gp.error, gp.version.serial), (None, "120"))
+        self.assertEqual((yc.error, yc.version.serial), (None, "121"))
+
+    def test_appendix_table_is_reported_as_manual(self):
+        """울산·창원: '건폐율은 별표 27과 같다'."""
+        api = FakeLaw()
+        api.add("수원시 도시계획 조례", "경기도 수원시", "122", "20250301", {"LawService": {"조문": {"조": [
+            {"조문번호": "005800", "조제목": "용도지역에서의 건폐율", "조내용": "제58조(용도지역에서의 건폐율) 각 용도지역별 건축물의 건폐율은 별표 27과 같다.", "조문여부": "Y"}]}}})
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertIn("별표로 정함", r.error)
+        self.assertIn("수동 입력", r.error)
+
+    def test_over_cap_value_gets_diagnostic(self):
+        api = FakeLaw()
+        bcr, far = standard()
+        api.add("수원시 도시계획 조례", "경기도 수원시", "123", "20250301", body("123", "수원시 도시계획 조례", {**bcr, "자연녹지지역": 30}, far))
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertTrue(any("자연녹지지역" in d and "30퍼센트" in d for d in r.diagnostics))
+
     def test_failure_lists_related_articles(self):
         api = FakeLaw()
         api.add("수원시 도시계획 조례", "경기도 수원시", "112", "20250301", {"LawService": {"조문": {"조": [
@@ -269,7 +307,7 @@ class CollectOneTests(unittest.TestCase):
         api.add("수원시 도시계획 조례", "경기도 수원시", "117", "20250301", {"LawService": {"조문": {"조": [
             {"조문번호": "004600", "조제목": "용도지역 안에서의 건폐율‧용적률", "조내용": "제46조(용도지역 안에서의 건폐율‧용적률) 용도지역 안에서의 건폐율 및 용적률은 별표 22와 같다.", "조문여부": "Y"}]}}})
         r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
-        self.assertIn("별표22와같다", r.error)
+        self.assertIn("별표로 정함", r.error)
 
     def test_diagnostics_show_unreadable_wording(self):
         api = FakeLaw()
