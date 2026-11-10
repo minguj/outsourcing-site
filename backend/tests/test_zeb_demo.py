@@ -699,6 +699,15 @@ class SiteCheckTests(unittest.TestCase):
         partial = self.warnings(partial_plans=("정비구역",))["OVERRIDE_PLAN"]["message"]
         self.assertIn("일부", partial)
 
+    def test_airport_obstacle_surfaces_are_height_plans(self):
+        """김포공항 주변(공항동)은 '수평표면구역', '중요시설물보호지구(공항)' 으로 나온다."""
+        site = SiteInput(1000, "제3종일반주거지역", "11500", land_use_plans=("수평표면구역", "중요시설물보호지구(공항)"))
+        r = run_feasibility(site, PlanOptions(), RB)
+        self.assertEqual(r["height_plans"], ["수평표면구역", "중요시설물보호지구(공항)"])
+        msgs = " ".join(w["message"] for w in r["warnings"])
+        self.assertIn("장애물제한표면", msgs)
+        self.assertIn("중요시설물보호지구", msgs)
+
     def test_street_height_limit_zone_is_warning(self):
         w = self.warnings(land_use_plans=("가로구역별 최고높이 제한지역",))
         self.assertEqual(w["OVERRIDE_PLAN"]["severity"], "warning")
