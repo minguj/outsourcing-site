@@ -19,9 +19,11 @@ backend/zeb/
   adapters/          브이월드 / 샘플 필지
   samples/*.json     데모 샘플 필지·정비사업 (가상). 'data' 폴더명은 .gitignore 에 걸리므로 쓰지 않는다
   check_vworld.py    키 발급 후 실제 응답 확인용
-  ordinance/         조례 개정 감지 (법제처 API → 조문 수집 → 값 추출 → zoning.yaml 수정안). 표준 라이브러리 + PyYAML 만 사용
+  ordinance/         조례 개정 감지(watch)·전국 일괄 수집(collect). 법제처 API → 조문 → 값 추출 → 규칙 파일 수정안. 표준 라이브러리 + PyYAML 만 사용
+  rules/authorities.yaml       조례로 건폐율·용적률을 정하는 시도·시군 160곳과 PNU 관할 코드 (법정동코드로 생성)
+  rules/zoning_collected.yaml  일괄 수집 결과 (자동 생성, 미검증). zoning.yaml 에 같은 관할이 있으면 그쪽이 우선
 frontend/src/app/demo/zeb/   검색(page) · 검토(plan) · 보고서(report), zb- 접두어 CSS
-backend/tests/test_zeb_demo.py, backend/tests/test_zeb_ordinance.py, backend/tests/fixtures/zeb/
+backend/tests/test_zeb_demo.py, test_zeb_ordinance.py, test_zeb_collect.py, backend/tests/fixtures/zeb/
 .github/workflows/ordinance-watch.yml   매일 조례 개정 감지 → 수정안 PR
 ```
 
@@ -59,6 +61,19 @@ backend/tests/test_zeb_demo.py, backend/tests/test_zeb_ordinance.py, backend/tes
 - 필요한 설정: 법제처 Open API(open.law.go.kr) 신청 시 배포 서버 공인 IP 등록 → 받은 인증값을 GitHub Secrets `LAW_OC` 로 등록 →
   저장소 Settings › Actions › General 에서 "Allow GitHub Actions to create and approve pull requests" 허용.
 - 수동 실행: Actions › Ordinance watch › Run workflow. 첫 실행은 `promulgated_on: null` 이라 전체 조문과 대조하는 기준선 PR 이 열린다.
+
+## 전국 조례 일괄 수집
+서울 외 지역은 조례가 없어 법정 상한으로 계산하고 있었다. 시도·시군 조례를 한꺼번에 받아 자동으로 값을 뽑는다.
+
+- 대상: `authorities.yaml` — 특별·광역시·특별자치시·제주는 시도 조례, 도는 시·군 조례(시 '도시계획 조례', 군 '군계획 조례').
+  자치구·행정시는 따로 정하지 않는다. 필지 PNU 앞자리(구가 있는 시는 4자리, 예: 수원 4111)로 관할을 찾는다.
+- 실행: Actions › Ordinance watch › Run workflow 에서 **mode = collect** (특정 도만: only = 41). 배포 서버에서 수집하고 PR 을 연다.
+- 결과: `zoning_collected.yaml`. 값은 모두 `verified: false` → **계산에 쓰고** 화면에 '미검증(자동 수집)' 경고·표시.
+  사람이 원문을 확인해 `true` 로 고친 값은 다시 수집해도 같은 값이면 유지된다.
+- 비워 두는 경우: 법정 상한 초과, 같은 용도지역에 값이 여러 개, 용도지역 조를 못 찾음(별표로 정한 곳 — 법제처 API 는 서울 외 별표를 주지 않는다).
+  이런 지자체는 파일 끝 `missing` 과 보고서에 남는다. 한쪽(건폐율·용적률)만 뽑힌 용도지역은 빠진 쪽을 법정 상한으로 채우고 근거 메모에 적는다.
+- 같은 이름 지자체(강원·경남 고성군)는 법제처의 지자체기관명으로 구분한다.
+- 매일 개정 감지(watch)는 zoning.yaml 과 zoning_collected.yaml 을 함께 본다.
 
 ## 브이월드
 - 키는 서버 `/etc/outsourcing-deploy/backend.env` 의 `VWORLD_API_KEY`, `VWORLD_DOMAIN`(키 발급 시 서비스 URL 과 동일).
