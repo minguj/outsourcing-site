@@ -1,27 +1,40 @@
 # 초기 기획용 가정값
 #
-# 이 값들은 법규가 아니라 "설계 전 단계에서 쓰는 추정치"다.
+# 이 값들은 법규가 아니라 "설계 전 단계에서 쓰는 추정치"다. 다만 추정의 기준은 공식 자료로 잡는다.
 # - 모든 값은 화면과 보고서에 '가정'으로 표시된다.
-# - 사용자는 요청 시 assumptions_override 로 덮어쓸 수 있다.
-# - 실설계 단계에서는 ECO2 등 인증 프로그램 결과로 대체해야 한다.
+# - 실설계 단계에서는 ECO2 등 인증 평가 프로그램 결과로 대체해야 한다.
 schema_version: 1
 id: early-stage-assumptions
-version: "2026.11-demo"
+version: "2026.11.10"
 
 primary_energy_factor:
-  electricity: { value: 2.75, unit: "-", note: 전력 1차에너지 환산계수 (에너지효율등급 인증 기준값 사용) }
-  fuel:        { value: 1.1,  unit: "-", note: 연료(가스) 1차에너지 환산계수 }
+  # 근거: 건축물 에너지효율등급·ZEB 인증 1차에너지 환산계수 (전력 2.75, 연료 1.1, 지역난방 0.728, 지역냉방 0.937)
+  electricity: { value: 2.75, unit: "-", note: 전력 1차에너지 환산계수 (인증 기준값) }
+  fuel:        { value: 1.1,  unit: "-", note: 연료(가스) 1차에너지 환산계수 (인증 기준값) }
+
+# 단위면적당 1차에너지 소요량 (kWh/㎡·년)
+# 설계가 아직 없으므로, ZEB 인증의 전제였던 '에너지효율 1++ 등급'의 상한값을 기본으로 쓴다(보수적).
+# 근거: 건축물 에너지효율등급 인증 기준 — 주거용 1++ 60~90 미만 / 비주거용 80~140 미만, 1+++ 주거 60 미만 / 비주거 80 미만
+# 등급 기준은 전국 공통이다. 기후 지역(중부·남부·제주)에 따라 같은 등급을 맞추는 난이도는 달라지지만 기준값 자체는 같다.
+performance_levels:
+  "1++":
+    label: 에너지효율 1++ 수준 (상한, 보수적)
+    demand_intensity: { 주거: 90, 비주거: 140 }
+  "1+++":
+    label: 에너지효율 1+++ 수준 (상한)
+    demand_intensity: { 주거: 60, 비주거: 80 }
+default_performance: "1++"
 
 building_uses:
   공동주택:
-    demand_intensity: { value: 110, unit: kWh/㎡·yr, note: 1차에너지 소요량 초기 추정치 (난방·냉방·급탕·조명·환기) }
-    floor_height:     { value: 3.0, unit: m }
+    category: 주거
+    floor_height: { value: 3.0, unit: m, note: 공동주택 일반적 층고 }
   업무시설:
-    demand_intensity: { value: 140, unit: kWh/㎡·yr, note: 1차에너지 소요량 초기 추정치 }
-    floor_height:     { value: 4.0, unit: m }
+    category: 비주거
+    floor_height: { value: 4.0, unit: m }
   제1종근린생활시설:
-    demand_intensity: { value: 160, unit: kWh/㎡·yr, note: 1차에너지 소요량 초기 추정치 }
-    floor_height:     { value: 4.2, unit: m }
+    category: 비주거
+    floor_height: { value: 4.2, unit: m }
 
 site:
   roof_usable_ratio:  { value: 0.5, unit: "-", note: 옥상 면적 중 설비·코어·조경 제외 후 태양광 설치 가능 비율 }

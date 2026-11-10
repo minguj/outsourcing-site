@@ -103,6 +103,14 @@ function Plan() {
             <DeferredInput key={`fh:${params.get("fh") ?? ""}`} value={params.get("fh") ?? ""} onCommit={(v) => update("fh", v)} placeholder={`기본 ${r.massing.floor_height_m}`} />
           </label>
           <FloorControl key={`fl:${r.calc_id}`} r={r} onCommit={(v) => update("fl", v)} />
+          <label className="zb-field">
+            <span>에너지 성능 가정</span>
+            <select value={params.get("perf") ?? ""} onChange={(e) => update("perf", e.target.value || null)}>
+              {Object.entries(meta?.performance_levels ?? { "1++": "에너지효율 1++ 수준 (상한, 보수적)" }).map(([k, label]) => (
+                <option key={k} value={k === "1++" ? "" : k}>{label}</option>
+              ))}
+            </select>
+          </label>
           <label className="zb-check">
             <input type="checkbox" checked={params.get("pub") === "1"} onChange={(e) => update("pub", e.target.checked ? "1" : null)} />
             공공 건축물
@@ -151,7 +159,7 @@ function Plan() {
             <div className="zb-card-head">
               <h2>2. ZEB 등급별 설비 시나리오</h2>
               <span className="zb-small zb-muted">
-                연간 1차에너지 소요량 {r.energy.demand_kwh.toLocaleString()} kWh ({r.energy.demand_intensity} kWh/㎡·yr 가정)
+                연간 1차에너지 소요량 {r.energy.demand_kwh.toLocaleString()} kWh ({r.energy.demand_intensity} kWh/㎡·yr, {r.energy.performance_label}) · 태양광 {r.energy.solar_yield.value.toLocaleString()} kWh/kWp·yr ({r.energy.solar_yield.label})
               </span>
             </div>
             <ScenarioChart r={r} />

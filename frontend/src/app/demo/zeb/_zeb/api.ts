@@ -95,6 +95,9 @@ export type Feasibility = {
   };
   height_plans: string[];
   energy: {
+    performance: string;
+    performance_label: string;
+    solar_yield: { value: number; label: string };
     demand_intensity: number;
     demand_kwh: number;
     max_self_sufficiency_pct: number;
@@ -136,6 +139,7 @@ export type Meta = {
   vworld_key: string | null;
   vworld_domain: string | null;
   building_uses: string[];
+  performance_levels: Record<string, string>;
   zones: string[];
   grades: { grade: string; label: string; min_self_sufficiency: number }[];
   rule_versions: Record<string, string>;
@@ -199,6 +203,7 @@ function planOptions(p: URLSearchParams) {
     target_floors: num(p, "fl"),
     is_public: p.get("pub") === "1",
     apply_zeb_incentive_grade: p.get("inc") || null,
+    performance: p.get("perf") || null,
   };
 }
 

@@ -16,7 +16,7 @@ from datetime import UTC, date, datetime
 from .energy import build_options, build_scenarios, grade_for, max_potential
 from .massing import MassingInput, compute_massing
 from .rules import RuleBook
-from .trace import INPUT, Ledger
+from .trace import INPUT, Ledger, Source
 
 ENGINE_VERSION = "0.1.0"
 
@@ -50,6 +50,7 @@ class PlanOptions:
     target_floors: int | None = None
     is_public: bool = False
     apply_zeb_incentive_grade: str | None = None  # 예: "3" → 3등급 취득 가정 시 용적률 완화 반영
+    performance: str | None = None  # 에너지 성능 가정 ("1++" 기본, "1+++")
     assumptions_override: dict = field(default_factory=dict)
     as_of: date | None = None
 
@@ -116,21 +117,29 @@ def run_feasibility(site: SiteInput, opts: PlanOptions, rules: RuleBook | None =
     )
 
     # 2) 에너지 소요량 ------------------------------------------------------
-    intensity = use_a["demand_intensity"]["value"]
-    overridden = "demand_intensity" in (opts.assumptions_override.get("building_uses", {}).get(opts.building_use, {}))
+    perf_key = opts.performance or assumptions["default_performance"]
+    perf = assumptions["performance_levels"].get(perf_key)
+    if perf is None:
+        raise ValueError(f"지원하지 않는 에너지 성능 가정: {perf_key}")
+    category = use_a["category"]
+    intensity = perf["demand_intensity"][category]
     demand = massing.gfa_m2 * intensity
     ledger.record(
         "demand_intensity",
         "단위면적당 1차에너지 소요량",
         intensity,
         "kWh/㎡·yr",
-        "입력값" if overridden else "용도별 가정값",
-        sources=[
-            INPUT
-            if overridden
-            else rules.assumption_source(
-                f"building_uses.{opts.building_use}.demand_intensity", use_a["demand_intensity"].get("note")
-            )
+        f"{perf['label']} · {category}용 기준 상한",
+        {"성능 가정": perf_key, "용도 구분": category},
+        [
+            Source(
+                id="kr-energy-efficiency-grade",
+                title="건축물 에너지효율등급 인증 기준 (연간 단위면적당 1차에너지소요량)",
+                kind="notice",
+                ref=f"{perf_key} 등급 {category}용 상한 {intensity} kWh/㎡·yr",
+                verified=True,
+            ),
+            rules.assumption_source("performance_levels", "설계 전 단계이므로 등급 기준 상한을 소요량으로 가정"),
         ],
     )
     ledger.record(
@@ -151,6 +160,7 @@ def run_feasibility(site: SiteInput, opts: PlanOptions, rules: RuleBook | None =
         gfa=massing.gfa_m2,
         height=massing.height_m,
         assumptions=assumptions,
+        jurisdiction=site.jurisdiction,
     )
     potential = max_potential(options, demand)
     ledger.record(
@@ -221,9 +231,13 @@ def run_feasibility(site: SiteInput, opts: PlanOptions, rules: RuleBook | None =
             "target_floors": opts.target_floors,
             "is_public": opts.is_public,
             "apply_zeb_incentive_grade": opts.apply_zeb_incentive_grade,
+            "performance": perf_key,
         },
         "massing": massing.to_dict(),
         "energy": {
+            "performance": perf_key,
+            "performance_label": perf["label"],
+            "solar_yield": {"value": rules.solar_yield(site.jurisdiction)[0], "label": rules.solar_yield(site.jurisdiction)[1]},
             "demand_intensity": intensity,
             "demand_kwh": round(demand),
             "max_self_sufficiency_pct": round(potential, 1),

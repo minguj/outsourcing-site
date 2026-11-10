@@ -26,29 +26,30 @@ mandates:
   - id: zeb-mandate-private-2025
     title: 민간 건축물 ZEB 인증 의무화 (제3차 녹색건축물 기본계획)
     effective_from: "2025-06-01"
-    checked_on: "2026-11-09"
+    checked_on: "2026-11-10"
     verified: true
     applies_to: private
     min_gfa_m2: 1000
     min_grade: "5"
-    note: 30세대 이상 민간 공동주택은 '5등급 수준'으로 완화된 기준이 적용된다 (세대수 판정은 본 데모 범위 밖).
+    note: 연면적 1,000㎡ 이상 일반건축물, 30세대 이상 공동주택은 '5등급 수준' 설계 의무 (세대수 판정은 본 데모 범위 밖). 2030년 500㎡ 이상으로 확대 예정.
   - id: zeb-mandate-public-4
     title: 공공 건축물 ZEB 4등급 의무화 (교육연구·업무 등 17개 용도)
     effective_from: "2025-01-01"
-    checked_on: "2026-11-09"
-    verified: false
+    checked_on: "2026-11-10"
+    verified: true
     applies_to: public
     min_gfa_m2: 1000
     min_grade: "4"
-    note: 적용 용도(17개)와 시행 시점은 고시 원문 확인 필요
+    note: 교육연구·업무 등 17개 용도, 연면적 1,000㎡ 이상 (그 외 공공건축물은 5등급 유지). 2030년 일부 용도·규모는 3등급으로 상향 예정. 근거 - 국토교통부 녹색건축과장 인터뷰(한국건축친환경설비학회지), 제3차 녹색건축물 기본계획
 
 incentives:
   - id: zeb-far-relaxation
     title: 녹색건축물 인증에 따른 건축기준 완화 (건축물의 에너지절약설계기준)
-    ref: 녹색건축물 조성 지원법 제15조, 같은 법 시행령 제11조
-    checked_on: "2026-11-09"
-    verified: false
+    ref: 녹색건축물 조성 지원법 제15조, 건축물의 에너지절약설계기준 (ZEB 인증 등급별 최대 완화비율)
+    checked_on: "2026-11-10"
+    verified: true
     max_total_rate: 15
-    # ZEB 인증 완화 범위는 11~15%. 등급별 세부 비율은 고시 별표 확인 필요.
+    # 근거: 경기도 녹색건축 설계기준 공고문(제로에너지건축물 인증에 따른 건축기준 최대완화비율 표)
+    # 플러스 등급은 표에 없어 1등급과 같게 둠 (확인 필요)
     rate_by_grade: { "+": 15, "1": 15, "2": 14, "3": 13, "4": 12, "5": 11 }
     note: 의무 인증 대상은 의무 등급을 초과하는 경우에만 인정될 수 있으므로 허가권자 확인 필요

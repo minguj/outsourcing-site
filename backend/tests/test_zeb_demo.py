@@ -23,9 +23,10 @@ from fastapi.testclient import TestClient
 from backend.zeb import router as zeb_router_module
 from backend.zeb.adapters.base import ProviderError
 from backend.zeb.adapters.vworld import VWorldParcelProvider
-from backend.zeb.domain.energy import grade_for
+from backend.zeb.domain.energy import build_options, grade_for
 from backend.zeb.domain.feasibility import PlanOptions, SiteInput, run_feasibility
 from backend.zeb.domain.rules import RuleBook
+from backend.zeb.domain.trace import Ledger
 
 RB = RuleBook()
 SEOUL = "11440"
@@ -203,31 +204,94 @@ class TargetFloorsTests(unittest.TestCase):
                     self.assertAlmostEqual(m["gfa_m2"], m["max_gfa_m2"], places=1)
 
 
+class RegionalVariableTests(unittest.TestCase):
+    """지역마다 달라지는 값: 조례, 구역(서울도심), 태양광 발전량."""
+
+    def test_solar_yield_differs_by_region(self):
+        """서울 1,165 / 제주 1,197 / 전남 1,434 / 그 외(예: 경기) 전국 평균 1,312 kWh/kWp·yr"""
+        cases = {"11440": 1165, "50110": 1197, "46110": 1434, "41135": 1312}
+        for juris, expected in cases.items():
+            with self.subTest(juris=juris):
+                e = run(1000, "제2종일반주거지역", juris)["energy"]
+                self.assertEqual(e["solar_yield"]["value"], expected)
+
+    def test_sunnier_region_needs_less_pv_for_same_grade(self):
+        """전남은 조례 미등록이라 용적률(250%)이 서울(200%)과 달라 연면적이 다르다 → ㎡당 비용으로 비교.
+        서울: 12 kWp × 180만 ÷ 2,000㎡ = 10,800원/㎡
+        전남: 필요 2,500 × 90 × 20% = 45,000 → ceil(45,000 / (1,434 × 2.75)) = ceil(11.41) = 12 kWp → ÷ 2,500㎡ = 8,640원/㎡"""
+        seoul = scenario(run(1000, "제2종일반주거지역", "11440"), "5")
+        jeonnam = scenario(run(1000, "제2종일반주거지역", "46110"), "5")
+        self.assertEqual((seoul["cost_per_gfa_krw"], jeonnam["cost_per_gfa_krw"]), (10_800, 8_640))
+
+    def test_seoul_downtown_commercial_warns(self):
+        """종로구·중구 상업지역: 서울도심이면 일반상업 600% (일반 800%). 경계가 구 단위가 아니므로 경고만."""
+        r = run(2000, "일반상업지역", "11110", building_use="업무시설")
+        self.assertEqual(r["massing"]["far_pct"], 800)
+        w = next(w for w in r["warnings"] if w["code"] == "SUBAREA")
+        self.assertIn("600%", w["message"])
+        self.assertNotIn("SUBAREA", {w["code"] for w in run(2000, "일반상업지역", "11680", building_use="업무시설")["warnings"]})
+
+    def test_first_class_general_residential_is_capped_at_4_floors(self):
+        """1종일반주거 4층 이하. 1,000㎡: 연면적 1,500, 건축면적 600 → 필요 3층(제한 미작동), 목표 6층 → 4층"""
+        r = run(1000, "제1종일반주거지역", target_floors=6)
+        self.assertEqual((r["massing"]["floors"], r["massing"]["floors_max"]), (4, 4))
+
+    def test_better_energy_performance_lowers_demand(self):
+        """1+++ 주거 상한 60 → 2,000㎡ × 60 = 120,000 kWh"""
+        r = run(1000, "제2종일반주거지역", performance="1+++")
+        self.assertEqual(r["energy"]["demand_kwh"], 120_000)
+        self.assertLess(scenario(r, "5")["total_cost_krw"], scenario(run(1000, "제2종일반주거지역"), "5")["total_cost_krw"])
+
+
+class RealCaseValidationTests(unittest.TestCase):
+    def test_yeouido_post_office_roof_only_self_sufficiency(self):
+        """실제 사례: 여의도 우체국 — 건폐율 51.6%, 용적률 963.4%, 33층, 1차에너지 118.5 kWh/㎡·yr(1++),
+        태양광 설치 가용면적 부족으로 에너지자립률 6% → ZEB 인증 실패 (한국건축친환경설비학회지 보도).
+
+        같은 조건을 이 모델의 옥상 태양광 가정에 넣으면
+        자립률 = (건축면적 × 0.5 ÷ 10㎡ × 1,165 × 2.75) ÷ (연면적 × 118.5)
+              = 0.05 × 3,203.75 ÷ (963.4/51.6 × 118.5) ≈ 7.2%
+        → 실제 6% 와 같은 수준이어야 한다 (모델이 낙관적으로 2배 이상 벗어나면 실패).
+        """
+        site = 10_000.0
+        ba, gfa = site * 0.516, site * 9.634
+        opts = build_options(
+            RB, Ledger(), building_area=ba, site_area=site, gfa=gfa, height=33 * 4.0,
+            assumptions=RB.assumptions, jurisdiction="11560",
+        )
+        roof = next(o for o in opts if o.key == "pv_roof")
+        pct = roof.max_units * roof.production_per_unit / (gfa * 118.5) * 100
+        self.assertTrue(4 <= pct <= 10, pct)
+
+
 class GoldenEnergyTests(unittest.TestCase):
     def test_e1_demand_and_unit_production(self):
-        """G1 기준
-        소요량 = 2,000㎡ × 110 = 220,000 kWh/yr
-        태양광 1kWp = 1,250 × 2.75 = 3,437.5
-        지열 1공 = 10.5kW × 1,000h × (1 − 1/4) × 1.1 = 8,662.5
-        연료전지 1kW = 7,000×2.75 + 7,000×1.1 − (7,000/0.4)×1.1 = 19,250 + 7,700 − 19,250 = 7,700
+        """G1 기준 (서울, 공동주택, 에너지효율 1++ 상한 가정)
+        소요량 = 2,000㎡ × 90(주거용 1++ 상한) = 180,000 kWh/yr
+        태양광 1kWp = 1,165(서울 발전량) × 2.75 = 3,203.75
+        BIPV 1kWp = 923(고시) × 1,165/1,312(지역 보정) × 2.75 = 2,253.9
+        지열 1공 = 10.5kW × 864(고시) × 1.1 = 9,979.2
+        연료전지 1kW = 7,415×2.75 + 7,415×1.0×1.1 − (7,415/0.4)×1.1 = 20,391.25 + 8,156.5 − 20,391.25 = 8,156.5
         옥상 최대 = floor(500 × 0.5 / 10) = 25 kWp
         """
         e = run(1000, "제2종일반주거지역")["energy"]
-        self.assertEqual(e["demand_kwh"], 220_000)
+        self.assertEqual(e["demand_kwh"], 180_000)
+        self.assertEqual(e["solar_yield"], {"value": 1165.0, "label": "서울"})
         opts = {o["key"]: o for o in e["options"]}
-        self.assertEqual(opts["pv_roof"]["production_per_unit"], 3437.5)
-        self.assertEqual(opts["geothermal"]["production_per_unit"], 8662.5)
-        self.assertEqual(opts["fuel_cell"]["production_per_unit"], 7700)
+        self.assertEqual(opts["pv_roof"]["production_per_unit"], 3203.8)  # 3,203.75 표시 반올림
+        self.assertAlmostEqual(opts["pv_bipv"]["production_per_unit"], 2253.9, places=1)
+        self.assertEqual(opts["geothermal"]["production_per_unit"], 9979.2)
+        self.assertEqual(opts["fuel_cell"]["production_per_unit"], 8156.5)
         self.assertEqual(opts["pv_roof"]["max_units"], 25)
 
     def test_e2_grade5_scenario_roof_pv_only(self):
-        """5등급: 필요 220,000 × 20% = 44,000 → ceil(44000/3437.5) = ceil(12.8) = 13 kWp
-        생산 44,687.5 → 자립률 20.3%, 비용 13 × 180만 = 2,340만 원"""
+        """5등급: 필요 180,000 × 20% = 36,000 → ceil(36,000 / 3,203.75) = ceil(11.24) = 12 kWp
+        생산 38,445 → 자립률 21.36% → 21.4%, 비용 12 × 180만 = 2,160만 원"""
         s5 = scenario(run(1000, "제2종일반주거지역"), "5")
         self.assertTrue(s5["feasible"] and s5["mandatory"])
-        self.assertEqual([(p["key"], p["units"]) for p in s5["picks"]], [("pv_roof", 13)])
-        self.assertEqual(s5["achieved_pct"], 20.3)
-        self.assertEqual(s5["total_cost_krw"], 23_400_000)
+        self.assertEqual([(p["key"], p["units"]) for p in s5["picks"]], [("pv_roof", 12)])
+        self.assertEqual(s5["achieved_pct"], 21.4)
+        self.assertEqual(s5["total_cost_krw"], 21_600_000)
 
     def test_e3_tall_office_cannot_meet_high_grades(self):
         """일반상업 14층 업무시설은 옥상이 작아 고등급이 불가능해야 한다 (도메인 직관 검증)."""
@@ -425,8 +489,13 @@ class ApiTests(unittest.TestCase):
         self.assertTrue(any("지구단위계획" in w["message"] for w in jongno["warnings"]))
 
     def test_unverified_rule_is_flagged(self):
-        body = {"manual": {"site_area_m2": 800, "zone": "제1종전용주거지역", "jurisdiction": "11"}}
-        self.assertIn("far", self.c.post("/api/demo/zeb/feasibility", json=body).json()["review_required"])
+        """규칙 값이 verified: false 면 해당 계산 단계가 review_required 에 잡혀야 한다."""
+        rb = RuleBook()
+        rb.zoning["national"]["zones"]["제1종전용주거지역"]["verified"] = False
+        rb.zoning["ordinances"][0]["zones"]["제1종전용주거지역"]["verified"] = False
+        r = run_feasibility(SiteInput(800, "제1종전용주거지역", "11"), PlanOptions(), rb)
+        self.assertIn("far", r["review_required"])
+        self.assertNotIn("far", run(800, "제1종전용주거지역", "11")["review_required"])
 
     def test_redevelopment_search(self):
         items = self.c.get("/api/demo/zeb/redevelopment/search", params={"q": "상계"}).json()["items"]

@@ -86,6 +86,7 @@ def build_options(
     gfa: float,
     height: float,
     assumptions: dict,
+    jurisdiction: str | None = None,
 ) -> list[EquipmentOption]:
     pef_e = assumptions["primary_energy_factor"]["electricity"]["value"]
     pef_f = assumptions["primary_energy_factor"]["fuel"]["value"]
@@ -93,21 +94,39 @@ def build_options(
     a_src = rules.assumption_source
     options: list[EquipmentOption] = []
 
+    # 지역별 태양광 발전량. BIPV 는 고시값에 같은 지역 비율을 곱한다.
+    pv_yield, region_label, region_src = rules.solar_yield(jurisdiction)
+    national_avg = float(rules.equipment["solar_by_region"]["default"]["value"])
+    ledger.record(
+        "solar_yield", f"태양광 연간 발전량 ({region_label})", pv_yield, "kWh/kWp·yr",
+        "지역별 관측 발전량", sources=[region_src],
+    )
+
     for eq in rules.equipment["equipment"]:
         key = eq["key"]
-        eq_src = a_src(f"equipment.{key}", "설비 라이브러리 단가·성능 가정")
+        eq_src = a_src(f"equipment.{key}", "설비 단가·설치 조건 가정")
+        sources = [eq_src]
 
         if eq["output"] == "electricity":
-            per_unit = eq["specific_yield"]["value"] * pef_e
-            formula = "연간 발전량 × 전력 1차에너지 환산계수"
-            inputs = {"연간 발전량(kWh/kWp)": eq["specific_yield"]["value"], "환산계수": pef_e}
+            if eq.get("yield_from_region"):
+                y = pv_yield
+                sources.append(region_src)
+                formula = "지역별 연간 발전량 × 전력 1차에너지 환산계수"
+                inputs = {"연간 발전량(kWh/kWp)": y, "환산계수": pef_e}
+            else:
+                base = eq["specific_yield"]["value"]
+                y = base * pv_yield / national_avg if eq.get("regional_scaling") else base
+                sources += [rules.regulation_source(f"{eq['name']} {base:,} kWh/kW·yr"), region_src]
+                formula = "고시 단위 생산량 × (지역 발전량 ÷ 전국 평균) × 전력 환산계수"
+                inputs = {"고시 생산량": base, "지역 보정": round(pv_yield / national_avg, 3), "환산계수": pef_e}
+            per_unit = y * pef_e
         elif eq["output"] == "renewable_heat":
             cap = eq["capacity_per_unit"]["value"]
-            hrs = eq["full_load_hours"]["value"]
-            cop = eq["cop"]["value"]
-            per_unit = cap * hrs * (1 - 1 / cop) * pef_f
-            formula = "용량 × 전부하시간 × (1 − 1/COP) × 연료 환산계수"
-            inputs = {"용량(kW)": cap, "전부하시간": hrs, "COP": cop, "환산계수": pef_f}
+            sy = eq["specific_yield"]["value"]
+            per_unit = cap * sy * pef_f
+            sources.append(rules.regulation_source(f"{eq['name']} {sy:,} kWh/kW·yr"))
+            formula = "공당 용량 × 고시 단위 생산량 × 연료 환산계수"
+            inputs = {"용량(kW)": cap, "고시 생산량": sy, "환산계수": pef_f}
         elif eq["output"] == "chp":
             hrs = eq["operating_hours"]["value"]
             eff = eq["electric_efficiency"]["value"]
@@ -118,6 +137,7 @@ def build_options(
             per_unit = elec * pef_e + heat * pef_f - fuel_in * pef_f
             formula = "발전량×전력계수 + 회수열×연료계수 − 투입연료×연료계수"
             inputs = {"운전시간": hrs, "발전효율": eff, "열전비": hpr, "전력계수": pef_e, "연료계수": pef_f}
+            sources.append(rules.regulation_source(f"{eq['name']} {hrs:,} kWh/kW·yr"))
         else:  # pragma: no cover - 설정 오류
             raise ValueError(f"unknown output type: {eq['output']}")
 
@@ -148,7 +168,7 @@ def build_options(
             f"kWh/yr·{eq['unit']}",
             formula,
             inputs,
-            [eq_src],
+            sources,
         )
         ledger.record(
             f"eq.{key}.max_units",
