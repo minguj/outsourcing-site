@@ -146,7 +146,58 @@ function Report() {
             데이터 {r.site.data_source}
           </li>
         </ul>
+
+        <h2 className="zb-appendix-start">부록. 산출 근거 전체</h2>
+        <p className="zb-small zb-muted" style={{ marginTop: 0 }}>
+          검토 화면의 산출 근거와 같은 내용입니다. 계산 순서대로 값·산식·입력값·근거(조문, 확인 상태, 메모)를 모두 싣습니다.
+        </p>
+        <TraceAppendix steps={r.trace} />
       </article>
     </>
+  );
+}
+
+/** 보고서 부록: 계산 단계 전체. 인쇄용이라 접지 않고 표로 펼친다. */
+function TraceAppendix({ steps }: { steps: Feasibility["trace"] }) {
+  return (
+    <table className="zb-appendix">
+      <thead>
+        <tr><th>항목</th><th className="num">값</th><th>산식 · 입력값</th><th>근거</th></tr>
+      </thead>
+      <tbody>
+        {steps.map((s) => {
+          const inputs = Object.entries(s.inputs);
+          const sources = s.sources.filter((x) => x.kind !== "input");
+          return (
+            <tr key={s.key}>
+              <td>
+                {s.label}
+                {s.needs_review && <span className="zb-pill warn" style={{ marginLeft: 4 }}>검토 필요</span>}
+              </td>
+              <td className="num">{typeof s.value === "number" ? n(s.value, s.value % 1 ? 2 : 0) : s.value} {s.unit}</td>
+              <td className="zb-small">
+                {s.formula}
+                {inputs.length > 0 && (
+                  <div className="zb-muted">
+                    {inputs.map(([k, v]) => `${k} ${typeof v === "number" ? n(v, v % 1 ? 2 : 0) : v}`).join(" · ")}
+                  </div>
+                )}
+              </td>
+              <td className="zb-small">
+                {sources.length === 0 && <span className="zb-muted">{s.formula === "입력값" ? "사용자 입력·필지 데이터" : "앞 단계 값으로 계산"}</span>}
+                {sources.map((x) => (
+                  <div key={x.id} style={{ marginBottom: 4 }}>
+                    <span className="zb-muted">{SOURCE_KIND[x.kind] ?? "근거"}</span> {x.title}
+                    {x.ref ? ` · ${x.ref}` : ""}
+                    {x.kind !== "assumption" && ` (${x.verified ? "근거 확인" : "미검증"})`}
+                    {x.note && <div className="zb-muted">{x.note}</div>}
+                  </div>
+                ))}
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
   );
 }

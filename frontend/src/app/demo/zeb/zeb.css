@@ -143,6 +143,8 @@
 .zb-root .zb-report h2 { font-size: 16px; margin: 28px 0 10px; padding-bottom: 6px; border-bottom: 2px solid var(--ink); }
 .zb-root .zb-report table { font-size: 12.5px; }
 .zb-root .zb-report td, .zb-root .zb-report th { padding: 6px; }
+.zb-root .zb-report table.zb-appendix td { vertical-align: top; }
+.zb-root .zb-report table.zb-appendix td:first-child { white-space: normal; min-width: 7em; }
 @media print {
   @page { size: A4; margin: 14mm; }
   .zb-root { background: #fff; font-size: 12px; }
@@ -151,6 +153,10 @@
   .zb-root .zb-report { border: none; padding: 0; max-width: none; }
   .zb-root .zb-report h2 { break-after: avoid; }
   .zb-root table, .zb-root .zb-avoid-break { break-inside: avoid; }
+  /* 부록은 여러 쪽에 걸치므로 표는 나누고 행만 붙여 둔다 */
+  .zb-root .zb-report .zb-appendix-start { break-before: page; }
+  .zb-root table.zb-appendix { break-inside: auto; }
+  .zb-root table.zb-appendix tr { break-inside: avoid; }
 }
 .zb-root input[type="range"] { padding: 0; border: 0; accent-color: var(--accent); background: transparent; margin: 6px 0 2px; }
 .zb-root .zb-btn-small { padding: 4px 10px; font-size: 12.5px; margin-top: 6px; }

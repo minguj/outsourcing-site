@@ -182,7 +182,7 @@ export function TracePanel({ steps, filter }: { steps: TraceStep[]; filter?: (s:
   return (
     <div>
       {list.map((s) => (
-        <details key={s.key} className="zb-trace-item">
+        <details key={s.key} className="zb-trace-item" open>
           <summary>
             <span>
               {s.label}{" "}
