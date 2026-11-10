@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { api, Meta, ParcelSummary, Redevelopment, vworldConf } from "./_zeb/api";
 import { searchParcels as vworldSearch, type VWorldConf } from "./_zeb/vworld";
 import { area } from "./_zeb/format";
-import { Spinner } from "./_zeb/loading";
+import { Spinner, useNavPending } from "./_zeb/loading";
 
 type Tab = "parcel" | "redev" | "manual";
 
@@ -96,7 +96,7 @@ function ParcelSearch({ source, conf }: { source: string; conf: VWorldConf | nul
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   // 결과를 누른 뒤 계산 화면이 뜰 때까지 표시 (여러 번 누르는 것 방지)
-  const [opening, setOpening] = useState<string | null>(null);
+  const [opening, setOpening] = useNavPending<string>();
 
   const run = async (query: string) => {
     setLoading(true);
@@ -162,7 +162,7 @@ function ParcelSearch({ source, conf }: { source: string; conf: VWorldConf | nul
 function RedevSearch() {
   const [items, setItems] = useState<Redevelopment[]>([]);
   const [q, setQ] = useState("");
-  const [opening, setOpening] = useState<string | null>(null);
+  const [opening, setOpening] = useNavPending<string>();
   useEffect(() => {
     api.searchRedevelopment(q).then((r) => setItems(r.items));
   }, [q]);
@@ -198,7 +198,7 @@ function RedevSearch() {
 function ManualForm({ meta }: { meta: Meta | null }) {
   const router = useRouter();
   const [f, setF] = useState({ area: "1000", zone: "제2종일반주거지역", juris: "11", addr: "" });
-  const [opening, setOpening] = useState(false);
+  const [opening, setOpening] = useNavPending<boolean>();
   return (
     <form
       onSubmit={(e) => {
@@ -230,7 +230,7 @@ function ManualForm({ meta }: { meta: Meta | null }) {
           <input value={f.addr} onChange={(e) => setF({ ...f, addr: e.target.value })} placeholder="예: OO동 검토 부지" />
         </label>
       </div>
-      <button disabled={opening}>{opening ? <Spinner label="계산 화면 여는 중…" /> : "검토 시작"}</button>
+      <button disabled={!!opening}>{opening ? <Spinner label="계산 화면 여는 중…" /> : "검토 시작"}</button>
     </form>
   );
 }
