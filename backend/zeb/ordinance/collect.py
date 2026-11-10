@@ -74,6 +74,8 @@ class Collected:
     articles: dict[str, list[str]] = field(default_factory=dict)
     issues: list[str] = field(default_factory=list)
     error: str | None = None
+    # 못 찾은 용도지역이 조문에 어떻게 쓰여 있는지 (추출 규칙 보강용)
+    diagnostics: list[str] = field(default_factory=list)
 
     @property
     def counts(self) -> tuple[int, int]:
@@ -124,11 +126,21 @@ def collect_one(a: dict, client: LawClient, national: dict) -> Collected:
                 out.issues.append(f"{zone} {kind_label(kind)} {value}% 사용 (다른 값 {'·'.join(map(str, others))}%)")
         if not_found and len(not_found) < len(national):
             out.issues.append(f"{kind_label(kind)} 못 찾음: {', '.join(not_found)}")
+            out.diagnostics += [_diagnose(kind, z, ext.texts.get(kind, "")) for z in not_found]
     if not out.zones:
         out.error = "용도지역 조문에서 값을 찾지 못함 (별표로 정했거나 조 제목·문구 형식이 다름)"
     for name in ext.subareas.get("far", {}):
         out.issues.append(f"구역별 별도 용적률 '{name}' 있음 — 자동 반영 안 함")
     return out
+
+
+def _diagnose(kind: str, zone: str, text: str) -> str:
+    """못 찾은 용도지역: 조문에 이름이 없으면 그 지역이 지정되지 않은 경우가 많고, 있으면 뒤따르는 문구를 보여 준다."""
+    i = text.find(zone)
+    if i < 0:
+        return f"{kind_label(kind)} {zone}: 조문에 이름 없음 (이 지자체에 지정되지 않은 용도지역일 수 있음)"
+    snippet = text[i : i + len(zone) + 40].replace("|", "/")
+    return f"{kind_label(kind)} {zone}: `{snippet}`"
 
 
 def kind_label(kind: str) -> str:
@@ -214,6 +226,15 @@ def report(results: list[Collected], skipped: list[dict]) -> str:
             b, f = r.counts
             note = "; ".join(r.issues[:4]) + (" …" if len(r.issues) > 4 else "")
             out.append(f"| {r.authority['sido_name']} {r.authority['name'] if r.authority['name'] != r.authority['sido_name'] else ''} | {r.version.name} | {r.version.promulgated_on} | {b}/16 | {f}/16 | {note} |")
+        out.append("")
+    diag = [r for r in part if r.diagnostics]
+    if diag:
+        out += ["### 못 찾은 용도지역 진단 (조문 문구)", ""]
+        for r in diag:
+            out.append(f"<details><summary>{r.authority['sido_name']} {r.authority['name']}</summary>")
+            out.append("")
+            out += [f"- {d}" for d in r.diagnostics]
+            out += ["", "</details>"]
         out.append("")
     if fail:
         out += ["### 실패", "", "| 지자체 | 이유 |", "|---|---|"]

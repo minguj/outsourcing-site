@@ -10,7 +10,7 @@
 - 같은 용도지역 값이 여러 개 나오면 모두 돌려주고, 판단은 비교 단계에서 한다.
   기본값 목록은 보통 제1항에 있고 예외(주거 비율별 주상복합, 취락지구 등)는 ②항·'다만' 뒤에 온다. 그래서 그 앞부분에서
   찾은 값을 primary 로 따로 모은다 (일괄 수집에서 값이 여러 개일 때 우선 쓴다).
-- 천 단위 쉼표("1,300퍼센트")와 한글 단위("1천퍼센트")를 숫자로 바꿔 읽는다.
+- 천 단위 쉼표("1,300퍼센트")와 법령식 한글 단위("1천퍼센트", "1천300퍼센트", "1천2백퍼센트")를 숫자로 바꿔 읽는다.
 - "중심상업지역: 1천퍼센트(단, 서울도심: 800퍼센트)" 의 괄호 값은 구역별 기준(subareas)으로 따로 모은다.
 """
 
@@ -43,6 +43,8 @@ class Extracted:
     subareas: dict[str, dict[str, dict[str, int]]] = field(default_factory=lambda: {"bcr": {}, "far": {}})
     # 제1항(②항·'다만' 앞)에서 찾은 값. kind → 용도지역 → 값 목록
     primary: dict[str, dict[str, list[int]]] = field(default_factory=lambda: {"bcr": {}, "far": {}})
+    # 읽은 조문 전문(공백 제거·숫자 정규화 후). 못 찾은 용도지역 진단용
+    texts: dict[str, str] = field(default_factory=lambda: {"bcr": "", "far": ""})
 
 # 기본값 목록이 끝나고 예외가 시작되는 표시 (공백을 지운 문장 기준)
 _EXCEPTION_START = re.compile(r"②|다만|제1항에도불구하고")
@@ -62,6 +64,7 @@ def extract(articles: list[Article]) -> Extracted:
                 v = int(pct)
                 if v not in found[zone]:
                     found[zone].append(v)
+            out.texts[kind] += flat
             head = _EXCEPTION_START.split(flat, maxsplit=1)[0]
             for zone, pct in _VALUE.findall(head):
                 if int(pct) not in primary[zone]:
@@ -76,6 +79,8 @@ def extract(articles: list[Article]) -> Extracted:
 def _normalize_numbers(s: str) -> str:
     """'1,300퍼센트' → '1300퍼센트', '1천퍼센트'·'1천2백퍼센트' → '1000퍼센트'·'1200퍼센트'."""
     s = re.sub(r"(\d),(\d{3})(?!\d)", r"\1\2", s)
+    # 법령 표기: 1천500 = 1500, 1천50 = 1050 (천 뒤 숫자가 바로 붙는 형식)
+    s = re.sub(r"(\d+)천(\d{1,3})(?=퍼센트|%)", lambda m: str(int(m[1]) * 1000 + int(m[2])), s)
     s = re.sub(r"(\d+)천(\d+)백", lambda m: str(int(m[1]) * 1000 + int(m[2]) * 100), s)
     s = re.sub(r"(\d+)천(?!\d)", lambda m: str(int(m[1]) * 1000), s)
     return re.sub(r"(\d+)백(?!\d)", lambda m: str(int(m[1]) * 100), s)
