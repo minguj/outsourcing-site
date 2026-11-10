@@ -111,6 +111,8 @@ override_plans:
     message: 정비구역에 포함됩니다. 정비계획 결정 용적률이 우선 적용됩니다.
   - keyword: 특별계획구역
     message: 특별계획구역에 포함됩니다. 별도 세부개발계획을 확인해야 합니다.
+  - keyword: 공공주택지구
+    message: 공공주택지구에 포함됩니다. 「공공주택 특별법」에 따른 지구계획의 용적률·높이가 우선하므로 지구계획을 확인해야 합니다.
   # height_related: 높이를 제한하지만 높이값은 토지이용계획 데이터에 없다 → 고시문의 값을 '높이 제한(m)'에 입력해야 한다.
   - keyword: 가로구역별 최고높이
     severity: warning
@@ -120,10 +122,11 @@ override_plans:
     severity: warning
     height_related: true
     message: 고도지구(최고고도지구)입니다. 도시관리계획으로 정한 최고 높이·층수를 '높이 제한(m)'에 입력해야 규모가 맞게 나옵니다.
-  - keyword: 비행안전구역
+  # 토지이용계획에는 "비행안전제5구역(전술)"처럼 구역 번호가 붙어 나온다 → '비행안전'으로 잡는다 (제1~6구역 모두)
+  - keyword: 비행안전
     severity: warning
     height_related: true
-    message: 비행안전구역입니다. 군 비행장 주변 구역별 높이 제한이 있으므로 해당 높이를 '높이 제한(m)'에 입력하세요.
+    message: 군 비행장 비행안전구역입니다(「군사기지 및 군사시설 보호법」). 구역 번호별 높이 제한이 있으므로 해당 높이를 '높이 제한(m)'에 입력하세요.
   # 공항 장애물제한표면: 토지이용계획에는 "수평표면구역" 등으로 나온다 (「공항시설법 시행규칙」 [별표 2])
   - keyword: 표면구역
     severity: warning
@@ -145,7 +148,7 @@ override_plans:
 # 지목(토지대장상 토지 용도)에 따른 판단
 land_categories:
   not_buildable:
-    values: [도로, 철도용지, 제방, 하천, 구거, 유지, 수도용지]
+    values: [도로, 철도용지, 제방, 하천, 구거, 유지, 수도용지, 공원, 유원지]
     severity: critical
     message: "지목이 '{category}'입니다. 일반적인 건축 대상지가 아니므로 이 계산은 참고용입니다 (도시계획시설·지목 변경 여부 확인 필요)."
   conversion_required:
