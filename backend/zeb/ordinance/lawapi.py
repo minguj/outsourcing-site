@@ -73,6 +73,11 @@ def _texts(obj: Any):
             yield from _texts(v)
 
 
+def _norm_title(s: str) -> str:
+    """조례명 비교용: 공백과 '[제명개정 2020. 10. 5.]' 같은 꼬리표를 뗀다 (청도군)."""
+    return re.sub(r"\[[^\]]*\]", "", s).replace(" ", "")
+
+
 def _date(v: Any) -> str | None:
     s = "".join(ch for ch in str(v or "") if ch.isdigit())
     return f"{s[:4]}-{s[4:6]}-{s[6:8]}" if len(s) == 8 else None
@@ -108,14 +113,14 @@ class LawClient:
         if org:
             params["org"] = org
         data = self._get("lawSearch.do", params)
-        want = name.replace(" ", "")
+        want = _norm_title(name)
         hits, other_agency, similar = [], [], []
         for d in _walk(data):
             row = {_norm_key(k): v for k, v in d.items()}
             if not row.get("자치법규ID"):
                 continue
             title = str(row.get("자치법규명", ""))
-            if title.replace(" ", "") == want:
+            if _norm_title(title) == want:
                 if agency_ok is None or agency_ok(str(row.get("지자체기관명", ""))):
                     hits.append(row)
                 else:
