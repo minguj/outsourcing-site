@@ -101,6 +101,12 @@ backend/tests/test_zeb_demo.py, test_zeb_ordinance.py, test_zeb_collect.py, back
 - fixture(`backend/tests/fixtures/zeb/vworld_*.json`)는 문서 기준 **가정 스키마**다. 키 발급 후 저장소 루트에서
   `python -m backend.zeb.check_vworld "<지번주소>"` 로 실제 응답을 녹화하고, 필드명이 다르면 `adapters/vworld.py` 의 `FIELD_MAP` 만 고친다.
 
+### 행정구역 코드 변경 (전남광주통합특별시, 2026-07-01)
+- 시군구 코드가 바뀌었다: 전남 46○○○ → 12○○○ (목포 12110, 순천 12150), 광주 구는 따로 매겨짐 (서구 29140 → 12240, 광산구 29200 → 12330).
+- 브이월드 검색은 새 PNU 를 주지만 토지특성은 아직 예전 PNU 로만 있는 필지가 있다 ("토지특성 정보가 없는 필지"). 새 PNU 로 비면 예전 PNU 로 한 번 더 조회한다 (브라우저 조회 _zeb/vworld.ts, 서버 조회 adapters/vworld.py).
+- 조례는 수집 파일이 예전 코드(4611·29 등)로 저장돼 있어, 엔진이 새 코드를 예전 코드로도 찾는다 (domain/regions.py, 프론트 _zeb/regions.ts 에 같은 표).
+- 광주 동구·남구·북구의 새 코드(12210·12270·12300)는 서구·광산구 간격으로 추정한 값이다. 실제 필지로 확인하면 regions.py 의 LEGACY_UNVERIFIED 에서 뺀다.
+
 ## 근거 (2026-11-10 확인)
 | 항목 | 값 | 근거 |
 |---|---|---|

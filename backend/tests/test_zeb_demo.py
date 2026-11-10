@@ -11,6 +11,7 @@ import asyncio
 import json
 import os
 import random
+import re
 import subprocess
 import unittest
 from pathlib import Path
@@ -23,8 +24,10 @@ from fastapi.testclient import TestClient
 from backend.zeb import router as zeb_router_module
 from backend.zeb.adapters.base import ProviderError
 from backend.zeb.adapters.vworld import VWorldParcelProvider
+from backend.zeb.domain import regions
 from backend.zeb.domain.energy import build_options, grade_for
 from backend.zeb.domain.feasibility import PlanOptions, SiteInput, run_feasibility
+from backend.zeb.domain.regions import legacy_code
 from backend.zeb.domain.rules import RuleBook
 from backend.zeb.domain.trace import Ledger
 
@@ -33,6 +36,8 @@ SEOUL = "11440"
 SEONGNAM = "41135"
 MAPO = "1144012000101230004"
 FIX = Path(__file__).parent / "fixtures" / "zeb"
+ROOT = Path(__file__).resolve().parents[2]
+RULES = ROOT / "backend" / "zeb" / "rules"
 
 
 def run(area, zone, juris=SEOUL, **opt):
@@ -584,6 +589,52 @@ class VWorldContractTests(unittest.TestCase):
                     asyncio.run(_provider(handler).search("아현동"))
                 self.assertNotIn("TEST", str(cm.exception))
                 self.assertIsNone(cm.exception.__cause__)
+
+
+class RegionCodeChangeTests(unittest.TestCase):
+    """2026-07 전남광주통합특별시 출범으로 시군구 코드가 46·29 → 12 로 바뀌었다 (브이월드 검색 PNU 로 확인)."""
+
+    def test_legacy_code(self):
+        self.assertEqual(legacy_code("1211010100111880002"), "4611010100111880002")  # 목포시청
+        self.assertEqual(legacy_code("12150"), "46150")  # 순천
+        self.assertEqual(legacy_code("1224012000112000000"), "2914012000112000000")  # 광주 서구 치평동 1200
+        self.assertEqual(legacy_code("12330"), "29200")  # 광주 광산구
+        self.assertIsNone(legacy_code("11440"))
+        self.assertIsNone(legacy_code("12"))
+
+    def test_new_codes_find_collected_ordinances(self):
+        if not (RULES / "zoning_collected.yaml").exists():
+            self.skipTest("아직 일괄 수집 전")
+        mokpo = RB.resolve_zone("일반상업지역", "12110", "공동주택")
+        self.assertEqual(mokpo.ordinance.source.id, "auto-4611")
+        gwangju = RB.resolve_zone("일반상업지역", "12330", "공동주택")
+        self.assertEqual(gwangju.ordinance.source.id, "auto-29")
+        r = run(1000, "일반상업지역", "12110")
+        self.assertNotIn("ORDINANCE_MISSING", {w["code"] for w in r["warnings"]})
+
+    def test_vworld_retries_with_legacy_pnu_when_new_pnu_is_empty(self):
+        new, old = "1211010100111880002", "4611010100111880002"
+        asked = []
+
+        def handler(req):
+            pnu = req.url.params.get("pnu")
+            asked.append((req.url.path.rsplit("/", 1)[-1], pnu))
+            if req.url.path.endswith("getLandCharacteristics") and pnu == new:
+                return httpx.Response(200, json={"landCharacteristicss": {"field": []}})
+            return _router(req)
+
+        p = asyncio.run(_provider(handler).get(new))
+        self.assertEqual(p.pnu, new)
+        self.assertEqual(p.jurisdiction, "12110")
+        self.assertEqual(p.area_m2, 1000)
+        self.assertIn(("getLandUseAttr", old), asked)
+
+    def test_frontend_table_matches_backend(self):
+        ts = (ROOT / "frontend/src/app/demo/zeb/_zeb/regions.ts").read_text(encoding="utf-8")
+        jeonnam = re.findall(r'"(46\d{3})"', ts)
+        gwangju = dict(re.findall(r'"(12\d{3})": "(29\d{3})"', ts))
+        self.assertEqual(tuple(jeonnam), regions.JEONNAM)
+        self.assertEqual(gwangju, regions.GWANGJU)
 
 
 @unittest.skipUnless((FIX / "vworld_land_characteristics.recorded.json").exists(), "실응답 녹화 없음")

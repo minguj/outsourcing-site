@@ -3,6 +3,8 @@
 // 응답 해석은 하지 않는다. 원본을 그대로 서버(/feasibility 의 vworld_raw)로 보내 서버의 검증된 해석 코드를 쓴다.
 // 키는 브이월드 지도 API 처럼 페이지에 전달되며, 브이월드에 등록한 도메인에서만 동작한다.
 
+import { legacyCode } from "./regions";
+
 const BASE = "https://api.vworld.kr";
 
 export type VWorldConf = { key: string; domain: string };
@@ -68,14 +70,32 @@ export async function searchParcels(conf: VWorldConf, query: string) {
 
 const landCache = new Map<string, Promise<VWorldRaw>>();
 
-/** 토지특성 + 토지이용계획 원본. 같은 필지는 페이지 안에서 한 번만 조회한다. */
+function hasRows(data: Json, container: string): boolean {
+  const field = ((data?.[container] ?? {}) as Json).field;
+  return Array.isArray(field) ? field.length > 0 : Boolean(field);
+}
+
+async function fetchRaw(conf: VWorldConf, pnu: string): Promise<[Json, Json]> {
+  return Promise.all([
+    call(conf, "/ned/data/getLandCharacteristics", { pnu, numOfRows: "10", pageNo: "1" }),
+    call(conf, "/ned/data/getLandUseAttr", { pnu, numOfRows: "100", pageNo: "1" }),
+  ]);
+}
+
+/** 토지특성 + 토지이용계획 원본. 같은 필지는 페이지 안에서 한 번만 조회한다.
+ *  전남광주통합(2026-07) 뒤 새 PNU(12…)로 토지특성이 비면 같은 필지의 예전 PNU 로 다시 조회한다.
+ *  돌려주는 pnu 는 새 PNU 그대로 (관할·조례는 서버가 예전 코드로도 찾는다). */
 export function fetchLand(conf: VWorldConf, pnu: string): Promise<VWorldRaw> {
   let p = landCache.get(pnu);
   if (!p) {
-    p = Promise.all([
-      call(conf, "/ned/data/getLandCharacteristics", { pnu, numOfRows: "10", pageNo: "1" }),
-      call(conf, "/ned/data/getLandUseAttr", { pnu, numOfRows: "100", pageNo: "1" }),
-    ]).then(([land_characteristics, land_use_attr]) => ({ pnu, land_characteristics, land_use_attr }));
+    p = (async () => {
+      let [land_characteristics, land_use_attr] = await fetchRaw(conf, pnu);
+      const old = legacyCode(pnu);
+      if (old && !hasRows(land_characteristics, "landCharacteristicss")) {
+        [land_characteristics, land_use_attr] = await fetchRaw(conf, old);
+      }
+      return { pnu, land_characteristics, land_use_attr };
+    })();
     p.catch(() => landCache.delete(pnu));
     landCache.set(pnu, p);
   }
