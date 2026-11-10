@@ -94,6 +94,7 @@ def collect_one(a: dict, client: LawClient, national: dict) -> Collected:
     out = Collected(a)
     ok = agency_predicate(a["sido"], a["sido_name"], a["name"])
     version = None
+    hints = []
     for name in candidate_names(a):
         try:
             version = client.latest(name, agency_ok=ok)
@@ -102,8 +103,10 @@ def collect_one(a: dict, client: LawClient, national: dict) -> Collected:
             if "찾지 못했습니다" not in str(e):
                 out.error = str(e)
                 return out
+            if " — " in str(e):
+                hints.append(str(e).split(" — ", 1)[1])
     if version is None:
-        out.error = "조례를 찾지 못함 (" + " / ".join(candidate_names(a)) + ")"
+        out.error = "조례를 찾지 못함 (" + " / ".join(candidate_names(a)) + ")" + (f" {hints[0]}" if hints else "")
         return out
     out.version = version
     try:
@@ -146,6 +149,9 @@ def collect_one(a: dict, client: LawClient, national: dict) -> Collected:
         out.error = "용도지역 조문에서 값을 찾지 못함 (별표로 정했거나 조 제목·문구 형식이 다름). 관련 조: " + (
             ", ".join(related[:6]) if related else "제목에 건폐율·용적률이 들어간 조 없음"
         )
+        sample = ext.texts.get("bcr") or ext.texts.get("far")
+        if sample:
+            out.error += f". 조문 앞부분: `{sample[:160].replace('|', '/')}`"
     for name in ext.subareas.get("far", {}):
         out.issues.append(f"구역별 별도 용적률 '{name}' 있음 — 자동 반영 안 함")
     return out
@@ -233,8 +239,10 @@ def report(results: list[Collected], skipped: list[dict]) -> str:
         "## 조례 일괄 수집 결과",
         "",
         f"- 대상 {len(results)}곳 (이미 확인한 관할 {len(skipped)}곳 제외: {', '.join(a['name'] for a in skipped) or '없음'})",
-        f"- **전체 추출 {len(full)}곳, 일부 추출 {len(part)}곳, 실패 {len(fail)}곳**"
-        " (조문에 이름이 없는 용도지역은 그 지자체에 지정되지 않은 것으로 보고 전체 추출에 포함)",
+        (
+            f"- **전체 추출 {len(full)}곳, 일부 추출 {len(part)}곳, 실패 {len(fail)}곳**"
+            " (조문에 이름이 없는 용도지역은 그 지자체에 지정되지 않은 것으로 보고 전체 추출에 포함)"
+        ),
         "- 추출한 값은 모두 `verified: false`(미검증)로 들어가 계산에 쓰이고, 화면·보고서에 '미검증(자동 수집)'으로 표시됩니다.",
         "",
     ]

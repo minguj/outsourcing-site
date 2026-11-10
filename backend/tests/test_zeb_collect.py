@@ -224,12 +224,52 @@ class CollectOneTests(unittest.TestCase):
         self.assertEqual(r.zones["중심상업지역"]["far"], 1200)
         self.assertEqual(r.zones["자연녹지지역"]["far"], 80)
 
+    def test_item_number_not_glued_to_hundredths(self):
+        """전주 실제 결과: '100분의 40 2. 제2종…' 이 공백 제거 뒤 '100분의402' 로 읽혀 402% 가 됐다."""
+        api = FakeLaw()
+        bcr, far = standard()
+        # 단위 없이 '100분의 40' 다음에 바로 다음 호 번호 '2.' 가 오는 형식
+        text = "제44조(용도지역 안에서의 건폐율) 용도지역별 건폐율은 다음 각 호와 같다." + "".join(
+            f"{i}. {z} : 100분의 {v} " for i, (z, v) in enumerate(bcr.items(), 1))
+        b = body("114", "수원시 도시계획 조례", bcr, far)
+        b["LawService"]["조문"]["조"][1]["조내용"] = text
+        api.add("수원시 도시계획 조례", "경기도 수원시", "114", "20250301", b)
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertEqual((r.zones["제1종전용주거지역"]["bcr"], r.zones["제2종전용주거지역"]["bcr"]), (40, 40))
+        self.assertTrue(r.complete, r.issues)
+
+    def test_unit_typos(self):
+        """옥천 '200센트', 아산 '70퍼센터' (실제 조문 오타)."""
+        api = FakeLaw()
+        bcr, far = standard()
+        b = body("115", "수원시 도시계획 조례", bcr, far)
+        art = b["LawService"]["조문"]["조"][2]
+        art["조내용"] = art["조내용"].replace("제1종일반주거지역: 160퍼센트", "제1종일반주거지역: 160센트").replace("보전녹지지역: 64퍼센트", "보전녹지지역: 64퍼센터")
+        api.add("수원시 도시계획 조례", "경기도 수원시", "115", "20250301", b)
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertEqual((r.zones["제1종일반주거지역"]["far"], r.zones["보전녹지지역"]["far"]), (160, 64))
+
+    def test_not_found_explains_agency_mismatch(self):
+        """전남 전체·광주가 '찾지 못함'이었다. 같은 이름이 다른 기관명으로 있으면 그 이름을 보여 준다."""
+        api = FakeLaw()
+        bcr, far = standard()
+        api.add("수원시 도시계획 조례", "새이름특별시 수원시", "116", "20250301", body("116", "수원시 도시계획 조례", bcr, far))
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertIn("다른 기관명으로 있음: 새이름특별시 수원시", r.error)
+
     def test_failure_lists_related_articles(self):
         api = FakeLaw()
         api.add("수원시 도시계획 조례", "경기도 수원시", "112", "20250301", {"LawService": {"조문": {"조": [
             {"조문번호": "005000", "조제목": "건폐율", "조내용": "제50조(건폐율) 영 제84조에 따른 건폐율은 별표 20과 같다.", "조문여부": "Y"}]}}})
         r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
         self.assertIn("관련 조: 제50조(건폐율)", r.error)
+
+    def test_failure_shows_article_head(self):
+        api = FakeLaw()
+        api.add("수원시 도시계획 조례", "경기도 수원시", "117", "20250301", {"LawService": {"조문": {"조": [
+            {"조문번호": "004600", "조제목": "용도지역 안에서의 건폐율‧용적률", "조내용": "제46조(용도지역 안에서의 건폐율‧용적률) 용도지역 안에서의 건폐율 및 용적률은 별표 22와 같다.", "조문여부": "Y"}]}}})
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertIn("별표22와같다", r.error)
 
     def test_diagnostics_show_unreadable_wording(self):
         api = FakeLaw()
