@@ -400,6 +400,19 @@ class CollectOneTests(unittest.TestCase):
         self.assertEqual(d.count("`") // 2, 3)
         self.assertTrue(d.endswith("외 1곳"))
 
+    def test_zone_name_typo_missing_last_char(self):
+        """태백 제56조: '6. 준주거지 : 500 퍼센트 이하' ('역' 빠짐). 실제 조문 형식 그대로."""
+        api = FakeLaw()
+        bcr, far = standard()
+        b = body("121", "수원시 도시계획 조례", bcr, far)
+        art = b["LawService"]["조문"]["조"][2]
+        art["조내용"] = art["조내용"].replace(f"준주거지역: {far['준주거지역']}퍼센트", f"준주거지 : {far['준주거지역']} 퍼센트 이하")
+        self.assertIn("준주거지 :", art["조내용"])
+        api.add("수원시 도시계획 조례", "경기도 수원시", "121", "20250301", b)
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertEqual(r.counts, (16, 16))
+        self.assertEqual(r.zones["준주거지역"]["far"], far["준주거지역"])
+
     def test_not_found_and_no_article(self):
         api = FakeLaw()
         self.assertIn("찾지 못함", collect.collect_one(SUWON, LawClient("x", api), NATIONAL).error)
