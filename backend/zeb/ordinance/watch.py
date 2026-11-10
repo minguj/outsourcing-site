@@ -63,7 +63,7 @@ def main(argv: list[str] | None = None) -> int:
     print(body)
 
     changed = bool(props)
-    needs_manual = any(p.manual or p.changed for p in props)
+    needs_manual = any(p.manual or p.changed or p.subarea_issues for p in props)
     if out := os.environ.get("GITHUB_OUTPUT"):
         with open(out, "a", encoding="utf-8") as f:
             f.write(f"changed={'true' if changed else 'false'}\n")

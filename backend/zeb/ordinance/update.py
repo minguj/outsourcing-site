@@ -39,6 +39,8 @@ class Proposal:
     previous_promulgated_on: str | None
     results: list[ZoneResult] = field(default_factory=list)
     articles: dict[str, list[str]] = field(default_factory=dict)
+    # 구역별 기준(서울도심 등) 중 조문과 다르거나 못 찾은 것: (구역 이름, 설명)
+    subarea_issues: list[tuple[str, str]] = field(default_factory=list)
 
     @property
     def changed(self) -> list[ZoneResult]:
@@ -78,6 +80,14 @@ def compare(ordinance: dict, version: OrdinanceVersion, ext: Extracted) -> Propo
                 prop.results.append(ZoneResult(zone, kind, cur, found, "changed", new=found[0]))
             else:
                 prop.results.append(ZoneResult(zone, kind, cur, found, "manual", reason="값이 여러 개라 자동 판단 불가"))
+    for sa in ordinance.get("subareas", []):
+        got = ext.subareas.get("far", {}).get(sa["name"])
+        if not got:
+            prop.subarea_issues.append((sa["name"], "조문에서 이 구역의 별도 용적률을 찾지 못함"))
+            continue
+        diffs = [f"{z} {cur}% → {got.get(z, '없음')}{'%' if z in got else ''}" for z, cur in sa["far"].items() if got.get(z) != cur]
+        if diffs:
+            prop.subarea_issues.append((sa["name"], ", ".join(diffs)))
     return prop
 
 
@@ -106,7 +116,16 @@ def apply(yaml_text: str, prop: Proposal, today: str) -> str:
         if r.status != "same":
             touched.setdefault(r.zone, {})[r.kind] = r.new
 
+    flagged = {name for name, _ in prop.subarea_issues}
+    in_flagged_subarea = False
     for i in range(start, end):
+        sm = re.match(r"^\s+-\s+name:\s*(.+?)\s*$", lines[i])
+        if sm:
+            in_flagged_subarea = sm.group(1) in flagged
+        elif in_flagged_subarea and re.match(r"^\s+verified:\s*true", lines[i]):
+            lines[i] = re.sub(r"verified:\s*true", "verified: false", lines[i])
+            in_flagged_subarea = False
+            continue
         m = re.match(rf"^(\s+)({ZONE}):\s*\{{.*\}}\s*$", lines[i])
         if m and m.group(2) in touched:
             line = lines[i]
@@ -150,6 +169,10 @@ def report(props: list[Proposal], errors: list[str]) -> str:
             ),
             "",
         ]
+        for name, why in p.subarea_issues:
+            out.append(f"- **구역별 기준 `{name}`: {why}** → 해당 구역 verified: false (값은 직접 수정)")
+        if p.subarea_issues:
+            out.append("")
         if p.changed or p.manual:
             out += ["| 용도지역 | 항목 | 지금 값 | 조문 값 | 처리 |", "|---|---|---|---|---|"]
             for r in p.changed + p.manual:
