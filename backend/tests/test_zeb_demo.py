@@ -80,11 +80,24 @@ class GoldenMassingTests(unittest.TestCase):
         self.assertEqual(m["height_m"], 28)
 
     def test_g4_unregistered_ordinance_falls_back_with_critical_warning(self):
-        """성남(경기)은 조례 미등록 → 법정 상한 60% / 250%. 연면적 1800×2.5 = 4,500㎡. 경고 필수."""
-        r = run(1800, "제2종일반주거지역", SEONGNAM)
+        """조례가 하나도 없는 관할 → 법정 상한 60% / 250%. 연면적 1800×2.5 = 4,500㎡. 경고 필수.
+        (전국 일괄 수집 뒤로는 실제 관할이 모두 채워져 있어, 수집 파일이 없는 상태를 만들어 확인한다)"""
+        rb = RuleBook()
+        rb.collected = {}
+        r = run_feasibility(SiteInput(1800, "제2종일반주거지역", SEONGNAM), PlanOptions(), rb)
         self.assertEqual(r["massing"]["far_pct"], 250)
         self.assertEqual(r["massing"]["max_gfa_m2"], 4500)
         self.assertIn(("ORDINANCE_MISSING", "critical"), {(w["code"], w["severity"]) for w in r["warnings"]})
+
+    def test_g4b_collected_ordinance_is_used_and_flagged(self):
+        """성남은 일괄 수집 조례(제67조) 2종일반 210% 를 쓴다. 연면적 1800×2.1 = 3,780㎡. 미검증 경고, 미등록 경고 없음."""
+        r = run(1800, "제2종일반주거지역", SEONGNAM)
+        self.assertEqual((r["massing"]["bcr_pct"], r["massing"]["far_pct"]), (60, 210))
+        self.assertEqual(r["massing"]["max_gfa_m2"], 3780)
+        codes = {w["code"] for w in r["warnings"]}
+        self.assertIn("ORDINANCE_COLLECTED", codes)
+        self.assertNotIn("ORDINANCE_MISSING", codes)
+        self.assertTrue(r["review_required"])
 
     def test_g5_height_limit_binds(self):
         """서울 2종일반 1,000㎡, 높이 제한 9m, 층고 3m → floor(9/3) = 3층
