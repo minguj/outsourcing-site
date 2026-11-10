@@ -100,8 +100,10 @@ class LawClient:
             raise LawApiError(f"법제처 API 거부: {data['result']} {data['msg']}".replace(self.oc, "***"))
         return data
 
-    def latest(self, name: str, org: str | None = None) -> OrdinanceVersion:
-        """현행 자치법규 중 이름이 정확히 같은 것."""
+    def latest(
+        self, name: str, org: str | None = None, agency_ok: Callable[[str], bool] | None = None
+    ) -> OrdinanceVersion:
+        """현행 자치법규 중 이름이 정확히 같은 것. agency_ok 로 지자체기관명을 거른다 (예: 강원·경남 고성군)."""
         params = {"target": "ordin", "query": name, "display": "100", "nw": "1"}
         if org:
             params["org"] = org
@@ -110,7 +112,8 @@ class LawClient:
         hits = []
         for d in _walk(data):
             row = {_norm_key(k): v for k, v in d.items()}
-            if str(row.get("자치법규명", "")).replace(" ", "") == want and row.get("자치법규ID"):
+            same_name = str(row.get("자치법규명", "")).replace(" ", "") == want and row.get("자치법규ID")
+            if same_name and (agency_ok is None or agency_ok(str(row.get("지자체기관명", "")))):
                 hits.append(row)
         if not hits:
             raise LawApiError(f"자치법규를 찾지 못했습니다: {name}")

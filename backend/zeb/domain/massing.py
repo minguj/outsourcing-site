@@ -88,6 +88,13 @@ def compute_massing(inp: MassingInput, rules: RuleBook, ledger: Ledger, floor_he
             "critical",
         )
 
+    if z.collected:
+        ledger.warn(
+            "ORDINANCE_COLLECTED",
+            f"{z.ordinance.source.title.replace(' (자동 수집)', '')} 값을 자동 수집해 적용했습니다(미검증). "
+            "법제처 원문에서 뽑은 값이지만 사람이 확인하기 전이므로 참고용입니다.",
+        )
+
     # 2) 용적률 -----------------------------------------------------------
     if z.use_override_far:
         ord_far, ord_src = z.use_override_far

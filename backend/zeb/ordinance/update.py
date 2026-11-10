@@ -63,6 +63,8 @@ def compare(ordinance: dict, version: OrdinanceVersion, ext: Extracted) -> Propo
         if not re.fullmatch(ZONE, zone):
             continue  # '제2종일반주거지역(7층이하)' 같은 서울 세분 이름은 조문에 그대로 나오지 않는다
         for kind in ("bcr", "far"):
+            if kind not in z:
+                continue  # 일괄 수집분은 한쪽 값만 있을 수 있다
             cur = z[kind]
             known = {cur}
             if kind == "far":

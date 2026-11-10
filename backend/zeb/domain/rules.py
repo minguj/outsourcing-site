@@ -31,6 +31,11 @@ def _load(name: str) -> dict[str, Any]:
         return yaml.safe_load(f)
 
 
+def _load_optional(name: str) -> dict[str, Any]:
+    """조례 일괄 수집 결과(zoning_collected.yaml). 아직 수집 전이면 빈 묶음."""
+    return _load(name) if (RULES_DIR / name).exists() else {"ordinances": []}
+
+
 def _parse_date(v: str | None) -> date | None:
     return date.fromisoformat(v) if v else None
 
@@ -52,6 +57,7 @@ class ResolvedZoning:
     ordinance: ZoneLimit | None
     use_override_far: tuple[float, Source] | None
     subarea: dict | None = None  # 같은 지자체 안에서 구역에 따라 다른 값 (예: 서울도심 상업지역)
+    collected: bool = False  # 조례값이 일괄 수집분(사람 미확인)에서 왔는지
 
 
 @dataclass(frozen=True)
@@ -67,6 +73,7 @@ class RuleBook:
     def __init__(self, as_of: date | None = None) -> None:
         self.as_of = as_of or date.today()
         self.zoning = _load("zoning.yaml")
+        self.collected = _load_optional("zoning_collected.yaml")
         self.zeb = _load("zeb.yaml")
         self.assumptions = _load("assumptions.yaml")
         self.equipment = _load("equipment.yaml")
@@ -75,7 +82,7 @@ class RuleBook:
     def fingerprint(self) -> str:
         """규칙 데이터 전체의 해시. 보고서에 찍어 같은 결과를 재현할 수 있게 한다."""
         blob = json.dumps(
-            [self.zoning, self.zeb, self.assumptions, self.equipment],
+            [self.zoning, self.collected.get("ordinances"), self.zeb, self.assumptions, self.equipment],
             ensure_ascii=False,
             sort_keys=True,
             default=str,
@@ -126,16 +133,24 @@ class RuleBook:
         if ord_rule:
             oz = ord_rule["zones"].get(zone) or ord_rule["zones"].get(canonical)
             if oz:
+                collected = bool(ord_rule.get("collected"))
+                note = oz.get("note")
+                missing = [label for key, label in (("bcr", "건폐율"), ("far", "용적률")) if key not in oz]
+                if missing:
+                    # 일괄 수집에서 한쪽 값만 뽑힌 경우: 빠진 쪽은 법정 상한으로 채우고 알린다
+                    note = f"{'·'.join(missing)}은 조문에서 찾지 못해 법정 상한을 사용" + (f" / {note}" if note else "")
                 src = Source(
                     id=ord_rule["id"],
-                    title=ord_rule["title"],
+                    title=ord_rule["title"] + (" (자동 수집)" if collected else ""),
                     kind="ordinance",
                     ref=_ordinance_ref(ord_rule),
                     url=ord_rule.get("url"),
                     verified=bool(oz.get("verified", False)),
-                    note=oz.get("note"),
+                    note=note,
                 )
-                ordinance = ZoneLimit(zone, oz["bcr"], oz["far"], oz.get("max_floors"), src)
+                ordinance = ZoneLimit(
+                    zone, oz.get("bcr", nz["bcr"]), oz.get("far", nz["far"]), oz.get("max_floors"), src
+                )
             uo = ord_rule.get("use_overrides", {}).get(canonical, {}).get(building_use)
             if uo:
                 override = (
@@ -155,22 +170,29 @@ class RuleBook:
             for sa in ord_rule.get("subareas", []):
                 if canonical in sa.get("far", {}) and any(jurisdiction.startswith(j) for j in sa["jurisdictions"]):
                     subarea = {"name": sa["name"], "far": sa["far"][canonical], "note": sa.get("note")}
-        return ResolvedZoning(zone, canonical, national, ordinance, override, subarea)
+        return ResolvedZoning(
+            zone, canonical, national, ordinance, override, subarea,
+            collected=bool(ordinance and ord_rule and ord_rule.get("collected")),
+        )
 
     def _ordinance_for(self, jurisdiction: str | None) -> dict | None:
         if not jurisdiction:
             return None
         candidates = [
             o
-            for o in self.zoning["ordinances"]
+            for o in [*self.zoning["ordinances"], *(self.collected.get("ordinances") or [])]
             if jurisdiction.startswith(o["jurisdiction"])
             and (_parse_date(o.get("effective_from")) or date.min) <= self.as_of
         ]
         if not candidates:
             return None
-        # 가장 구체적인(코드가 긴) 관할, 그다음 가장 최근 시행분
+        # 가장 구체적인(코드가 긴) 관할, 같으면 사람이 확인한 규칙(zoning.yaml)이 일괄 수집분보다 우선, 그다음 최근 시행분
         candidates.sort(
-            key=lambda o: (len(o["jurisdiction"]), _parse_date(o.get("effective_from")) or date.min),
+            key=lambda o: (
+                len(o["jurisdiction"]),
+                not o.get("collected"),
+                _parse_date(o.get("effective_from")) or date.min,
+            ),
             reverse=True,
         )
         return candidates[0]
