@@ -290,11 +290,17 @@ class RuleFileTests(unittest.TestCase):
             walk(yaml.safe_load(f.read_text(encoding="utf-8")), f.name)
 
     def test_every_watched_ordinance_has_name_and_org(self):
+        """기관 구분: 법제처 지자체코드(org) 또는 [시도코드, 시도명, 지자체명](agency, 일괄 수집과 같은 방식)."""
         data = yaml.safe_load((RULES / "zoning.yaml").read_text(encoding="utf-8"))
         for o in data["ordinances"]:
             if "watch" in o:
-                self.assertTrue(o["watch"]["law_name"])
-                self.assertRegex(str(o["watch"]["org"]), r"^\d{7}$")
+                w = o["watch"]
+                self.assertTrue(w["law_name"])
+                if "agency" in w:
+                    self.assertEqual(len(w["agency"]), 3, o["id"])
+                    self.assertRegex(str(w["agency"][0]), r"^\d{2}$")
+                else:
+                    self.assertRegex(str(w["org"]), r"^\d{7}$")
 
 
 class RuleBookIntegrationTests(unittest.TestCase):
