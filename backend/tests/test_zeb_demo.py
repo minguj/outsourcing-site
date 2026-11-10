@@ -699,6 +699,21 @@ class SiteCheckTests(unittest.TestCase):
         partial = self.warnings(partial_plans=("정비구역",))["OVERRIDE_PLAN"]["message"]
         self.assertIn("일부", partial)
 
+    def test_numbered_flight_safety_zone_is_height_plan(self):
+        """실제 데이터는 '비행안전제5구역(전술)'처럼 번호가 붙는다 (성남 여수동 200, 분당 정자동 1-1)."""
+        site = SiteInput(1000, "제2종일반주거지역", "41133", land_use_plans=("비행안전제5구역(전술)",))
+        r = run_feasibility(site, PlanOptions(), RB)
+        self.assertEqual(r["height_plans"], ["비행안전제5구역(전술)"])
+        self.assertTrue(any("비행안전구역" in w["message"] for w in r["warnings"]))
+
+    def test_public_housing_district_is_override_plan(self):
+        self.assertEqual(self.warnings(land_use_plans=("공공주택지구",))["OVERRIDE_PLAN"]["severity"], "critical")
+
+    def test_park_and_amusement_land_categories_are_not_buildable(self):
+        for cat in ("공원", "유원지"):
+            with self.subTest(cat=cat):
+                self.assertEqual(self.warnings(land_category=cat)["LAND_CATEGORY"]["severity"], "critical")
+
     def test_airport_obstacle_surfaces_are_height_plans(self):
         """김포공항 주변(공항동)은 '수평표면구역', '중요시설물보호지구(공항)' 으로 나온다."""
         site = SiteInput(1000, "제3종일반주거지역", "11500", land_use_plans=("수평표면구역", "중요시설물보호지구(공항)"))
