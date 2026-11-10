@@ -183,8 +183,32 @@ class CollectOneTests(unittest.TestCase):
         far.pop("유통상업지역")
         api.add("수원시 도시계획 조례", "경기도 수원시", "108", "20250301", body("108", "수원시 도시계획 조례", bcr, far))
         r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
-        self.assertIn("용적률 못 찾음: 유통상업지역", r.issues)
-        self.assertIn("조문에 이름 없음", r.diagnostics[0])
+        # 조문에 이름이 아예 없으면 지정 안 된 용도지역으로 보고 전체 추출로 센다 (안양·과천·시흥 등)
+        self.assertEqual(r.absent["far"], ["유통상업지역"])
+        self.assertTrue(r.complete)
+        self.assertIn("용적률 조문에 없음(지정 안 된 듯): 유통상업지역", r.issues)
+        self.assertIn("전체 추출 1곳", collect.report([r], []))
+
+    def test_label_between_zone_and_number(self):
+        """수원 형식: '제2종일반주거지역: 일반건축은 250퍼센트 이하(다만, 공동주택… 230퍼센트)'."""
+        api = FakeLaw()
+        bcr, far = standard()
+        b = body("111", "수원시 도시계획 조례", bcr, far)
+        art = b["LawService"]["조문"]["조"][2]
+        art["조내용"] = art["조내용"].replace(
+            "제2종일반주거지역: 200퍼센트", "제2종일반주거지역: 일반건축은 200퍼센트 이하(다만, 공동주택은 230퍼센트 이하)"
+        ).replace("중심상업지역: 1200퍼센트", "중심상업지역: 일반건축물은 1,200퍼센트 이하")
+        api.add("수원시 도시계획 조례", "경기도 수원시", "111", "20250301", b)
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertEqual((r.zones["제2종일반주거지역"]["far"], r.zones["중심상업지역"]["far"]), (200, 1200))
+        self.assertTrue(r.complete)
+
+    def test_failure_lists_related_articles(self):
+        api = FakeLaw()
+        api.add("수원시 도시계획 조례", "경기도 수원시", "112", "20250301", {"LawService": {"조문": {"조": [
+            {"조문번호": "005000", "조제목": "건폐율", "조내용": "제50조(건폐율) 영 제84조에 따른 건폐율은 별표 20과 같다.", "조문여부": "Y"}]}}})
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertIn("관련 조: 제50조(건폐율)", r.error)
 
     def test_diagnostics_show_unreadable_wording(self):
         api = FakeLaw()
