@@ -21,6 +21,7 @@ from typing import Any
 
 import httpx
 
+from ..domain.regions import legacy_code
 from .base import Parcel, ParcelSummary, ProviderError
 
 BASE = "https://api.vworld.kr"
@@ -146,9 +147,17 @@ class VWorldParcelProvider:
             return cached
 
         lc = await self._get("/ned/data/getLandCharacteristics", {"pnu": pnu, "numOfRows": 10, "pageNo": 1})
+        query_pnu = pnu
         if not _as_list(_dig(lc, FIELD_MAP["lc_container"])):
-            return None
-        lu = await self._get("/ned/data/getLandUseAttr", {"pnu": pnu, "numOfRows": 100, "pageNo": 1})
+            # 전남광주통합(2026-07) 뒤 새 PNU(12…)로는 토지특성이 아직 없는 필지가 있다 → 같은 필지의 예전 PNU 로 다시 조회
+            old = legacy_code(pnu)
+            if not old:
+                return None
+            lc = await self._get("/ned/data/getLandCharacteristics", {"pnu": old, "numOfRows": 10, "pageNo": 1})
+            if not _as_list(_dig(lc, FIELD_MAP["lc_container"])):
+                return None
+            query_pnu = old
+        lu = await self._get("/ned/data/getLandUseAttr", {"pnu": query_pnu, "numOfRows": 100, "pageNo": 1})
         parcel = parse_land(pnu, lc, lu)
         self._cache.set(pnu, parcel)
         return parcel
@@ -161,7 +170,9 @@ def parse_land(pnu: str, land_characteristics: dict, land_use_attr: dict) -> Par
     모두 이 함수 하나로 해석된다. 해석 규칙을 한곳에 두어 테스트가 두 경로를 함께 지킨다.
     """
     rows = [r for r in _as_list(_dig(land_characteristics, FIELD_MAP["lc_container"])) if isinstance(r, dict)]
-    rows = [r for r in rows if str(r.get("pnu", pnu)) == pnu] or rows
+    # 예전 PNU 로 다시 조회한 응답(전남광주통합 뒤)도 같은 필지로 본다
+    same = {pnu, legacy_code(pnu)}
+    rows = [r for r in rows if str(r.get("pnu", pnu)) in same] or rows
     if not rows:
         raise ProviderError("토지특성 정보가 없는 필지입니다.")
     # 가장 최근 기준년도 행

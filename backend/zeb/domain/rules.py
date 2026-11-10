@@ -17,6 +17,7 @@ from typing import Any
 
 import yaml
 
+from .regions import legacy_code
 from .trace import Source
 
 RULES_DIR = Path(__file__).resolve().parent.parent / "rules"
@@ -178,10 +179,12 @@ class RuleBook:
     def _ordinance_for(self, jurisdiction: str | None) -> dict | None:
         if not jurisdiction:
             return None
+        # 전남광주통합(2026-07) 뒤 새 코드(12…)는 규칙 파일의 예전 코드(46…·29…)로도 찾는다
+        codes = [c for c in (jurisdiction, legacy_code(jurisdiction)) if c]
         candidates = [
             o
             for o in [*self.zoning["ordinances"], *(self.collected.get("ordinances") or [])]
-            if jurisdiction.startswith(o["jurisdiction"])
+            if any(c.startswith(o["jurisdiction"]) for c in codes)
             and (_parse_date(o.get("effective_from")) or date.min) <= self.as_of
         ]
         if not candidates:
