@@ -51,6 +51,7 @@ class ResolvedZoning:
     national: ZoneLimit
     ordinance: ZoneLimit | None
     use_override_far: tuple[float, Source] | None
+    subarea: dict | None = None  # 같은 지자체 안에서 구역에 따라 다른 값 (예: 서울도심 상업지역)
 
 
 @dataclass(frozen=True)
@@ -149,7 +150,12 @@ class RuleBook:
                         note=uo.get("note"),
                     ),
                 )
-        return ResolvedZoning(zone, canonical, national, ordinance, override)
+        subarea = None
+        if ord_rule and jurisdiction:
+            for sa in ord_rule.get("subareas", []):
+                if canonical in sa.get("far", {}) and any(jurisdiction.startswith(j) for j in sa["jurisdictions"]):
+                    subarea = {"name": sa["name"], "far": sa["far"][canonical], "note": sa.get("note")}
+        return ResolvedZoning(zone, canonical, national, ordinance, override, subarea)
 
     def _ordinance_for(self, jurisdiction: str | None) -> dict | None:
         if not jurisdiction:
@@ -255,6 +261,28 @@ class RuleBook:
 
     def building_uses(self) -> list[str]:
         return list(self.assumptions["building_uses"].keys())
+
+    def performance_levels(self) -> dict[str, str]:
+        return {k: v["label"] for k, v in self.assumptions["performance_levels"].items()}
+
+    def solar_yield(self, jurisdiction: str | None) -> tuple[float, str, Source]:
+        """지역별 태양광 연간 발전량 (kWh/kWp·yr). 시도코드(앞 2자리)로 찾고, 없으면 전국 평균."""
+        sb = self.equipment["solar_by_region"]
+        hit = sb["regions"].get((jurisdiction or "")[:2])
+        entry = hit or sb["default"]
+        src = Source(
+            id="solar-by-region",
+            title=sb["source"],
+            kind="data",
+            ref=f"{entry['label']} {entry['value']:,} kWh/kWp·yr",
+            verified=True,
+            note=None if hit else "지역별 값이 등록되지 않아 전국 평균을 사용",
+        )
+        return float(entry["value"]), entry["label"], src
+
+    def regulation_source(self, ref: str) -> Source:
+        rs = self.equipment["regulation_source"]
+        return Source(id="kr-renewable-unit-output", title=rs["title"], kind="notice", ref=ref, url=rs.get("url"), verified=True)
 
 
 @lru_cache(maxsize=8)

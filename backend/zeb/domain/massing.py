@@ -116,6 +116,13 @@ def compute_massing(inp: MassingInput, rules: RuleBook, ledger: Ledger, floor_he
             "far", "적용 용적률", far, "%", "법정 상한 (조례 미등록)", {"법정 상한": far}, [z.national.source]
         )
 
+    if z.subarea and z.subarea["far"] < far:
+        ledger.warn(
+            "SUBAREA",
+            f"{z.subarea['name']}에 해당하면 용적률이 {z.subarea['far']}%로 낮아집니다 ({z.subarea['note']}). "
+            f"구 전체가 해당하지는 않으므로 지금은 {far}%로 계산했습니다. 대상지 위치를 확인하세요.",
+        )
+
     far_eff = far
     if inp.far_incentive_rate > 0:
         far_eff = far * (1 + inp.far_incentive_rate / 100)

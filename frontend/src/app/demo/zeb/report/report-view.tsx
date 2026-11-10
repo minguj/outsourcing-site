@@ -114,7 +114,8 @@ function Report() {
 
         <h2>2. ZEB 등급별 신재생 설비 시나리오</h2>
         <p className="zb-small zb-muted" style={{ marginTop: 0 }}>
-          연간 1차에너지 소요량 {n(r.energy.demand_kwh)} kWh (연면적 {area(m.gfa_m2)} × {r.energy.demand_intensity} kWh/㎡·yr 가정).
+          연간 1차에너지 소요량 {n(r.energy.demand_kwh)} kWh (연면적 {area(m.gfa_m2)} × {r.energy.demand_intensity} kWh/㎡·yr, {r.energy.performance_label} 기준).
+          태양광 발전량은 {r.energy.solar_yield.label} {n(r.energy.solar_yield.value)} kWh/kWp·yr를 적용했습니다.
           등급 기준: {r.grade_source.title}.
         </p>
         <div className="zb-avoid-break"><ScenarioChart r={r} /></div>

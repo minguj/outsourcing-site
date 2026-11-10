@@ -105,6 +105,7 @@ def meta():
         "vworld_key": key if key and mode == "browser" else None,
         "vworld_domain": _vworld_domain() if key else None,
         "building_uses": rb.building_uses(),
+        "performance_levels": rb.performance_levels(),
         "zones": rb.zone_names(),
         "grades": [g.__dict__ for g in grades],
         "rule_versions": rb.versions(),
@@ -190,6 +191,7 @@ class FeasibilityRequest(BaseModel):
     target_floors: int | None = Field(None, ge=1, le=200)
     is_public: bool = False
     apply_zeb_incentive_grade: Literal["+", "1", "2", "3", "4", "5"] | None = None
+    performance: Literal["1++", "1+++"] | None = None
     as_of: date | None = None
 
     @model_validator(mode="after")
@@ -240,6 +242,7 @@ async def feasibility(req: FeasibilityRequest):
         target_floors=req.target_floors,
         is_public=req.is_public,
         apply_zeb_incentive_grade=req.apply_zeb_incentive_grade,
+        performance=req.performance,
         as_of=req.as_of,
     )
     try:
