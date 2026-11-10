@@ -11,6 +11,7 @@
   기본값 목록은 보통 제1항에 있고 예외(주거 비율별 주상복합, 취락지구 등)는 ②항·'다만' 뒤에 온다. 그래서 그 앞부분에서
   찾은 값을 primary 로 따로 모은다 (일괄 수집에서 값이 여러 개일 때 우선 쓴다).
 - 천 단위 쉼표("1,300퍼센트")와 법령식 한글 단위("1천퍼센트", "1천300퍼센트", "1천2백퍼센트")를 숫자로 바꿔 읽는다.
+- "100분의 60 이하"(= 60퍼센트) 형식도 읽는다 (군포: "제1종 전용주거지역 : 100분의 40 이하").
 - "중심상업지역: 1천퍼센트(단, 서울도심: 800퍼센트)" 의 괄호 값은 구역별 기준(subareas)으로 따로 모은다.
 """
 
@@ -67,7 +68,10 @@ def extract(articles: list[Article]) -> Extracted:
                 if v not in found[zone]:
                     found[zone].append(v)
             out.texts[kind] += flat
-            head = _EXCEPTION_START.split(flat, maxsplit=1)[0]
+            # 예외 표시는 첫 값 이후부터 찾는다 (군포처럼 목록 앞 본문에 '다만,'이 먼저 나오는 경우)
+            first = _VALUE.search(flat)
+            cut = _EXCEPTION_START.search(flat, first.start()) if first else None
+            head = flat[: cut.start()] if cut else flat
             for zone, pct in _VALUE.findall(head):
                 if int(pct) not in primary[zone]:
                     primary[zone].append(int(pct))
@@ -81,6 +85,8 @@ def extract(articles: list[Article]) -> Extracted:
 def _normalize_numbers(s: str) -> str:
     """'1,300퍼센트' → '1300퍼센트', '1천퍼센트'·'1천2백퍼센트' → '1000퍼센트'·'1200퍼센트'."""
     s = re.sub(r"(\d),(\d{3})(?!\d)", r"\1\2", s)
+    # 100분의 60 = 60퍼센트 (공백은 이미 지웠으므로 "100분 의 280" 도 "100분의280")
+    s = re.sub(r"100분의(\d{1,4})", r"\1퍼센트", s)
     # 법령 표기: 1천500 = 1500, 1천50 = 1050 (천 뒤 숫자가 바로 붙는 형식)
     s = re.sub(r"(\d+)천(\d{1,3})(?=퍼센트|%)", lambda m: str(int(m[1]) * 1000 + int(m[2])), s)
     s = re.sub(r"(\d+)천(\d+)백", lambda m: str(int(m[1]) * 1000 + int(m[2]) * 100), s)
