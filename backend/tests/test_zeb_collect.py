@@ -352,6 +352,20 @@ class CollectOneTests(unittest.TestCase):
         self.assertTrue(any("준주거지역은400퍼센트" in d for d in r.diagnostics))
         self.assertIn("못 찾은 용도지역 진단", collect.report([r], []))
 
+    def test_issue_lists_titles_when_no_zoning_article(self):
+        """여수: 건폐율 조 제목에 '용도지역'이 없어 0/16 인데 이유가 안 보이던 경우. 비슷한 제목을 보여 준다."""
+        api = FakeLaw()
+        bcr, far = standard()
+        b = body("118", "수원시 도시계획 조례", bcr, far)
+        art = b["LawService"]["조문"]["조"][1]
+        art["조제목"] = "건폐율의 최대한도"
+        art["조내용"] = art["조내용"].replace("(용도지역 안에서의 건폐율)", "(건폐율의 최대한도)")
+        api.add("수원시 도시계획 조례", "경기도 수원시", "118", "20250301", b)
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertEqual(r.counts, (0, 16))
+        self.assertFalse(r.complete)
+        self.assertTrue(any("제44조(건폐율의 최대한도)" in i for i in r.issues), r.issues)
+
     def test_not_found_and_no_article(self):
         api = FakeLaw()
         self.assertIn("찾지 못함", collect.collect_one(SUWON, LawClient("x", api), NATIONAL).error)
@@ -408,6 +422,48 @@ class RunTests(unittest.TestCase):
         data = yaml.safe_load((self.dir / collect.COLLECTED_FILE).read_text(encoding="utf-8"))
         self.assertEqual([o["id"] for o in data["ordinances"]], ["auto-4111", "auto-4180"])
         self.assertEqual(data["missing"], [])
+
+    def test_retry_reruns_only_failed_and_partial(self):
+        """--only retry: 지난번에 실패했거나 일부만 뽑은 곳만 다시 받고, 나머지는 이전 결과를 둔다."""
+        self.run_collect()  # 수원 전체 추출, 연천 실패
+        bcr, far = standard(0.7)
+        self.api.add("연천군 군계획 조례", "경기도 연천군", "102", "20240101", body("102", "연천군 군계획 조례", bcr, far))
+        self.api.queries.clear()
+        results, _, changed = self.run_collect(only="retry")
+        self.assertTrue(changed)
+        self.assertEqual([r.authority["name"] for r in results], ["연천군"])
+        self.assertFalse(any("수원" in q for q in self.api.queries))
+        data = yaml.safe_load((self.dir / collect.COLLECTED_FILE).read_text(encoding="utf-8"))
+        self.assertEqual([(o["id"], o["complete"]) for o in data["ordinances"]], [("auto-4111", True), ("auto-4180", True)])
+        self.assertEqual(data["missing"], [])
+        # 다 채워졌으면 다음 retry 는 할 일이 없다
+        results, _, changed = self.run_collect(only="retry")
+        self.assertEqual((results, changed), ([], False))
+
+    def test_retry_includes_partial_and_accepts_codes(self):
+        bcr, far = standard()
+        b = body("106", "수원시 도시계획 조례", bcr, far)
+        art = b["LawService"]["조문"]["조"][2]
+        art["조내용"] = art["조내용"].replace("준주거지역: 400퍼센트", "준주거지역은 400퍼센트 이상 500퍼센트 이하")
+        self.api.add("수원시 도시계획 조례", "경기도 수원시", "106", "20250401", b)
+        self.run_collect()
+        data = yaml.safe_load((self.dir / collect.COLLECTED_FILE).read_text(encoding="utf-8"))
+        self.assertFalse(data["ordinances"][0]["complete"])
+        self.assertEqual(collect.retry_prefixes(data), {"4111", "4180"})
+        picked = collect.selector("11, retry", data)
+        self.assertEqual([p for p in ("11", "4111", "4180", "4113") if picked(p)], ["11", "4111", "4180"])
+
+    def test_retry_on_legacy_file_without_complete_flag(self):
+        """complete 가 없던 예전 파일: 두 값이 16개씩 다 있지 않은 곳만 다시 수집 대상."""
+        full = {z: {"bcr": 10, "far": 10} for z in ZONES}
+        half = {z: {"bcr": 10, "far": 10} for z in ZONES[:10]}
+        prev = {"ordinances": [{"jurisdiction": "4111", "zones": full}, {"jurisdiction": "4113", "zones": half}],
+                "missing": [{"prefix": "4180"}]}
+        self.assertEqual(collect.retry_prefixes(prev), {"4113", "4180"})
+
+    def test_retry_without_previous_file_is_an_error(self):
+        with self.assertRaises(ValueError):
+            self.run_collect(only="retry")
 
     def test_daily_watch_covers_collected_file(self):
         """일괄 수집분도 개정 감지 대상. 같은 이름 조례가 다른 도에 있어도 지자체기관명으로 구분한다."""

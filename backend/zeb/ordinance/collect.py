@@ -8,6 +8,7 @@
 - 결과는 rules/zoning_collected.yaml 에 쓴다 (사람이 확인한 zoning.yaml 과 분리). 값은 모두 verified: false 로 들어가고,
   계산에는 쓰되 화면·보고서에 '미검증(자동 수집)'으로 표시된다. 사람이 원문을 확인해 true 로 고친 값은 다시 수집해도 유지한다.
 - zoning.yaml 에 이미 있는 관할(예: 서울)은 건너뛴다.
+- --only retry: 지난 수집에서 실패했거나 일부만 뽑은 관할만 다시 받는다 (나머지는 이전 결과 유지). 41,4613 처럼 코드도 섞어 쓸 수 있다.
 - 법정 상한을 넘는 값, 같은 용도지역에 값이 여러 개인 경우는 쓰지 않고 보고서에 남긴다 (잘못 뽑느니 비워 둔다).
 - 표준 라이브러리 + PyYAML 만 쓴다 (배포 서버의 기본 python3 에서 실행).
 """
@@ -82,6 +83,8 @@ class Collected:
     diagnostics: list[str] = field(default_factory=list)
     # 조문에 이름이 아예 없는 용도지역 (그 지자체에 지정되지 않은 것으로 본다). kind → 용도지역 목록
     absent: dict[str, list[str]] = field(default_factory=lambda: {"bcr": [], "far": []})
+    # 이전 파일에서 그대로 가져온 결과는 '지정 안 됨' 목록이 없어 complete 를 다시 계산할 수 없다. 파일에 적힌 값을 쓴다
+    stored_complete: bool | None = None
 
     @property
     def counts(self) -> tuple[int, int]:
@@ -90,6 +93,8 @@ class Collected:
     @property
     def complete(self) -> bool:
         """뽑은 값 + 조문에 없는 용도지역 = 16개면 다 뽑은 것으로 본다."""
+        if self.stored_complete is not None:
+            return self.stored_complete
         b, f = self.counts
         return b + len(self.absent["bcr"]) == 16 and f + len(self.absent["far"]) == 16
 
@@ -123,6 +128,14 @@ def collect_one(a: dict, client: LawClient, national: dict) -> Collected:
     ext = extract(articles)
     out.articles = ext.articles
     for kind in ("bcr", "far"):
+        if not ext.articles.get(kind) and articles:
+            # 제목에 '용도지역'+'건폐율/용적률'이 함께 든 조가 없다 (여수 건폐율 0/16). 비슷한 조 제목을 보여 준다
+            word = kind_label(kind)
+            titles = [f"제{x.number}조({x.title})" for x in articles if word in x.title]
+            out.issues.append(
+                f"{word}: 제목에 '용도지역'과 '{word}'가 함께 든 조가 없음"
+                + (f" — 제목에 {word}이 든 조: {', '.join(titles[:5])}" if titles else f" — 제목에 {word}이 든 조도 없음")
+            )
         not_found = []
         for zone in national:
             values = ext.values.get(kind, {}).get(zone, [])
@@ -242,6 +255,7 @@ def render(results: list[Collected], previous: dict, today: str, zone_order: lis
             "    effective_from: null",
             f"    checked_on: {_q(today)}",
             "    collected: true",
+            f"    complete: {'true' if r.complete else 'false'}",
             "    watch:",
             f"      law_name: {_q(v.name)}",
             f"      agency: [{_q(a['sido'])}, {_q(a['sido_name'])}, {_q(a['name'])}]",
@@ -313,15 +327,47 @@ def report(results: list[Collected], skipped: list[dict]) -> str:
     return "\n".join(out) + "\n"
 
 
+RETRY = "retry"
+
+
+def retry_prefixes(previous: dict) -> set[str]:
+    """이전 수집에서 실패(missing)했거나 일부만 뽑은(complete: false) 관할.
+    complete 가 없는 예전 파일은 두 값이 16개씩 다 있지 않으면 다시 수집 대상으로 본다 (한 번 돌면 complete 가 채워진다)."""
+    out = {m["prefix"] for m in previous.get("missing") or []}
+    for o in previous.get("ordinances") or []:
+        done = o.get("complete")
+        if done is None:
+            zones = (o.get("zones") or {}).values()
+            done = sum("bcr" in z for z in zones) == 16 and sum("far" in z for z in zones) == 16
+        if not done:
+            out.add(o["jurisdiction"])
+    return out
+
+
+def selector(only: str | None, previous: dict) -> Callable[[str], bool] | None:
+    """--only 해석. 쉼표로 여러 개: 코드 앞자리(41 = 경기, 4613 = 여수) 또는 retry(실패+일부 추출). None 이면 전체."""
+    if not only or not only.strip():
+        return None
+    tokens = [t.strip() for t in only.split(",") if t.strip()]
+    prefixes = tuple(t for t in tokens if t != RETRY)
+    retry = retry_prefixes(previous) if RETRY in tokens else set()
+    return lambda p: p in retry or (bool(prefixes) and p.startswith(prefixes))
+
+
 def run(rules_dir: Path, client: LawClient, today: str, only: str | None = None,
         sleep: Callable[[float], None] = time.sleep) -> tuple[list[Collected], list[dict], bool]:
     zoning = yaml.safe_load((rules_dir / "zoning.yaml").read_text(encoding="utf-8"))
     national = zoning["national"]["zones"]
     manual = {o["jurisdiction"] for o in zoning.get("ordinances", [])}
     authorities = yaml.safe_load((rules_dir / "authorities.yaml").read_text(encoding="utf-8"))["authorities"]
+    path = rules_dir / COLLECTED_FILE
+    previous = (yaml.safe_load(path.read_text(encoding="utf-8")) if path.exists() else None) or {}
+    if only and RETRY in [t.strip() for t in only.split(",")] and not previous:
+        raise ValueError(f"{COLLECTED_FILE} 이 없어 retry 할 대상을 알 수 없습니다. 먼저 전체 수집을 한 번 돌리세요.")
+    picked = selector(only, previous)
     target, skipped = [], []
     for a in authorities:
-        if only and not a["prefix"].startswith(only):
+        if picked and not picked(a["prefix"]):
             continue
         (skipped if a["prefix"] in manual else target).append(a)
     results = []
@@ -329,37 +375,41 @@ def run(rules_dir: Path, client: LawClient, today: str, only: str | None = None,
         if i:
             sleep(0.3)  # 법제처 서버 부담을 줄인다
         results.append(collect_one(a, client, national))
-    path = rules_dir / COLLECTED_FILE
-    previous = yaml.safe_load(path.read_text(encoding="utf-8")) if path.exists() else {}
-    if only and previous:
+    if picked and previous:
         # 일부만 다시 수집했으면 나머지 지자체 결과는 이전 파일 그대로 둔다
-        results = _merge_previous(results, previous, authorities, only)
-    body = render(results, previous or {}, today, list(national.keys()))
+        results = _merge_previous(results, previous, authorities, picked, manual)
+    body = render(results, previous, today, list(national.keys()))
     old = path.read_text(encoding="utf-8") if path.exists() else ""
     changed = _without_dates(old) != _without_dates(body)
     if changed:
         path.write_bytes(body.encode("utf-8"))  # LF 고정 (yaml 은 LF)
-    return [r for r in results if not only or r.authority["prefix"].startswith(only)], skipped, changed
+    return [r for r in results if not picked or picked(r.authority["prefix"])], skipped, changed
 
 
 def _without_dates(text: str) -> str:
     return "\n".join(l for l in text.splitlines() if "collected_on:" not in l and "checked_on:" not in l)
 
 
-def _merge_previous(results: list[Collected], previous: dict, authorities: list[dict], only: str) -> list[Collected]:
+def _merge_previous(results: list[Collected], previous: dict, authorities: list[dict],
+                    picked: Callable[[str], bool], manual: set[str]) -> list[Collected]:
+    """다시 수집하지 않은 관할은 이전 결과를 그대로 둔다. zoning.yaml 에 직접 넣은 관할(manual)은 뺀다."""
     by_prefix = {a["prefix"]: a for a in authorities}
     merged = list(results)
     for o in previous.get("ordinances") or []:
         p = o["jurisdiction"]
-        if p.startswith(only) or p not in by_prefix:
+        if picked(p) or p not in by_prefix or p in manual:
             continue
         w = o["watch"]
         c = Collected(by_prefix[p], OrdinanceVersion(w["law_name"], "", "", w["promulgated_on"], None, None))
         c.zones = {z: {k: v[k] for k in ("bcr", "far", "note") if k in v} for z, v in o["zones"].items()}
         c.articles = {"bcr": [o["ref"]], "far": []}
+        c.stored_complete = o.get("complete")
+        if c.stored_complete is None:
+            c.stored_complete = o["jurisdiction"] not in retry_prefixes({"ordinances": [o]})
         merged.append(c)
     for m in previous.get("missing") or []:
-        if not m["prefix"].startswith(only) and m["prefix"] in by_prefix:
+        p = m["prefix"]
+        if not picked(p) and p in by_prefix and p not in manual:
             merged.append(Collected(by_prefix[m["prefix"]], error=m["reason"]))
     order = {a["prefix"]: i for i, a in enumerate(authorities)}
     return sorted(merged, key=lambda r: order.get(r.authority["prefix"], 0))
@@ -369,7 +419,10 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description="전국 도시계획 조례 일괄 수집")
     ap.add_argument("--rules-dir", default="backend/zeb/rules", type=Path)
     ap.add_argument("--report", default="collect-report.md", type=Path)
-    ap.add_argument("--only", help="이 코드로 시작하는 관할만 (예: 41 = 경기)")
+    ap.add_argument(
+        "--only",
+        help="쉼표로 여러 개. 코드 앞자리(41 = 경기, 4613 = 여수) 또는 retry(지난 수집의 실패+일부 추출만). 비우면 전체",
+    )
     args = ap.parse_args(argv)
     try:
         client = LawClient(os.environ.get("LAW_OC", ""))
@@ -377,7 +430,11 @@ def main(argv: list[str] | None = None) -> int:
         print(e, file=sys.stderr)
         return 2
     today = dt.datetime.now(dt.timezone(dt.timedelta(hours=9))).date().isoformat()
-    results, skipped, changed = run(args.rules_dir, client, today, args.only)
+    try:
+        results, skipped, changed = run(args.rules_dir, client, today, args.only)
+    except ValueError as e:
+        print(e, file=sys.stderr)
+        return 2
     body = report(results, skipped)
     args.report.write_text(body, encoding="utf-8")
     print(body)

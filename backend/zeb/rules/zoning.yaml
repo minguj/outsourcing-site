@@ -101,6 +101,97 @@ ordinances:
           근린상업지역: 500
           유통상업지역: 500
 
+  - id: ulsan-urban-planning-ordinance
+    jurisdiction: "31"
+    jurisdiction_name: 울산광역시
+    title: 울산광역시 도시계획 조례
+    # 값이 별표에 있어 법제처 API 로는 받을 수 없다(서울 외 별표 미제공). 2026-11-10 원문 별표 24(제46조 관련, 한글 파일)와 대조해 직접 넣었다.
+    # 개정 감지는 공포일만 본다: 공포일이 바뀌면 '수동 확인' PR 이 열리니 새 별표를 받아 값을 다시 대조한다.
+    ref: 제46조(용도지역 안에서의 건폐율ㆍ용적률), 별표 24
+    url: https://www.law.go.kr/자치법규/울산광역시도시계획조례
+    effective_from: null
+    checked_on: "2026-11-10"
+    watch:
+      law_name: 울산광역시 도시계획 조례
+      agency: ["31", "울산광역시", "울산광역시"]
+      promulgated_on: "2026-04-09"   # 조례 제3264호
+    zones:
+      제1종전용주거지역: { bcr: 50, far: 100, verified: true }
+      제2종전용주거지역: { bcr: 50, far: 150, verified: true }
+      제1종일반주거지역: { bcr: 60, far: 150, verified: true }
+      제2종일반주거지역: { bcr: 60, far: 200, verified: true }
+      제3종일반주거지역: { bcr: 50, far: 300, verified: true, note: "별표 24 제3호가목: 공동주택은 250%, 도시정비법 재건축 공동주택은 300%" }
+      준주거지역:        { bcr: 70, far: 500, verified: true, note: "별표 24 제3호나목: 공동주택·주거복합 건축물은 350%" }
+      중심상업지역:      { bcr: 80, far: 1300, verified: true, note: "별표 24 제3호아목: 주거복합은 공동주택 비율에 따라 660~1300%" }
+      일반상업지역:      { bcr: 70, far: 1200, verified: true, note: "별표 24 제3호아목: 주거복합은 공동주택 비율에 따라 600~1200%" }
+      근린상업지역:      { bcr: 60, far: 700, verified: true, note: "별표 24 제3호아목: 주거복합은 공동주택 비율에 따라 540~700%" }
+      유통상업지역:      { bcr: 70, far: 900, verified: true }
+      전용공업지역:      { bcr: 70, far: 300, verified: true }
+      일반공업지역:      { bcr: 70, far: 350, verified: true }
+      준공업지역:        { bcr: 70, far: 400, verified: true }
+      보전녹지지역:      { bcr: 20, far: 80, verified: true }
+      생산녹지지역:      { bcr: 20, far: 100, verified: true }
+      자연녹지지역:      { bcr: 20, far: 100, verified: true }
+    use_overrides:
+      제3종일반주거지역:
+        공동주택:
+          far: 250
+          verified: true
+          note: 별표 24 제3호가목. 도시정비법 재건축 공동주택은 300%, 공공시설 제공 때 지구단위계획 수립지침에 따라 300% 범위에서 조정 (기본값에는 미반영)
+      준주거지역:
+        공동주택:
+          far: 350
+          verified: true
+          note: 별표 24 제3호나목. 공동주택과 주거 외 용도가 복합된 건축물도 350%
+      준공업지역:
+        공동주택:
+          far: 250
+          verified: true
+          note: 별표 24 제3호다목
+
+  - id: changwon-urban-planning-ordinance
+    jurisdiction: "4812"          # 창원시 (의창·성산·마산합포·마산회원·진해구)
+    jurisdiction_name: 경상남도 창원시
+    title: 창원시 도시계획 조례
+    # 값이 별표에 있어 법제처 API 로는 받을 수 없다. 2026-11-10 원문 별표 27(제58조 건폐율)·별표 28(제60조 용적률, 한글 파일)과 대조해 직접 넣었다.
+    # 창원신도시구역(제2조: 창원국가산업단지, 의창·서상지구 등 제외)·마금산 온천 관광단지 연접지역 단서는 경계가 구 단위와 달라 메모로만 남긴다.
+    ref: 제58조(용도지역에서의 건폐율) 별표 27, 제60조(용도지역에서의 용적률) 별표 28
+    url: https://www.law.go.kr/자치법규/창원시도시계획조례
+    effective_from: null
+    checked_on: "2026-11-10"
+    watch:
+      law_name: 창원시 도시계획 조례
+      agency: ["48", "경상남도", "창원시"]
+      promulgated_on: "2026-02-13"   # 조례 제2296호
+    zones:
+      제1종전용주거지역: { bcr: 50, far: 100, verified: true }
+      제2종전용주거지역: { bcr: 50, far: 150, verified: true }
+      제1종일반주거지역: { bcr: 60, far: 200, verified: true }
+      제2종일반주거지역: { bcr: 60, far: 220, verified: true }
+      제3종일반주거지역: { bcr: 50, far: 250, verified: true }
+      준주거지역:        { bcr: 70, far: 400, verified: true, note: "별표 27 단서: 창원신도시구역 건폐율 60%" }
+      중심상업지역:      { bcr: 80, far: 1000, verified: true, note: "별표 27 단서: 창원신도시구역 건폐율 60%" }
+      일반상업지역:      { bcr: 80, far: 1000, verified: true, note: "별표 27·28 단서: 창원신도시구역 건폐율 60%, 마금산 온천 관광단지 연접지역 건폐율 40%·용적률 210%" }
+      근린상업지역:      { bcr: 70, far: 700, verified: true, note: "별표 27 단서: 창원신도시구역 건폐율 60%" }
+      유통상업지역:      { bcr: 80, far: 700, verified: true, note: "별표 27 단서: 창원신도시구역 건폐율 60%" }
+      전용공업지역:      { bcr: 70, far: 300, verified: true }
+      일반공업지역:      { bcr: 70, far: 350, verified: true }
+      준공업지역:        { bcr: 70, far: 400, verified: true, note: "별표 28 단서: 읍·면지역 용적률 200%" }
+      보전녹지지역:      { bcr: 20, far: 80, verified: true }
+      생산녹지지역:      { bcr: 20, far: 100, verified: true }
+      자연녹지지역:      { bcr: 20, far: 100, verified: true }
+    use_overrides:
+      일반상업지역:
+        공동주택:
+          far: 600
+          verified: true
+          note: 별표 28 제8호 단서. 주택법 시행령 제27조 사업계획승인 대상·같은 조 제4항 건축허가 대상 건축물
+      근린상업지역:
+        공동주택:
+          far: 500
+          verified: true
+          note: 별표 28 제9호 단서. 주택법 시행령 제27조 사업계획승인 대상·같은 조 제4항 건축허가 대상 건축물
+
 # 토지이용계획(지역·지구)에 따른 경고.
 #  - 필지에 '포함'되거나 일부 '저촉'되는 항목만 본다. '접함'(인접 필지)은 이 필지의 규제가 아니다.
 #  - severity 기본값 critical: 자동 계산값을 확정값처럼 쓰면 안 되는 경우.
