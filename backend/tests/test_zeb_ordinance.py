@@ -65,7 +65,7 @@ def _seoul(data: dict) -> dict:
 class LawApiTests(unittest.TestCase):
     def test_latest_picks_exact_name_not_similar_ordinances(self):
         v = LawClient("OC1", FakeApi()).latest(SEOUL, "6110000")
-        self.assertEqual((v.serial, v.promulgated_on, v.effective_on), ("1700001", "2025-05-15", "2025-05-15"))
+        self.assertEqual((v.serial, v.promulgated_on, v.effective_on), ("2149501", "2026-07-13", "2026-07-13"))
 
     def test_request_carries_oc_org_and_json(self):
         api = FakeApi()
@@ -99,9 +99,10 @@ class LawApiTests(unittest.TestCase):
         api = FakeApi()
         c = LawClient("OC1", api)
         arts = c.articles(c.latest(SEOUL))
-        self.assertEqual([a.number for a in arts], ["44", "45", "48", "49", "50", "51"])
+        # 실제 응답처럼 조문번호가 ["004400", "004400"] 목록으로 오고, '제3절' 같은 머리는 조문여부 N
+        self.assertEqual([a.number for a in arts], ["44", "45", "46", "47", "48", "49", "50", "51"])
         self.assertEqual(arts[0].title, "용도지역 안에서의 건폐율")
-        self.assertIn("MST=1700001", api.urls[-1])
+        self.assertIn("MST=2149501", api.urls[-1])
 
 
 class ExtractTests(unittest.TestCase):
@@ -109,24 +110,35 @@ class ExtractTests(unittest.TestCase):
         c = LawClient("OC1", FakeApi())
         self.ext = extract(c.articles(c.latest(SEOUL)))
 
-    def test_all_zones_found_by_article_title_not_number(self):
+    def test_only_the_zoning_articles_are_read(self):
+        """제목에 '용도지역'이 있는 조만 본다. '그 밖의', '강화', '완화' 조는 제외."""
+        self.assertEqual(self.ext.articles["bcr"], ["제44조(용도지역 안에서의 건폐율)"])
+        self.assertEqual(self.ext.articles["far"], ["제48조(용도지역 안에서의 용적률)"])
         self.assertEqual(len(self.ext.values["bcr"]), 16)
         self.assertEqual(len(self.ext.values["far"]), 16)
-        self.assertIn("제44조(용도지역 안에서의 건폐율)", self.ext.articles["bcr"])
-        self.assertEqual(len(self.ext.articles["far"]), 4)
 
     def test_values(self):
         self.assertEqual(self.ext.values["far"]["제3종일반주거지역"], [250])
         self.assertEqual(self.ext.values["bcr"]["제2종전용주거지역"], [40])
-        self.assertEqual(self.ext.values["far"]["중심상업지역"], [1000, 800])  # '1천퍼센트' + 서울도심 별도 기준
+        self.assertEqual(self.ext.values["far"]["중심상업지역"], [1000])  # '1천퍼센트'
 
-    def test_sentence_numbers_in_relaxation_clauses_are_ignored(self):
-        """'자연녹지지역에 있는 기존 공장 … 40퍼센트' 같은 완화 문장은 값으로 잡지 않는다."""
-        self.assertEqual(self.ext.values["bcr"]["자연녹지지역"], [20])
-        self.assertEqual(self.ext.values["far"]["준공업지역"], [400])
+    def test_school_site_values_in_other_article_are_not_mixed_in(self):
+        """실제 제49조 학교이적지 값('제3종일반주거지역: 200퍼센트')이 기본값에 섞이면 안 된다."""
+        self.assertEqual(self.ext.values["far"]["제3종일반주거지역"], [250])
+        self.assertEqual(self.ext.values["far"]["준주거지역"], [400])
+
+    def test_seoul_downtown_values_in_parentheses(self):
+        self.assertEqual(
+            self.ext.subareas["far"]["서울도심"],
+            {"중심상업지역": 800, "일반상업지역": 600, "근린상업지역": 500, "유통상업지역": 500},
+        )
+
+    def test_without_zoning_article_nothing_is_extracted(self):
+        e = extract([Article("49", "그 밖의 용적률", "바. 제3종일반주거지역: 200퍼센트")])
+        self.assertEqual(e.values["far"], {})
 
     def test_spacing_variants(self):
-        e = extract([Article("44", "건폐율", "1. 제3종 일반주거지역 : 50 퍼센트 2. 준주거지역: 60%")])
+        e = extract([Article("44", "용도지역 안에서의 건폐율", "1. 제3종 일반주거지역 : 50 퍼센트 2. 준주거지역: 60%")])
         self.assertEqual(e.values["bcr"], {"제3종일반주거지역": [50], "준주거지역": [60]})
 
 
@@ -151,12 +163,12 @@ class CompareTests(unittest.TestCase):
         out = apply(self.text, p, "2026-11-17")
         diff = [(a, b) for a, b in zip(self.text.splitlines(), out.splitlines()) if a != b]
         self.assertEqual(len(diff), 2, diff)
-        self.assertIn('promulgated_on: "2025-05-15"', out)
+        self.assertIn('promulgated_on: "2026-07-13"', out)
         self.assertIn('checked_on: "2026-11-17"', out)
         self.assertIn('checked_on: "2026-11-10"', out)  # 국가 법령 확인일은 그대로
 
     def test_single_changed_value_is_proposed_as_unverified(self):
-        p = self.proposal(FakeApi(_body_with("제3종일반주거지역 : 250퍼센트", "제3종일반주거지역 : 300퍼센트")))
+        p = self.proposal(FakeApi(_body_with("제3종일반주거지역: 250퍼센트", "제3종일반주거지역: 300퍼센트")))
         self.assertEqual([(r.zone, r.kind, r.new) for r in p.changed], [("제3종일반주거지역", "far", 300)])
         out = apply(self.text, p, "2026-11-17")
         # 다른 용도지역·주석은 그대로
@@ -167,29 +179,41 @@ class CompareTests(unittest.TestCase):
         self.assertEqual(new["zones"]["제2종일반주거지역"]["far"], 200)
 
     def test_ambiguous_value_keeps_number_but_marks_unverified(self):
-        p = self.proposal(FakeApi(_body_with("3. 근린상업지역 : 500퍼센트", "3. 근린상업지역 : 550퍼센트")))
+        p = self.proposal(FakeApi(_body_with("근린상업지역: 600퍼센트(단", "근린상업지역: 600퍼센트, 근린상업지역: 550퍼센트(단")))
         self.assertEqual([(r.zone, r.found) for r in p.manual], [("근린상업지역", [600, 550])])
         out = apply(self.text, p, "2026-11-17")
         z = _seoul(yaml.safe_load(out))["zones"]["근린상업지역"]
         self.assertEqual((z["far"], z["verified"]), (600, False))
 
     def test_missing_article_marks_zones_for_manual_check(self):
+        """용적률 조(제48조)가 사라지면(조 제목 변경 등) 다른 조로 대신 읽지 않고 전부 수동 확인으로 넘긴다."""
         body = _fixture("law_ordin_body.json")
-        body["LawService"]["조문"]["조"] = [a for a in body["LawService"]["조문"]["조"] if "녹지지역 안에서의" not in a.get("조제목", "")]
+        body["LawService"]["조문"]["조"] = [a for a in body["LawService"]["조문"]["조"] if a.get("조제목") != "용도지역 안에서의 용적률"]
         p = self.proposal(FakeApi(body))
-        self.assertEqual({r.zone for r in p.manual}, {"보전녹지지역", "생산녹지지역", "자연녹지지역"})
+        self.assertEqual(p.changed, [])
+        self.assertEqual(len(p.manual), 16)
         self.assertTrue(all(r.kind == "far" for r in p.manual))
+        self.assertEqual([n for n, _ in p.subarea_issues], ["서울도심"])
+
+    def test_seoul_downtown_change_flags_subarea(self):
+        p = self.proposal(FakeApi(_body_with("(단, 서울도심: 600퍼센트)", "(단, 서울도심: 650퍼센트)")))
+        self.assertEqual((p.changed, p.manual), ([], []))
+        self.assertEqual(p.subarea_issues, [("서울도심", "일반상업지역 600% → 650%")])
+        out = apply(self.text, p, "2026-11-17")
+        sa = _seoul(yaml.safe_load(out))["subareas"][0]
+        self.assertEqual((sa["verified"], sa["far"]["일반상업지역"]), (False, 600))
+        self.assertIn("서울도심", report([p], []))
 
     def test_note_with_comma_survives_edit(self):
         """1종일반 줄의 note 에는 쉼표·괄호가 있다. 줄 단위 수정이 note 를 깨지 않아야 한다."""
-        p = self.proposal(FakeApi(_body_with("제1종일반주거지역 : 150퍼센트", "제1종일반주거지역 : 160퍼센트")))
+        p = self.proposal(FakeApi(_body_with("3. 제1종일반주거지역: 150퍼센트", "3. 제1종일반주거지역: 160퍼센트")))
         out = apply(self.text, p, "2026-11-17")
         z = _seoul(yaml.safe_load(out))["zones"]["제1종일반주거지역"]
         self.assertEqual((z["far"], z["max_floors"], z["verified"]), (160, 4, False))
         self.assertIn("별표 4, 서울시", z["note"])
 
     def test_report_lists_changes_and_source_link(self):
-        p = self.proposal(FakeApi(_body_with("제3종일반주거지역 : 250퍼센트", "제3종일반주거지역 : 300퍼센트")))
+        p = self.proposal(FakeApi(_body_with("제3종일반주거지역: 250퍼센트", "제3종일반주거지역: 300퍼센트")))
         md = report([p], [])
         self.assertIn("| 제3종일반주거지역 | 용적률 | 250% | 300% | 300%로 변경 (미검증) |", md)
         self.assertIn("law.go.kr/자치법규/서울특별시도시계획조례", md)
@@ -206,7 +230,7 @@ class WatchRunTests(unittest.TestCase):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def test_same_promulgation_skips_body_and_does_not_write(self):
-        text = self.rules.read_text(encoding="utf-8").replace("promulgated_on: null", 'promulgated_on: "2025-05-15"')
+        text = self.rules.read_text(encoding="utf-8").replace("promulgated_on: null", 'promulgated_on: "2026-07-13"')
         self.rules.write_text(text, encoding="utf-8")
         api = FakeApi()
         props, errors = watch.run(self.rules, LawClient("OC1", api), "2026-11-17")
@@ -216,7 +240,7 @@ class WatchRunTests(unittest.TestCase):
 
     def test_new_promulgation_writes_rules_and_keeps_line_endings(self):
         before = self.rules.read_bytes()
-        props, _ = watch.run(self.rules, LawClient("OC1", FakeApi(_body_with("준주거지역 : 400퍼센트", "준주거지역 : 450퍼센트"))), "2026-11-17")
+        props, _ = watch.run(self.rules, LawClient("OC1", FakeApi(_body_with("6. 준주거지역: 400퍼센트", "6. 준주거지역: 450퍼센트"))), "2026-11-17")
         after = self.rules.read_bytes()
         self.assertEqual(len(props), 1)
         self.assertEqual(before.count(b"\r\n"), after.count(b"\r\n"))  # yaml 은 LF 유지
@@ -234,7 +258,7 @@ class WatchRunTests(unittest.TestCase):
         out = self.tmp / "gh_output"
         rep = self.tmp / "report.md"
         with mock.patch.dict(os.environ, {"LAW_OC": "OC1", "GITHUB_OUTPUT": str(out)}), mock.patch.object(
-            watch, "LawClient", lambda oc: LawClient(oc, FakeApi(_body_with("준주거지역 : 400퍼센트", "준주거지역 : 450퍼센트")))
+            watch, "LawClient", lambda oc: LawClient(oc, FakeApi(_body_with("6. 준주거지역: 400퍼센트", "6. 준주거지역: 450퍼센트")))
         ):
             code = watch.main(["--rules", str(self.rules), "--report", str(rep)])
         self.assertEqual(code, 0)
@@ -278,7 +302,7 @@ class RuleBookIntegrationTests(unittest.TestCase):
         """PR 이 그대로 병합돼도, 사람이 verified 를 고치기 전까지 결과에 '미검증'으로 보인다."""
         text = SNAPSHOT.read_text(encoding="utf-8")
         data = yaml.safe_load(text)
-        c = LawClient("OC1", FakeApi(_body_with("제3종일반주거지역 : 250퍼센트", "제3종일반주거지역 : 300퍼센트")))
+        c = LawClient("OC1", FakeApi(_body_with("제3종일반주거지역: 250퍼센트", "제3종일반주거지역: 300퍼센트")))
         v = c.latest(SEOUL)
         changed = yaml.safe_load(apply(text, compare(_seoul(data), v, extract(c.articles(v))), "2026-11-17"))
         rb = RuleBook()
