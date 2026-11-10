@@ -103,14 +103,27 @@ def collect_one(a: dict, client: LawClient, national: dict) -> Collected:
         return out
     out.articles = ext.articles
     for kind in ("bcr", "far"):
-        for zone, values in ext.values.get(kind, {}).items():
+        not_found = []
+        for zone in national:
+            values = ext.values.get(kind, {}).get(zone, [])
+            if not values:
+                not_found.append(zone)
+                continue
+            # 값이 여러 개면 제1항(예외 조항 앞)의 첫 값을 기본값으로 본다. 다른 값은 메모로 남긴다.
+            head = ext.primary.get(kind, {}).get(zone) or values
+            value, others = head[0], [v for v in values if v != head[0]]
             cap = national[zone][kind]
-            if len(values) != 1:
-                out.issues.append(f"{zone} {kind_label(kind)} 값이 여러 개({', '.join(map(str, values))}%) — 비워 둠")
-            elif values[0] > cap:
-                out.issues.append(f"{zone} {kind_label(kind)} {values[0]}%가 법정 상한 {cap}%를 넘음 — 비워 둠")
-            else:
-                out.zones.setdefault(zone, {})[kind] = values[0]
+            if value > cap:
+                out.issues.append(f"{zone} {kind_label(kind)} {value}%가 법정 상한 {cap}%를 넘음 — 비워 둠")
+                continue
+            z = out.zones.setdefault(zone, {})
+            z[kind] = value
+            if others:
+                note = f"{kind_label(kind)}: 조문에 다른 값도 있음({'·'.join(map(str, others))}%) — 제1항 첫 값 사용"
+                z["note"] = f"{z['note']} / {note}" if "note" in z else note
+                out.issues.append(f"{zone} {kind_label(kind)} {value}% 사용 (다른 값 {'·'.join(map(str, others))}%)")
+        if not_found and len(not_found) < len(national):
+            out.issues.append(f"{kind_label(kind)} 못 찾음: {', '.join(not_found)}")
     if not out.zones:
         out.error = "용도지역 조문에서 값을 찾지 못함 (별표로 정했거나 조 제목·문구 형식이 다름)"
     for name in ext.subareas.get("far", {}):
@@ -169,7 +182,10 @@ def render(results: list[Collected], previous: dict, today: str, zone_order: lis
             old = prev_zones.get(oid, {}).get(zone, {})
             keep = bool(old.get("verified")) and all(old.get(k) == z.get(k) for k in ("bcr", "far"))
             parts = [f"{k}: {z[k]}" for k in ("bcr", "far") if k in z]
-            lines.append(f"      {zone}: {{ {', '.join(parts)}, verified: {'true' if keep else 'false'} }}")
+            parts.append(f"verified: {'true' if keep else 'false'}")
+            if z.get("note"):
+                parts.append(f"note: {_q(z['note'])}")
+            lines.append(f"      {zone}: {{ {', '.join(parts)} }}")
     lines.append("# 값을 얻지 못한 지자체 (사람이 확인하거나 추출 규칙을 보강할 대상)")
     lines.append("missing:")
     for r in missing:
@@ -196,7 +212,7 @@ def report(results: list[Collected], skipped: list[dict]) -> str:
         out += ["### 추출한 지자체", "", "| 지자체 | 조례 | 공포일 | 건폐율 | 용적률 | 참고 |", "|---|---|---|---|---|---|"]
         for r in part + full:
             b, f = r.counts
-            note = "; ".join(r.issues[:3]) + (" …" if len(r.issues) > 3 else "")
+            note = "; ".join(r.issues[:4]) + (" …" if len(r.issues) > 4 else "")
             out.append(f"| {r.authority['sido_name']} {r.authority['name'] if r.authority['name'] != r.authority['sido_name'] else ''} | {r.version.name} | {r.version.promulgated_on} | {b}/16 | {f}/16 | {note} |")
         out.append("")
     if fail:
@@ -254,7 +270,7 @@ def _merge_previous(results: list[Collected], previous: dict, authorities: list[
             continue
         w = o["watch"]
         c = Collected(by_prefix[p], OrdinanceVersion(w["law_name"], "", "", w["promulgated_on"], None, None))
-        c.zones = {z: {k: v[k] for k in ("bcr", "far") if k in v} for z, v in o["zones"].items()}
+        c.zones = {z: {k: v[k] for k in ("bcr", "far", "note") if k in v} for z, v in o["zones"].items()}
         c.articles = {"bcr": [o["ref"]], "far": []}
         merged.append(c)
     for m in previous.get("missing") or []:

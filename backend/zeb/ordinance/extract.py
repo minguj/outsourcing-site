@@ -8,6 +8,9 @@
 - "제3종일반주거지역 : 250퍼센트" 처럼 용도지역 이름 바로 뒤에 숫자가 오는 경우만 인정한다.
   단서·완화 조항의 문장형 숫자는 잡지 않는다 (잘못 뽑느니 못 뽑고 사람에게 넘긴다).
 - 같은 용도지역 값이 여러 개 나오면 모두 돌려주고, 판단은 비교 단계에서 한다.
+  기본값 목록은 보통 제1항에 있고 예외(주거 비율별 주상복합, 취락지구 등)는 ②항·'다만' 뒤에 온다. 그래서 그 앞부분에서
+  찾은 값을 primary 로 따로 모은다 (일괄 수집에서 값이 여러 개일 때 우선 쓴다).
+- 천 단위 쉼표("1,300퍼센트")와 한글 단위("1천퍼센트")를 숫자로 바꿔 읽는다.
 - "중심상업지역: 1천퍼센트(단, 서울도심: 800퍼센트)" 의 괄호 값은 구역별 기준(subareas)으로 따로 모은다.
 """
 
@@ -38,29 +41,41 @@ class Extracted:
     articles: dict[str, list[str]] = field(default_factory=lambda: {"bcr": [], "far": []})
     # kind → 구역 이름(예: 서울도심) → 용도지역 → 값
     subareas: dict[str, dict[str, dict[str, int]]] = field(default_factory=lambda: {"bcr": {}, "far": {}})
+    # 제1항(②항·'다만' 앞)에서 찾은 값. kind → 용도지역 → 값 목록
+    primary: dict[str, dict[str, list[int]]] = field(default_factory=lambda: {"bcr": {}, "far": {}})
+
+# 기본값 목록이 끝나고 예외가 시작되는 표시 (공백을 지운 문장 기준)
+_EXCEPTION_START = re.compile(r"②|다만|제1항에도불구하고")
 
 
 def extract(articles: list[Article]) -> Extracted:
     out = Extracted()
     for kind, word in KINDS.items():
         found: dict[str, list[int]] = defaultdict(list)
+        primary: dict[str, list[int]] = defaultdict(list)
         candidates = [a for a in articles if word in a.title]
         chosen = [a for a in candidates if "용도지역" in a.title]
         for a in chosen:
             out.articles[kind].append(f"제{a.number}조({a.title})")
-            flat = _korean_numbers(re.sub(r"\s+", "", a.text))
+            flat = _normalize_numbers(re.sub(r"\s+", "", a.text))
             for zone, pct in _VALUE.findall(flat):
                 v = int(pct)
                 if v not in found[zone]:
                     found[zone].append(v)
+            head = _EXCEPTION_START.split(flat, maxsplit=1)[0]
+            for zone, pct in _VALUE.findall(head):
+                if int(pct) not in primary[zone]:
+                    primary[zone].append(int(pct))
             for zone, name, pct in _SUBAREA.findall(flat):
                 out.subareas[kind].setdefault(name, {})[zone] = int(pct)
         out.values[kind] = dict(found)
+        out.primary[kind] = dict(primary)
     return out
 
 
-def _korean_numbers(s: str) -> str:
-    """조례 표기 '1천퍼센트', '1천2백퍼센트' → '1000퍼센트', '1200퍼센트'."""
+def _normalize_numbers(s: str) -> str:
+    """'1,300퍼센트' → '1300퍼센트', '1천퍼센트'·'1천2백퍼센트' → '1000퍼센트'·'1200퍼센트'."""
+    s = re.sub(r"(\d),(\d{3})(?!\d)", r"\1\2", s)
     s = re.sub(r"(\d+)천(\d+)백", lambda m: str(int(m[1]) * 1000 + int(m[2]) * 100), s)
     s = re.sub(r"(\d+)천(?!\d)", lambda m: str(int(m[1]) * 1000), s)
     return re.sub(r"(\d+)백(?!\d)", lambda m: str(int(m[1]) * 100), s)
