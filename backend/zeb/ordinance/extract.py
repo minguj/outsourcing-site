@@ -44,6 +44,8 @@ _ZONE_TYPO = re.compile(r"(" + ZONE.replace("지역", "") + r")지(?=[:：])")
 KINDS = {"bcr": "건폐율", "far": "용적률"}
 # '용도지역', '용도구역·지역·지구' (괄호 안까지 넘어가지 않게 한다)
 _ZONING_TITLE = re.compile(r"용도[^()]{0,8}지역")
+# '그 밖의 용도지역ㆍ지구 등에서의 건폐율'(수원 제67조)은 용도지구·구역 값을 정한 조라 제외한다
+_OTHER_TITLE = re.compile(r"그\s*밖의")
 
 
 @dataclass
@@ -67,7 +69,7 @@ def extract(articles: list[Article]) -> Extracted:
         found: dict[str, list[int]] = defaultdict(list)
         primary: dict[str, list[int]] = defaultdict(list)
         candidates = [a for a in articles if word in a.title]
-        chosen = [a for a in candidates if _ZONING_TITLE.search(a.title)]
+        chosen = [a for a in candidates if _ZONING_TITLE.search(a.title) and not _OTHER_TITLE.search(a.title)]
         for a in chosen:
             out.articles[kind].append(f"제{a.number}조({a.title})")
             flat = _normalize_numbers(re.sub(r"\s+", "", _normalize_spaced(a.text)))

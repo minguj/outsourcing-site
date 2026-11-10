@@ -599,6 +599,9 @@ class RegionCodeChangeTests(unittest.TestCase):
         self.assertEqual(legacy_code("12150"), "46150")  # 순천
         self.assertEqual(legacy_code("1224012000112000000"), "2914012000112000000")  # 광주 서구 치평동 1200
         self.assertEqual(legacy_code("12330"), "29200")  # 광주 광산구
+        self.assertEqual(legacy_code("1221012700100010000"), "2911012700100010000")  # 광주 동구 충장로1가 1
+        self.assertEqual(legacy_code("1227011500100010019"), "2915511500100010019")  # 광주 남구 봉선동 1-19
+        self.assertEqual(legacy_code("1230010100100010000"), "2917010100100010000")  # 광주 북구 중흥동 1
         self.assertIsNone(legacy_code("11440"))
         self.assertIsNone(legacy_code("12"))
 

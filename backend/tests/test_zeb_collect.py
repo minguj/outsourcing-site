@@ -380,6 +380,18 @@ class CollectOneTests(unittest.TestCase):
         self.assertEqual(r.counts, (16, 16))
         self.assertEqual(r.articles["bcr"], ["제44조(용도구역·지역·지구안에서의 건폐율)"])
 
+    def test_other_zoning_article_is_ignored(self):
+        """수원 제67조 '그 밖의 용도지역ㆍ지구 등에서의 건폐율'은 근거·값에서 뺀다 (제목에 '용도지역'이 있어도)."""
+        api = FakeLaw()
+        bcr, far = standard()
+        b = body("122", "수원시 도시계획 조례", bcr, far)
+        b["LawService"]["조문"]["조"].append({"조문번호": "006700", "조제목": "그 밖의 용도지역ㆍ지구 등에서의 건폐율",
+                                          "조내용": "제67조(그 밖의 용도지역ㆍ지구 등에서의 건폐율) 1. 준주거지역: 10퍼센트", "조문여부": "Y"})
+        api.add("수원시 도시계획 조례", "경기도 수원시", "122", "20250301", b)
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertEqual(r.articles["bcr"], ["제44조(용도지역 안에서의 건폐율)"])
+        self.assertNotIn("note", r.zones["준주거지역"])
+
     def test_zone_only_in_exception_sentence_counts_as_absent(self):
         """울릉: 근린상업지역이 목록엔 없고 '근린상업지역 중 방화지구의 건축물…'에만 나오면 지정 안 된 것으로 본다.
         다른 쪽(용적률)에 값이 있는 용도지역은 그대로 '못 찾음'으로 둔다 (태백 준주거 용적률)."""
