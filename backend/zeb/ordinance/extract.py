@@ -12,6 +12,7 @@
   기본값 목록은 보통 제1항에 있고 예외(주거 비율별 주상복합, 취락지구 등)는 ②항·'다만' 뒤에 온다. 그래서 그 앞부분에서
   찾은 값을 primary 로 따로 모은다 (일괄 수집에서 값이 여러 개일 때 우선 쓴다).
 - 천 단위 쉼표("1,300퍼센트")와 법령식 한글 단위("1천퍼센트", "1천300퍼센트", "1천2백퍼센트")를 숫자로 바꿔 읽는다.
+- 조문 오타 '준주거지 : 500 퍼센트'(태백, '역' 빠짐)처럼 이름 끝 '역'이 빠지고 바로 쌍점이 오면 용도지역 이름으로 고쳐 읽는다.
 - "100분의 60 이하"(= 60퍼센트) 형식도 읽는다 (군포: "제1종 전용주거지역 : 100분의 40 이하").
 - "중심상업지역: 1천퍼센트(단, 서울도심: 800퍼센트)" 의 괄호 값은 구역별 기준(subareas)으로 따로 모은다.
 """
@@ -38,6 +39,8 @@ _UNIT = r"(?:퍼센트|퍼센터|센트|%)"
 _VALUE = re.compile(rf"({ZONE})[:：]?{_LABEL}(\d{{1,4}}){_UNIT}")
 _SUBAREA = re.compile(rf"({ZONE})[:：]?\d{{1,4}}{_UNIT}\(단,([^:：()]+)[:：](\d{{1,4}}){_UNIT}\)")
 
+# 이름 끝 '역'이 빠진 오타 (태백 제56조 "준주거지 : 500 퍼센트"). 쌍점이 바로 뒤에 올 때만 고친다
+_ZONE_TYPO = re.compile(r"(" + ZONE.replace("지역", "") + r")지(?=[:：])")
 KINDS = {"bcr": "건폐율", "far": "용적률"}
 # '용도지역', '용도구역·지역·지구' (괄호 안까지 넘어가지 않게 한다)
 _ZONING_TITLE = re.compile(r"용도[^()]{0,8}지역")
@@ -68,6 +71,7 @@ def extract(articles: list[Article]) -> Extracted:
         for a in chosen:
             out.articles[kind].append(f"제{a.number}조({a.title})")
             flat = _normalize_numbers(re.sub(r"\s+", "", _normalize_spaced(a.text)))
+            flat = _ZONE_TYPO.sub(r"\1지역", flat)
             for zone, pct in _VALUE.findall(flat):
                 v = int(pct)
                 if v not in found[zone]:
