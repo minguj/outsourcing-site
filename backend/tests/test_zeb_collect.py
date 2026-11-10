@@ -366,6 +366,40 @@ class CollectOneTests(unittest.TestCase):
         self.assertFalse(r.complete)
         self.assertTrue(any("제44조(건폐율의 최대한도)" in i for i in r.issues), r.issues)
 
+    def test_zoning_title_with_split_words(self):
+        """여수 제33조 '용도구역·지역·지구안에서의 건폐율' 도 용도지역 조로 읽는다. '용도지구'·'그 밖의' 조는 아니다."""
+        api = FakeLaw()
+        bcr, far = standard()
+        b = body("119", "수원시 도시계획 조례", bcr, far)
+        arts = b["LawService"]["조문"]["조"]
+        arts[1]["조제목"] = "용도구역·지역·지구안에서의 건폐율"
+        arts.append({"조문번호": "004500", "조제목": "그 밖의 용도지구ㆍ구역 등의 건폐율",
+                     "조내용": "제45조(그 밖의 용도지구ㆍ구역 등의 건폐율) 1. 준주거지역: 10퍼센트", "조문여부": "Y"})
+        api.add("수원시 도시계획 조례", "경기도 수원시", "119", "20250301", b)
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertEqual(r.counts, (16, 16))
+        self.assertEqual(r.articles["bcr"], ["제44조(용도구역·지역·지구안에서의 건폐율)"])
+
+    def test_zone_only_in_exception_sentence_counts_as_absent(self):
+        """울릉: 근린상업지역이 목록엔 없고 '근린상업지역 중 방화지구의 건축물…'에만 나오면 지정 안 된 것으로 본다.
+        다른 쪽(용적률)에 값이 있는 용도지역은 그대로 '못 찾음'으로 둔다 (태백 준주거 용적률)."""
+        api = FakeLaw()
+        bcr, far = standard()
+        del bcr["근린상업지역"], far["근린상업지역"], far["준주거지역"]
+        tail = "② 근린상업지역 중 방화지구의 건축물은 90퍼센트 이하. 준주거지역에 위치한 시장의 용적률은 500퍼센트 이하"
+        b = body("120", "수원시 도시계획 조례", bcr, far, extra_far_text=tail)
+        b["LawService"]["조문"]["조"][1]["조내용"] += tail
+        api.add("수원시 도시계획 조례", "경기도 수원시", "120", "20250301", b)
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertEqual(r.absent, {"bcr": ["근린상업지역"], "far": ["근린상업지역"]})
+        self.assertFalse(r.complete)  # 준주거 용적률은 못 찾음
+        self.assertTrue(any(d.startswith("용적률 준주거지역:") and "준주거지역에위치한시장" in d for d in r.diagnostics), r.diagnostics)
+
+    def test_diagnose_shows_up_to_three_places(self):
+        d = collect._diagnose("far", "준주거지역", "준주거지역에A준주거지역에B준주거지역에C준주거지역에D")
+        self.assertEqual(d.count("`") // 2, 3)
+        self.assertTrue(d.endswith("외 1곳"))
+
     def test_not_found_and_no_article(self):
         api = FakeLaw()
         self.assertIn("찾지 못함", collect.collect_one(SUWON, LawClient("x", api), NATIONAL).error)

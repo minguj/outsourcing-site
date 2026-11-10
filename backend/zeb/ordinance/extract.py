@@ -2,6 +2,7 @@
 
 - 조 번호가 아니라 조 제목으로 조문을 고른다. 2024년 서울 전부개정처럼 번호가 통째로 바뀌어도 찾는다.
   제목에 '용도지역'과 '건폐율'/'용적률'이 함께 있는 조(예: 제48조 용도지역 안에서의 용적률)만 본다.
+  '용도구역·지역·지구안에서의 건폐율'(여수 제33조)처럼 '용도'와 '지역'이 떨어져 있는 제목도 같은 조로 본다.
   '그 밖의 용적률'(학교이적지 등 특수 부지 값), '강화', '완화' 조는 같은 용도지역 이름에 다른 숫자가 붙어 있어 제외한다.
   (실제 서울 조례 제49조에 "제3종일반주거지역: 200퍼센트"(학교이적지)가 있다.)
   그런 조가 없으면 아무 값도 뽑지 않는다. 다른 조로 대신 읽으면 특수 부지 값을 기본값으로 잘못 제안하게 된다.
@@ -38,6 +39,8 @@ _VALUE = re.compile(rf"({ZONE})[:：]?{_LABEL}(\d{{1,4}}){_UNIT}")
 _SUBAREA = re.compile(rf"({ZONE})[:：]?\d{{1,4}}{_UNIT}\(단,([^:：()]+)[:：](\d{{1,4}}){_UNIT}\)")
 
 KINDS = {"bcr": "건폐율", "far": "용적률"}
+# '용도지역', '용도구역·지역·지구' (괄호 안까지 넘어가지 않게 한다)
+_ZONING_TITLE = re.compile(r"용도[^()]{0,8}지역")
 
 
 @dataclass
@@ -61,7 +64,7 @@ def extract(articles: list[Article]) -> Extracted:
         found: dict[str, list[int]] = defaultdict(list)
         primary: dict[str, list[int]] = defaultdict(list)
         candidates = [a for a in articles if word in a.title]
-        chosen = [a for a in candidates if "용도지역" in a.title]
+        chosen = [a for a in candidates if _ZONING_TITLE.search(a.title)]
         for a in chosen:
             out.articles[kind].append(f"제{a.number}조({a.title})")
             flat = _normalize_numbers(re.sub(r"\s+", "", _normalize_spaced(a.text)))
