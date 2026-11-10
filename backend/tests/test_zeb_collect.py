@@ -203,6 +203,27 @@ class CollectOneTests(unittest.TestCase):
         self.assertEqual((r.zones["제2종일반주거지역"]["far"], r.zones["중심상업지역"]["far"]), (200, 1200))
         self.assertTrue(r.complete)
 
+    def test_hundredths_format_from_gunpo(self):
+        """군포 실제 문구: '제1종 전용주거지역 : 100분의 40 이하', '100분 의 280', '100분의 1,000', '자연녹지지 역'."""
+        api = FakeLaw()
+        bcr_text = ("제49조(용도지역안에서의 건폐율)① 영 제84조제1항에 따라 용도지역 안에서의 건폐율은 다음 각 호와 같다."
+                    + "".join(f"{i}. {z[:-4]} {z[-4:]} : 100분의 {v} 이하" if "전용" in z or "일반주거" in z else f"{i}. {z} : 100분의 {v} 이하"
+                              for i, (z, v) in enumerate(standard()[0].items(), 1))
+                    + "② 제1항에도 불구하고 시장정비사업구역 주거지역에 위치한 시장의 건폐율은 65퍼센트 이하로 한다.")
+        far = standard()[1]
+        far_text = ("제53조(용도지역 안에서의 용적률)① 각 용도지역의 용적률은 다음 각 호와 같다. 다만, 지구단위계획구역에서는 강화 또는 완화할 수 있다."
+                    + "".join(f"{i}. {z} : 100분 의 {v:,} 이하" for i, (z, v) in enumerate(far.items(), 1)).replace("자연녹지지역", "자연녹지지 역"))
+        b = {"LawService": {"조문": {"조": [
+            {"조문번호": ["004900"] * 2, "조제목": "용도지역안에서의 건폐율", "조내용": bcr_text, "조문여부": "Y"},
+            {"조문번호": ["005300"] * 2, "조제목": "용도지역 안에서의 용적률", "조내용": far_text, "조문여부": "Y"}]}}}
+        api.add("수원시 도시계획 조례", "경기도 수원시", "113", "20250301", b)
+        r = collect.collect_one(SUWON, LawClient("x", api), NATIONAL)
+        self.assertIsNone(r.error)
+        self.assertTrue(r.complete, r.issues)
+        self.assertEqual(r.zones["제1종전용주거지역"]["bcr"], 40)
+        self.assertEqual(r.zones["중심상업지역"]["far"], 1200)
+        self.assertEqual(r.zones["자연녹지지역"]["far"], 80)
+
     def test_failure_lists_related_articles(self):
         api = FakeLaw()
         api.add("수원시 도시계획 조례", "경기도 수원시", "112", "20250301", {"LawService": {"조문": {"조": [
