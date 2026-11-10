@@ -76,10 +76,18 @@ class Collected:
     error: str | None = None
     # 못 찾은 용도지역이 조문에 어떻게 쓰여 있는지 (추출 규칙 보강용)
     diagnostics: list[str] = field(default_factory=list)
+    # 조문에 이름이 아예 없는 용도지역 (그 지자체에 지정되지 않은 것으로 본다). kind → 용도지역 목록
+    absent: dict[str, list[str]] = field(default_factory=lambda: {"bcr": [], "far": []})
 
     @property
     def counts(self) -> tuple[int, int]:
         return (sum("bcr" in z for z in self.zones.values()), sum("far" in z for z in self.zones.values()))
+
+    @property
+    def complete(self) -> bool:
+        """뽑은 값 + 조문에 없는 용도지역 = 16개면 다 뽑은 것으로 본다."""
+        b, f = self.counts
+        return b + len(self.absent["bcr"]) == 16 and f + len(self.absent["far"]) == 16
 
 
 def collect_one(a: dict, client: LawClient, national: dict) -> Collected:
@@ -99,17 +107,21 @@ def collect_one(a: dict, client: LawClient, national: dict) -> Collected:
         return out
     out.version = version
     try:
-        ext = extract(client.articles(version))
+        articles = client.articles(version)
     except LawApiError as e:
         out.error = str(e)
         return out
+    ext = extract(articles)
     out.articles = ext.articles
     for kind in ("bcr", "far"):
         not_found = []
         for zone in national:
             values = ext.values.get(kind, {}).get(zone, [])
             if not values:
-                not_found.append(zone)
+                if ext.texts.get(kind) and zone not in ext.texts[kind]:
+                    out.absent[kind].append(zone)
+                else:
+                    not_found.append(zone)
                 continue
             # 값이 여러 개면 제1항(예외 조항 앞)의 첫 값을 기본값으로 본다. 다른 값은 메모로 남긴다.
             head = ext.primary.get(kind, {}).get(zone) or values
@@ -124,11 +136,16 @@ def collect_one(a: dict, client: LawClient, national: dict) -> Collected:
                 note = f"{kind_label(kind)}: 조문에 다른 값도 있음({'·'.join(map(str, others))}%) — 제1항 첫 값 사용"
                 z["note"] = f"{z['note']} / {note}" if "note" in z else note
                 out.issues.append(f"{zone} {kind_label(kind)} {value}% 사용 (다른 값 {'·'.join(map(str, others))}%)")
+        if out.absent[kind] and len(out.absent[kind]) < len(national):
+            out.issues.append(f"{kind_label(kind)} 조문에 없음(지정 안 된 듯): {', '.join(out.absent[kind])}")
         if not_found and len(not_found) < len(national):
             out.issues.append(f"{kind_label(kind)} 못 찾음: {', '.join(not_found)}")
             out.diagnostics += [_diagnose(kind, z, ext.texts.get(kind, "")) for z in not_found]
     if not out.zones:
-        out.error = "용도지역 조문에서 값을 찾지 못함 (별표로 정했거나 조 제목·문구 형식이 다름)"
+        related = [f"제{a.number}조({a.title})" for a in articles if "건폐율" in a.title or "용적률" in a.title]
+        out.error = "용도지역 조문에서 값을 찾지 못함 (별표로 정했거나 조 제목·문구 형식이 다름). 관련 조: " + (
+            ", ".join(related[:6]) if related else "제목에 건폐율·용적률이 들어간 조 없음"
+        )
     for name in ext.subareas.get("far", {}):
         out.issues.append(f"구역별 별도 용적률 '{name}' 있음 — 자동 반영 안 함")
     return out
@@ -209,14 +226,15 @@ def render(results: list[Collected], previous: dict, today: str, zone_order: lis
 
 
 def report(results: list[Collected], skipped: list[dict]) -> str:
-    full = [r for r in results if not r.error and r.counts == (16, 16)]
-    part = [r for r in results if not r.error and r.counts != (16, 16)]
+    full = [r for r in results if not r.error and r.complete]
+    part = [r for r in results if not r.error and not r.complete]
     fail = [r for r in results if r.error]
     out = [
         "## 조례 일괄 수집 결과",
         "",
         f"- 대상 {len(results)}곳 (이미 확인한 관할 {len(skipped)}곳 제외: {', '.join(a['name'] for a in skipped) or '없음'})",
-        f"- **전체 추출 {len(full)}곳, 일부 추출 {len(part)}곳, 실패 {len(fail)}곳**",
+        f"- **전체 추출 {len(full)}곳, 일부 추출 {len(part)}곳, 실패 {len(fail)}곳**"
+        " (조문에 이름이 없는 용도지역은 그 지자체에 지정되지 않은 것으로 보고 전체 추출에 포함)",
         "- 추출한 값은 모두 `verified: false`(미검증)로 들어가 계산에 쓰이고, 화면·보고서에 '미검증(자동 수집)'으로 표시됩니다.",
         "",
     ]
