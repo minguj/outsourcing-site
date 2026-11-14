@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Pic } from "../_nurse/art";
 import { CENTER, type FaqItem, type ImageItem, type Inquiry, type Mail, type Post } from "../_nurse/data";
-import { PUBLIC_ORIGIN, SITE_BASE, excerpt, fmtBytes, fmtDate, fmtTime, postJsonLd, postUrl, slugify, uid, useNurse } from "../_nurse/store";
+import { PUBLIC_ORIGIN, SITE_BASE, type CodeResult, excerpt, fmtBytes, fmtDate, fmtTime, postJsonLd, postUrl, slugify, uid, useNurse } from "../_nurse/store";
 import { Body } from "../site/site-view";
 
 type Menu = "dashboard" | "inquiries" | "posts" | "images" | "account" | "mails";
@@ -52,7 +52,17 @@ function AuthScreen() {
   const [code, setCode] = useState("");
   const [newPw, setNewPw] = useState("");
   const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState<CodeResult | null>(null);
   const run = (fn: () => string | null, next?: typeof mode) => (e: FormEvent) => { e.preventDefault(); const r = fn(); setErr(r ?? ""); if (!r && next) setMode(next); };
+  const ask = async () => {
+    setBusy(true); const r = await actions.requestReset(email); setBusy(false);
+    setErr(r.error ?? ""); if (!r.error) { setSent(r); setMode("code"); }
+  };
+  const confirm = async (e: FormEvent) => {
+    e.preventDefault(); setBusy(true); const r = await actions.verifyCode("reset", code, newPw); setBusy(false);
+    setErr(r ?? ""); if (!r) setMode("done");
+  };
 
   return <div className="nc-auth">
     <div className="nc-auth-card">
@@ -64,25 +74,26 @@ function AuthScreen() {
         {err && <p className="nc-err" role="alert">{err}</p>}
         <button className="nc-btn block">로그인</button>
         <button type="button" className="nc-link" onClick={() => { setErr(""); setMode("reset"); }}>비밀번호를 잊으셨나요?</button>
-        <p className="nc-hint">데모 계정이 채워져 있습니다. 비밀번호를 틀리게 입력해 오류 안내도 확인해 보세요.</p>
+        <p className="nc-hint">데모 계정이 채워져 있습니다. 계정 설정에서 관리자 이메일을 실제 주소로 바꾸면, 비밀번호 찾기 인증코드도 그 주소로 실제 발송됩니다.</p>
       </form>}
-      {mode === "reset" && <form onSubmit={run(() => actions.requestReset(email), "code")} className="nc-form">
+      {mode === "reset" && <form onSubmit={e => { e.preventDefault(); void ask(); }} className="nc-form">
         <h1>비밀번호 찾기</h1>
         <p className="nc-hint">관리자 이메일로 6자리 인증코드를 보내 드립니다. 코드는 10분 동안 유효합니다.</p>
         <label>관리자 이메일<input type="email" value={email} onChange={e => setEmail(e.target.value)} /></label>
         {err && <p className="nc-err" role="alert">{err}</p>}
-        <button className="nc-btn block">인증코드 받기</button>
+        <button className="nc-btn block" disabled={busy}>{busy ? "보내는 중…" : "인증코드 받기"}</button>
         <button type="button" className="nc-link" onClick={() => { setErr(""); setMode("login"); }}>로그인으로 돌아가기</button>
       </form>}
-      {mode === "code" && <form onSubmit={run(() => actions.verifyCode("reset", code, newPw), "done")} className="nc-form">
+      {mode === "code" && <form onSubmit={e => void confirm(e)} className="nc-form">
         <h1>새 비밀번호 설정</h1>
+        <SentNotice sent={sent} to={state.account.email} />
         <label>인증코드<input inputMode="numeric" maxLength={6} value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ""))} placeholder="6자리 숫자" /></label>
         <label>새 비밀번호 (8자 이상)<input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} autoComplete="new-password" /></label>
         {err && <p className="nc-err" role="alert">{err}</p>}
-        <button className="nc-btn block">비밀번호 변경</button>
+        <button className="nc-btn block" disabled={busy}>{busy ? "확인 중…" : "비밀번호 변경"}</button>
         <div className="nc-row-links">
-          <button type="button" className="nc-link" onClick={() => { const r = actions.requestReset(state.account.email); setErr(r ?? ""); }}>인증코드 다시 받기</button>
-          <button type="button" className="nc-link muted" onClick={actions.expireCode}>(데모) 코드 만료시키기</button>
+          <button type="button" className="nc-link" disabled={busy} onClick={() => { setEmail(state.account.email); void ask(); }}>인증코드 다시 받기</button>
+          {sent?.mode !== "real" && <button type="button" className="nc-link muted" onClick={actions.expireCode}>(데모) 코드 만료시키기</button>}
         </div>
       </form>}
       {mode === "done" && <div className="nc-form">
@@ -91,9 +102,15 @@ function AuthScreen() {
         <button className="nc-btn block" onClick={() => { setPw(""); setMode("login"); }}>로그인하기</button>
       </div>}
     </div>
-    {(mode === "code" || mode === "done") && <MailPreview mail={state.mails[0]} />}
+    {mode === "code" && sent?.mode === "local" && <MailPreview mail={state.mails[0]} />}
     <a className="nc-auth-back" href="/demo/nurse">샘플 소개로 돌아가기</a>
   </div>;
+}
+/** 인증코드를 실제로 보냈는지, 데모 메일함에 보여 주는지 안내한다. */
+function SentNotice({ sent, to }: { sent: CodeResult | null; to: string }) {
+  if (!sent) return null;
+  if (sent.mode === "real") return <p className="nc-sent"><b>{to}</b>(으)로 인증코드를 보냈습니다. 받은 메일함을 확인해 주세요. 보이지 않으면 스팸함도 확인해 주세요.</p>;
+  return <p className="nc-hint">{sent.note ?? "예시 주소라 실제로 보내지 않고 아래 데모 메일함에 표시합니다."}</p>;
 }
 function MailPreview({ mail }: { mail: Mail | undefined }) {
   if (!mail) return null;
@@ -388,6 +405,17 @@ function Account() {
   const [pw, setPw] = useState("");
   const [code, setCode] = useState("");
   const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState<CodeResult | null>(null);
+  const [target, setTarget] = useState("");
+  const ask = async () => {
+    setBusy(true); const r = await actions.requestEmailChange(newEmail, pw); setBusy(false);
+    setErr(r.error ?? ""); if (!r.error) { setSent(r); setTarget(newEmail.trim()); setStep("code"); }
+  };
+  const confirm = async () => {
+    setBusy(true); const r = await actions.verifyCode("email", code); setBusy(false);
+    setErr(r ?? ""); if (!r) setStep("done");
+  };
   const [cur, setCur] = useState(""); const [next, setNext] = useState(""); const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   return <>
@@ -396,21 +424,22 @@ function Account() {
       <section className="nc-panel nc-form">
         <h2>관리자 이메일 변경</h2>
         <p className="nc-hint">현재 이메일: <b>{state.account.email}</b></p>
-        {step === "form" && <form className="nc-form" onSubmit={e => { e.preventDefault(); const r = actions.requestEmailChange(newEmail, pw); setErr(r ?? ""); if (!r) setStep("code"); }}>
+        {step === "form" && <form className="nc-form" onSubmit={e => { e.preventDefault(); void ask(); }}>
           <label>새 이메일<input type="email" value={newEmail} onChange={e => setNewEmail(e.target.value)} placeholder="new@example.com" /></label>
           <label>현재 비밀번호<input type="password" value={pw} onChange={e => setPw(e.target.value)} autoComplete="current-password" /></label>
           {err && <p className="nc-err" role="alert">{err}</p>}
-          <button className="nc-abtn">새 이메일로 인증코드 받기</button>
+          <p className="nc-hint">실제 주소를 넣으면 그 주소로 인증코드가 발송됩니다. 입력한 주소는 사이트에 저장하지 않습니다.</p>
+          <button className="nc-abtn" disabled={busy}>{busy ? "보내는 중…" : "새 이메일로 인증코드 받기"}</button>
         </form>}
-        {step === "code" && <form className="nc-form" onSubmit={e => { e.preventDefault(); const r = actions.verifyCode("email", code); setErr(r ?? ""); if (!r) setStep("done"); }}>
-          <p className="nc-hint"><b>{newEmail}</b>(으)로 보낸 6자리 코드를 입력해 주세요. 10분 동안 유효합니다.</p>
+        {step === "code" && <form className="nc-form" onSubmit={e => { e.preventDefault(); void confirm(); }}>
+          <SentNotice sent={sent} to={target} />
+          <p className="nc-hint">6자리 코드를 입력해 주세요. 10분 동안 유효합니다.</p>
           <label>인증코드<input inputMode="numeric" maxLength={6} value={code} onChange={e => setCode(e.target.value.replace(/\D/g, ""))} /></label>
           {err && <p className="nc-err" role="alert">{err}</p>}
-          <div className="nc-actions"><button className="nc-abtn">확인</button><button type="button" className="nc-abtn ghost" onClick={() => { setStep("form"); setCode(""); setErr(""); }}>취소</button></div>
-          <button type="button" className="nc-link muted" onClick={actions.expireCode}>(데모) 코드 만료시키기</button>
-          <MailPreview mail={state.mails[0]} />
+          <div className="nc-actions"><button className="nc-abtn" disabled={busy}>{busy ? "확인 중…" : "확인"}</button><button type="button" className="nc-abtn ghost" onClick={() => { setStep("form"); setCode(""); setErr(""); }}>취소</button></div>
+          {sent?.mode === "local" && <><button type="button" className="nc-link muted" onClick={actions.expireCode}>(데모) 코드 만료시키기</button><MailPreview mail={state.mails[0]} /></>}
         </form>}
-        {step === "done" && <div className="nc-form"><p className="nc-ok">관리자 이메일이 변경되었습니다. 다음 로그인부터 새 이메일을 사용합니다. 이전 이메일로도 변경 알림을 보냈습니다.</p>
+        {step === "done" && <div className="nc-form"><p className="nc-ok">관리자 이메일이 변경되었습니다. 다음 로그인부터 새 이메일을 사용합니다. 이전 이메일로 가는 변경 알림은 ‘보낸 메일 (데모)’에 기록했습니다.</p>
           <button className="nc-abtn ghost" onClick={() => { setStep("form"); setNewEmail(""); setPw(""); setCode(""); }}>확인</button></div>}
       </section>
 

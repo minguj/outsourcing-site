@@ -488,3 +488,4 @@
   .nc-mails button { grid-template-columns: 1fr auto; }
   .nc-mails button time, .nc-mails button span:not(.nc-tag) { display: none; }
 }
+.nc-sent { background: #e9f4ec; color: #245c39; border-radius: 8px; padding: 10px 12px; font-size: 13.5px; line-height: 1.6; }
