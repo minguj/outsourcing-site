@@ -2822,13 +2822,13 @@ ordinances:
     ref: "제56조(용도지역 안에서의 건폐율), 제62조(용도지역 안에서의 용적률)"
     url: "https://www.law.go.kr/자치법규/영천시도시계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-13"
     collected: true
     complete: true
     watch:
       law_name: "영천시 도시계획 조례"
       agency: ["47", "경상북도", "영천시"]
-      promulgated_on: "2024-12-27"
+      promulgated_on: "2026-11-11"
     zones:
       제1종전용주거지역: { bcr: 50, far: 100, verified: false }
       제2종전용주거지역: { bcr: 50, far: 150, verified: false }
@@ -2915,13 +2915,13 @@ ordinances:
     ref: "제79조(용도지역 안에서의 건폐율), 제84조(용도지역 안에서의 용적률)"
     url: "https://www.law.go.kr/자치법규/경산시도시계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-13"
     collected: true
     complete: true
     watch:
       law_name: "경산시 도시계획 조례"
       agency: ["47", "경상북도", "경산시"]
-      promulgated_on: "2026-01-07"
+      promulgated_on: "2026-11-11"
     zones:
       제1종전용주거지역: { bcr: 50, far: 100, verified: false }
       제2종전용주거지역: { bcr: 50, far: 150, verified: false }
@@ -3310,13 +3310,13 @@ ordinances:
     ref: "제53조(용도지역에서의 건폐율), 제58조(용도지역에서의 용적률)"
     url: "https://www.law.go.kr/자치법규/진주시도시계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-13"
     collected: true
     complete: true
     watch:
       law_name: "진주시 도시계획 조례"
       agency: ["48", "경상남도", "진주시"]
-      promulgated_on: "2026-05-04"
+      promulgated_on: "2026-11-12"
     zones:
       제1종전용주거지역: { bcr: 40, far: 80, verified: false }
       제2종전용주거지역: { bcr: 40, far: 120, verified: false }
@@ -3682,13 +3682,13 @@ ordinances:
     ref: "제30조(용도지역에서의 건폐율), 제33조(용도지역에서의 용적률)"
     url: "https://www.law.go.kr/자치법규/하동군계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-13"
     collected: true
     complete: true
     watch:
       law_name: "하동군 계획 조례"
       agency: ["48", "경상남도", "하동군"]
-      promulgated_on: "2026-09-30"
+      promulgated_on: "2026-11-10"
     zones:
       제1종전용주거지역: { bcr: 50, far: 100, verified: false }
       제2종전용주거지역: { bcr: 50, far: 150, verified: false }
@@ -3806,13 +3806,13 @@ ordinances:
     ref: "제53조(용도지역안에서의 건폐율), 제58조(용도지역안에서의 용적률)"
     url: "https://www.law.go.kr/자치법규/합천군군계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-13"
     collected: true
     complete: true
     watch:
       law_name: "합천군 군계획 조례"
       agency: ["48", "경상남도", "합천군"]
-      promulgated_on: "2026-04-16"
+      promulgated_on: "2026-11-12"
     zones:
       제1종전용주거지역: { bcr: 50, far: 100, verified: false }
       제2종전용주거지역: { bcr: 50, far: 150, verified: false }
@@ -3820,15 +3820,15 @@ ordinances:
       제2종일반주거지역: { bcr: 60, far: 250, verified: false }
       제3종일반주거지역: { bcr: 50, far: 300, verified: false }
       준주거지역: { bcr: 70, far: 500, verified: false }
-      중심상업지역: { bcr: 80, far: 900, verified: false }
-      일반상업지역: { bcr: 80, far: 800, verified: false }
-      근린상업지역: { bcr: 70, far: 600, verified: false }
-      유통상업지역: { bcr: 80, far: 700, verified: false }
+      중심상업지역: { bcr: 80, far: 1500, verified: false }
+      일반상업지역: { bcr: 80, far: 1300, verified: false }
+      근린상업지역: { bcr: 70, far: 900, verified: false }
+      유통상업지역: { bcr: 80, far: 1100, verified: false }
       전용공업지역: { bcr: 70, far: 300, verified: false }
       일반공업지역: { bcr: 70, far: 350, verified: false }
       준공업지역: { bcr: 70, far: 400, verified: false }
-      보전녹지지역: { bcr: 20, far: 60, verified: false }
-      생산녹지지역: { bcr: 20, far: 80, verified: false }
+      보전녹지지역: { bcr: 20, far: 80, verified: false }
+      생산녹지지역: { bcr: 20, far: 100, verified: false }
       자연녹지지역: { bcr: 20, far: 100, verified: false }
   - id: auto-50
     jurisdiction: "50"
