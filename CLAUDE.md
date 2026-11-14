@@ -20,6 +20,7 @@ AI 상담 → 요약 → 접수 → 견적서 → 계약 → 결제 흐름을 �
   - `src/app/admin/` 관리자 (상담 접수, AI 상담 기록 consult-log.tsx)
   - `src/app/quote`, `contract` 견적서·계약 (고객별 토큰 주소, GA 수집 제외)
   - `src/app/demo/` 작업 예시 데모 (tower: 입주기업 플랫폼 샘플, 브랜드명 쓰지 않음)
+    - nurse: 방문간호센터 홈페이지 샘플(홈페이지 /demo/nurse/site + 관리자 /demo/nurse/admin). 센터명 "늘곁방문간호센터"는 가상, CSS는 nc- 접두어, 상태는 localStorage(nurse-demo-v1)만 쓰고 백엔드 없음. 랜딩 썸네일은 public/samples/nurse/thumbnails/
     - zeb: 건축 초기 기획(대지 규모 + ZEB 신재생 시나리오) 샘플. 검색 제외·공개 화면 미링크, CSS는 zb- 접두어. 백엔드는 `backend/zeb/`
   - `src/app/privacy/` 개인정보처리방침
 - `backend/` FastAPI + SQLite (`DATA_DIR/site.db`)
@@ -36,7 +37,7 @@ AI 상담 → 요약 → 접수 → 견적서 → 계약 → 결제 흐름을 �
 
 ## 작업 규칙
 - 줄바꿈: ts/tsx/py/md/css는 기존 CRLF를 유지한다. sh/yaml/Caddyfile은 LF(.gitattributes).
-- 검색 노출: robots.ts에서 /admin, /quote, /contract, /en, /api/, /demo/tower, /demo/zeb 제외 유지.
+- 검색 노출: robots.ts에서 /admin, /quote, /contract, /en, /api/, /demo/tower, /demo/zeb, /demo/nurse 제외 유지.
 - GA: 비공개 경로(/admin, /quote, /contract)는 수집하지 않는다. page_view에는 utm_* 등 유입 파라미터만 남긴다.
 - 개인정보를 새로 수집·보관하는 변경을 하면 privacy/page.tsx와 site-config.ts의 시행일도 함께 고친다.
 - 화면 FAQ를 바꾸면 backend/site_knowledge.py도 같이 맞춘다.
