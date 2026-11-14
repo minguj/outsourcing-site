@@ -64,7 +64,7 @@ export const OPERATOR = {
   email: "help@fitagent.co.kr",
   site: "fitagent.co.kr",
 };
-export const POLICY_EFFECTIVE = { privacy: "2026년 11월 9일", terms: "2026년 11월 2일" };
+export const POLICY_EFFECTIVE = { privacy: "2026년 11월 14일", terms: "2026년 11월 2일" };
 
 // 계약서(안)의 을(수급인). 공개 데모 문서라 개인 이름은 넣지 않고 서비스명만 표시하고, 성명은 빈칸으로 둔다.
 export const CONTRACTOR = {

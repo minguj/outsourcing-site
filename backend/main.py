@@ -2,10 +2,12 @@
 
 if __package__:
     from .demo_api import router
+    from .nurse_demo import router as nurse_router
     from .site_api import router as site_router
     from .zeb.router import router as zeb_router
 else:
     from demo_api import router
+    from nurse_demo import router as nurse_router
     from site_api import router as site_router
     from zeb.router import router as zeb_router
 
@@ -13,6 +15,7 @@ app = FastAPI(title="Outsourcing Site API")
 app.include_router(router)
 app.include_router(site_router)
 app.include_router(zeb_router)
+app.include_router(nurse_router)
 
 
 @app.middleware("http")

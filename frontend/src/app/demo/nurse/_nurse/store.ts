@@ -9,7 +9,10 @@ import { BUILTIN_IMAGES, CENTER, DEMO_ADMIN, INITIAL_INQUIRIES, INITIAL_POSTS, t
 const KEY = "nurse-demo-v1";
 const CODE_TTL_MS = 10 * 60 * 1000;
 
-export type PendingCode = { kind: "reset" | "email"; code: string; target: string; expiresAt: number };
+/** real: 실제 메일로 보낸 코드(서버가 확인). 아니면 데모 메일함에만 보여 주는 코드. */
+export type PendingCode = { kind: "reset" | "email"; code: string; target: string; expiresAt: number; real?: boolean };
+/** mode: real = 실제 메일 발송, local = 데모 메일함에 표시. note: 실제 발송에 실패해 데모 메일함으로 대신한 경우 안내. */
+export type CodeResult = { error?: string; mode?: "real" | "local"; note?: string };
 export type NurseState = {
   posts: Post[]; images: ImageItem[]; inquiries: Inquiry[]; mails: Mail[];
   account: { email: string; password: string };
@@ -59,6 +62,42 @@ function mail(s: NurseState, to: string, subject: string, body: string, ok = tru
   return [{ id: uid(), at: now(), to, subject, body, ok }, ...s.mails].slice(0, 40);
 }
 
+/** 받을 수 없는 예시 도메인(기본 데모 계정 등)은 실제로 보내지 않고 데모 메일함에만 보여 준다. */
+export const isDeliverable = (email: string) => !/\.(example|test|invalid|localhost|local)$/i.test(email.trim());
+const LABEL = { reset: "비밀번호 재설정 인증코드", email: "이메일 변경 인증코드" } as const;
+
+type ApiResult = { ok: true } | { ok: false; status: number; detail: string };
+async function callApi(path: "code" | "verify", body: Record<string, string>): Promise<ApiResult> {
+  try {
+    const r = await fetch(`/api/demo/nurse/${path}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    if (r.ok) return { ok: true };
+    let detail = "";
+    try { const j = await r.json(); if (typeof j.detail === "string") detail = j.detail; } catch { /* 본문 없음 */ }
+    return { ok: false, status: r.status, detail };
+  } catch { return { ok: false, status: 0, detail: "" }; }
+}
+
+/** 인증코드 발송. 실제 주소면 서버가 메일을 보내고, 서버가 응답하지 않으면 데모 메일함으로 대신한다. */
+async function issueCode(kind: PendingCode["kind"], target: string): Promise<CodeResult> {
+  let note: string | undefined;
+  if (isDeliverable(target)) {
+    const r = await callApi("code", { purpose: kind, email: target });
+    if (r.ok) {
+      const s = read();
+      write({ ...s, pending: { kind, code: "", target, expiresAt: Date.now() + CODE_TTL_MS, real: true },
+        mails: mail(s, target, `[늘곁방문간호센터 샘플] ${LABEL[kind]}`, "실제 메일로 발송했습니다. 인증코드는 받은 메일함에서 확인해 주세요.") });
+      return { mode: "real" };
+    }
+    if (r.status === 400 || r.status === 422 || r.status === 429) return { error: r.detail || "요청을 처리하지 못했습니다." };
+    note = "지금은 메일을 보내지 못해 데모 메일함에 대신 표시합니다.";
+  }
+  const c = code6();
+  const s = read();
+  write({ ...s, pending: { kind, code: c, target, expiresAt: Date.now() + CODE_TTL_MS },
+    mails: mail(s, target, `[늘곁 관리자] ${LABEL[kind]}`, `인증코드: ${c}\n10분 안에 입력해 주세요. 요청하지 않으셨다면 이 메일을 무시하세요.`) });
+  return { mode: "local", note };
+}
+
 export function useNurse() {
   const state = useSyncExternalStore(subscribe, read, () => serverState);
   const update = useCallback((fn: (s: NurseState) => NurseState) => write(fn(read())), []);
@@ -97,35 +136,36 @@ export function useNurse() {
     },
     logout: () => update(s => ({ ...s, loggedIn: false })),
     /** 비밀번호 찾기 1단계: 등록된 관리자 이메일로 인증코드를 보낸다. */
-    requestReset: (email: string): string | null => {
+    requestReset: async (email: string): Promise<CodeResult> => {
       const s = read();
-      if (email.trim().toLowerCase() !== s.account.email.toLowerCase()) return "등록된 관리자 이메일이 아닙니다.";
-      const c = code6();
-      write({ ...s, pending: { kind: "reset", code: c, target: s.account.email, expiresAt: Date.now() + CODE_TTL_MS },
-        mails: mail(s, s.account.email, "[늘곁 관리자] 비밀번호 재설정 인증코드", `인증코드: ${c}\n10분 안에 입력해 주세요. 요청하지 않으셨다면 이 메일을 무시하세요.`) });
-      return null;
+      if (email.trim().toLowerCase() !== s.account.email.toLowerCase()) return { error: "등록된 관리자 이메일이 아닙니다." };
+      return issueCode("reset", s.account.email);
     },
     /** 이메일 변경 1단계: 현재 비밀번호를 확인하고 새 이메일로 인증코드를 보낸다. */
-    requestEmailChange: (newEmail: string, password: string): string | null => {
+    requestEmailChange: async (newEmail: string, password: string): Promise<CodeResult> => {
       const s = read();
       const e = newEmail.trim();
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return "이메일 형식을 확인해 주세요.";
-      if (e.toLowerCase() === s.account.email.toLowerCase()) return "지금 쓰는 이메일과 같습니다.";
-      if (password !== s.account.password) return "현재 비밀번호가 맞지 않습니다.";
-      const c = code6();
-      write({ ...s, pending: { kind: "email", code: c, target: e, expiresAt: Date.now() + CODE_TTL_MS },
-        mails: mail(s, e, "[늘곁 관리자] 이메일 변경 인증코드", `인증코드: ${c}\n이 주소를 관리자 이메일로 쓰려면 10분 안에 입력해 주세요.`) });
-      return null;
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return { error: "이메일 형식을 확인해 주세요." };
+      if (e.toLowerCase() === s.account.email.toLowerCase()) return { error: "지금 쓰는 이메일과 같습니다." };
+      if (password !== s.account.password) return { error: "현재 비밀번호가 맞지 않습니다." };
+      return issueCode("email", e);
     },
-    /** 인증코드 확인. 비밀번호 재설정이면 newPassword를 함께 받는다. */
-    verifyCode: (kind: PendingCode["kind"], input: string, newPassword?: string): string | null => {
-      const s = read(); const p = s.pending;
+    /** 인증코드 확인. 비밀번호 재설정이면 newPassword를 함께 받는다. 실제로 보낸 코드는 서버가 확인한다. */
+    verifyCode: async (kind: PendingCode["kind"], input: string, newPassword?: string): Promise<string | null> => {
+      const p = read().pending;
       if (!p || p.kind !== kind) return "인증 요청 내역이 없습니다. 인증코드를 다시 받아 주세요.";
-      if (Date.now() > p.expiresAt) return "인증코드가 만료되었습니다. 다시 받아 주세요.";
-      if (input.trim() !== p.code) return "인증코드가 맞지 않습니다.";
+      if (kind === "reset" && (!newPassword || newPassword.length < 8)) return "새 비밀번호는 8자 이상으로 정해 주세요.";
+      if (!/^\d{6}$/.test(input.trim())) return "6자리 숫자를 입력해 주세요.";
+      if (p.real) {
+        const r = await callApi("verify", { purpose: kind, email: p.target, code: input.trim() });
+        if (!r.ok) return r.detail || "인증코드를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.";
+      } else {
+        if (Date.now() > p.expiresAt) return "인증코드가 만료되었습니다. 다시 받아 주세요.";
+        if (input.trim() !== p.code) return "인증코드가 맞지 않습니다.";
+      }
+      const s = read();
       if (kind === "reset") {
-        if (!newPassword || newPassword.length < 8) return "새 비밀번호는 8자 이상으로 정해 주세요.";
-        write({ ...s, pending: null, account: { ...s.account, password: newPassword },
+        write({ ...s, pending: null, account: { ...s.account, password: newPassword! },
           mails: mail(s, s.account.email, "[늘곁 관리자] 비밀번호가 변경되었습니다", "관리자 비밀번호가 변경되었습니다. 본인이 아니라면 바로 연락 주세요.") });
       } else {
         write({ ...s, pending: null, account: { ...s.account, email: p.target },
@@ -133,7 +173,7 @@ export function useNurse() {
       }
       return null;
     },
-    expireCode: () => update(s => s.pending ? { ...s, pending: { ...s.pending, expiresAt: Date.now() - 1 } } : s),
+    expireCode: () => update(s => s.pending && !s.pending.real ? { ...s, pending: { ...s.pending, expiresAt: Date.now() - 1 } } : s),
     changePassword: (current: string, next: string): string | null => {
       const s = read();
       if (current !== s.account.password) return "현재 비밀번호가 맞지 않습니다.";

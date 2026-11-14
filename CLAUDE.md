@@ -20,7 +20,7 @@ AI 상담 → 요약 → 접수 → 견적서 → 계약 → 결제 흐름을 �
   - `src/app/admin/` 관리자 (상담 접수, AI 상담 기록 consult-log.tsx)
   - `src/app/quote`, `contract` 견적서·계약 (고객별 토큰 주소, GA 수집 제외)
   - `src/app/demo/` 작업 예시 데모 (tower: 입주기업 플랫폼 샘플, 브랜드명 쓰지 않음)
-    - nurse: 방문간호센터 홈페이지 샘플(홈페이지 /demo/nurse/site + 관리자 /demo/nurse/admin). 센터명 "늘곁방문간호센터"는 가상, CSS는 nc- 접두어, 상태는 localStorage(nurse-demo-v1)만 쓰고 백엔드 없음. 랜딩 썸네일은 public/samples/nurse/thumbnails/
+    - nurse: 방문간호센터 홈페이지 샘플(홈페이지 /demo/nurse/site + 관리자 /demo/nurse/admin). 센터명 "늘곁방문간호센터"는 가상, CSS는 nc- 접두어, 상태는 localStorage(nurse-demo-v1)만 쓰고 백엔드 없음. 랜딩 썸네일은 public/samples/nurse/thumbnails/. 관리자 인증코드 메일만 실제 발송(`backend/nurse_demo.py`, `/api/demo/nurse/code·verify`, 고정 문구·IP/주소/하루 제한·코드는 메모리 10분). 예시 도메인(.example 등)이나 서버 미응답 시 데모 메일함으로 대체. 상담 신청 알림은 데모 기록만 남긴다
     - zeb: 건축 초기 기획(대지 규모 + ZEB 신재생 시나리오) 샘플. 검색 제외·공개 화면 미링크, CSS는 zb- 접두어. 백엔드는 `backend/zeb/`
   - `src/app/privacy/` 개인정보처리방침
 - `backend/` FastAPI + SQLite (`DATA_DIR/site.db`)
@@ -44,7 +44,7 @@ AI 상담 → 요약 → 접수 → 견적서 → 계약 → 결제 흐름을 �
 
 ## 확인 방법
 - 백엔드 테스트 (저장소 루트, PowerShell). pytest는 설치되어 있지 않아서 `backend\.venv`의 unittest로 돌린다.
-  `$env:DATA_DIR="$env:TEMP\fitagent-test"; .\backend\.venv\Scripts\python.exe -c "import functools,sys,tempfile,unittest; T=tempfile.TemporaryDirectory; T.__init__=functools.partialmethod(T.__init__, ignore_cleanup_errors=True); r=unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromNames(['backend.tests.test_site','backend.tests.test_purchase_demo','backend.tests.test_zeb_demo','backend.tests.test_zeb_ordinance','backend.tests.test_zeb_collect'])); sys.exit(not r.wasSuccessful())"`
+  `$env:DATA_DIR="$env:TEMP\fitagent-test"; .\backend\.venv\Scripts\python.exe -c "import functools,sys,tempfile,unittest; T=tempfile.TemporaryDirectory; T.__init__=functools.partialmethod(T.__init__, ignore_cleanup_errors=True); r=unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromNames(['backend.tests.test_site','backend.tests.test_purchase_demo','backend.tests.test_zeb_demo','backend.tests.test_zeb_ordinance','backend.tests.test_zeb_collect','backend.tests.test_nurse_demo'])); sys.exit(not r.wasSuccessful())"`
   - Windows에서는 테스트가 끝날 때 임시 폴더의 site.db가 잠겨 있어 정리 단계에서 `PermissionError`(WinError 32)가 난다. 위 명령은 이 정리 오류만 무시한다. 테스트 본문의 실패는 그대로 잡힌다.
   - 테스트 파일을 새로 만들면 위 목록(`backend.tests.…`)에 추가한다.
 - 프론트 타입 검사: `cd frontend; npx tsc --noEmit`
