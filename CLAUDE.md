@@ -22,7 +22,7 @@ AI 상담 → 요약 → 접수 → 견적서 → 계약 → 결제 흐름을 �
   - `src/app/demo/` 작업 예시 데모 (tower: 입주기업 플랫폼 샘플, 브랜드명 쓰지 않음)
     - nurse: 방문간호센터 홈페이지 샘플(홈페이지 /demo/nurse/site + 관리자 /demo/nurse/admin). 센터명 "늘곁방문간호센터"는 가상, CSS는 nc- 접두어, 상태는 localStorage(nurse-demo-v1)만 쓰고 백엔드 없음. 랜딩 썸네일은 public/samples/nurse/thumbnails/. 관리자 인증코드 메일만 실제 발송(`backend/nurse_demo.py`, `/api/demo/nurse/code·verify`, 고정 문구·IP/주소/하루 제한·코드는 메모리 10분). 예시 도메인(.example 등)이나 서버 미응답 시 데모 메일함으로 대체. 상담 신청 알림은 데모 기록만 남긴다
     - zeb: 건축 초기 기획(대지 규모 + ZEB 신재생 시나리오) 샘플. 검색 제외·공개 화면 미링크, CSS는 zb- 접두어. 백엔드는 `backend/zeb/`
-    - pms: 운영 플랫폼(PMS) 샘플. 역할 전환·사업장 선택·운영 현황/호실/입주자/계약/청구·수납/회계 마감/민원/출입 연동/감사 기록 탭(3단계 탭은 _pms/tabs-ops.tsx). 검색 제외·공개 화면 미링크, CSS는 pm- 접두어(.pm-root 안). 백엔드는 `backend/pms/`
+    - pms: 운영 플랫폼(PMS) 샘플. 역할 전환·사업장 선택·운영 현황/호실/입주자/계약/청구·수납/회계 마감/민원/출입 연동/감사 기록 탭(3단계 탭은 _pms/tabs-ops.tsx). 검색 제외, 랜딩 데모 모음에서 링크(썸네일 public/samples/pms/thumbnails), CSS는 pm- 접두어(.pm-root 안). 백엔드는 `backend/pms/`
   - `src/app/privacy/` 개인정보처리방침
 - `backend/` FastAPI + SQLite (`DATA_DIR/site.db`)
   - `consult.py` Claude API 호출과 시스템 프롬프트
