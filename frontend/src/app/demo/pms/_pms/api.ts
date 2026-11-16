@@ -127,7 +127,9 @@ export type Voc = {
   status_label: string;
   created_at: string;
   created_by_name: string;
-  next: string[];
+  reopened: number;
+  next: { to: string; label: string; reason: boolean }[];
+  history: { at: string; by: string; action: string; reason: string | null; from_label: string | null; to_label: string }[];
 };
 
 export type AccessEvent = {
@@ -208,7 +210,7 @@ export function client(token: string, userId: string) {
     audit: () => get<AuditEntry[]>("/audit"),
     vocs: (siteId: string) => get<Voc[]>(`/sites/${siteId}/vocs`),
     addVoc: (residentId: string, text: string) => post<Voc>(`/residents/${residentId}/vocs`, { text }),
-    vocStatus: (id: string, to: string) => post<Voc>(`/vocs/${id}/status`, { to }),
+    vocStatus: (id: string, to: string, reason?: string) => post<Voc>(`/vocs/${id}/status`, { to, ...(reason ? { reason } : {}) }),
     integration: (siteId: string) => get<IntegrationView>(`/sites/${siteId}/integration`),
     processIntegration: (siteId: string, asOf: string) =>
       post<{ sent: { id: string; status: string }[] }>(`/sites/${siteId}/integration/process`, { as_of: asOf }),

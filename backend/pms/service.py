@@ -306,6 +306,9 @@ def create_voc(actor: Actor, data: dict, resident: dict, text: str, redacted: st
         **result, "source": source, "assignee_role": voc.ROUTE[result["category"]], "status": "received",
         "created_at": now.isoformat(timespec="seconds"), "created_by": actor.user_id,
         "created_by_name": f"{actor.name} ({ROLE_SHORT.get(actor.role, actor.role)})",
+        "reopened": 0,
+        "history": [{"at": now.isoformat(timespec="seconds"), "by": actor.name, "from": None, "to": "received",
+                     "action": "접수", "reason": None}],
     }
     data["vocs"].append(item)
     return _voc_view(actor, item)
@@ -326,7 +329,11 @@ def _voc_view(actor: Actor, item: dict) -> dict:
     out["urgency_label"] = voc.URGENCY[item["urgency"]]
     out["status_label"] = voc.STATUS_LABELS[item["status"]]
     out["assignee_label"] = ROLE_SHORT.get(item["assignee_role"], item["assignee_role"])
-    out["next"] = sorted(voc.STATUS_FLOW[item["status"]]) if actor.can("voc.manage") else []
+    out["next"] = [{"to": to, "label": label, "reason": needs}
+                   for (frm, to), (label, needs) in voc.TRANSITIONS.items()
+                   if frm == item["status"]] if actor.can("voc.manage") else []
+    out["history"] = [{**h, "from_label": voc.STATUS_LABELS.get(h["from"]) if h["from"] else None,
+                       "to_label": voc.STATUS_LABELS[h["to"]]} for h in item["history"]]
     return out
 
 
@@ -339,13 +346,25 @@ def list_vocs(actor: Actor, data: dict, site_id: str) -> list[dict]:
     return [_voc_view(actor, v) for v in items]
 
 
-def voc_status(actor: Actor, data: dict, voc_id: str, to: str) -> dict:
+def voc_status(actor: Actor, data: dict, voc_id: str, to: str, reason: str | None, now: datetime) -> dict:
+    """상태를 바꾸고 이력을 남긴다. 되돌리기·다시 열기는 사유가 있어야 한다."""
     actor.require("voc.manage")
     item = _get(data, "vocs", voc_id)
     if not actor.sees_voc(item):
         raise NotFound(voc_id)
-    if to not in voc.STATUS_FLOW[item["status"]]:
+    rule = voc.TRANSITIONS.get((item["status"], to))
+    if rule is None:
         raise Invalid(f"'{voc.STATUS_LABELS[item['status']]}' 상태에서 '{voc.STATUS_LABELS.get(to, to)}'(으)로 바꿀 수 없습니다.")
+    label, needs_reason = rule
+    reason = (reason or "").strip()
+    if needs_reason and not reason:
+        raise Invalid(f"'{label}'에는 사유가 필요합니다.")
+    if len(reason) > voc.REASON_MAX:
+        raise Invalid(f"사유는 {voc.REASON_MAX}자까지 입력할 수 있습니다.")
+    item["history"].append({"at": now.isoformat(timespec="seconds"), "by": actor.name, "from": item["status"], "to": to,
+                            "action": label, "reason": reason or None})
+    if (item["status"], to) == ("done", "in_progress"):
+        item["reopened"] += 1
     item["status"] = to
     return _voc_view(actor, item)
 

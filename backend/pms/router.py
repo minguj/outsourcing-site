@@ -254,13 +254,14 @@ def add_voc(resident_id: str, body: VocIn, request: Request, token: str = TokenH
 
 class VocStatusIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    to: Literal["in_progress", "done"]
+    to: Literal["received", "in_progress", "done"]
+    reason: str | None = Field(default=None, max_length=voc.REASON_MAX)
 
 
 @router.post("/vocs/{voc_id}/status")
 def voc_status(voc_id: str, body: VocStatusIn, token: str = TokenHeader, user_id: str = UserHeader):
     data, actor = _context(token, user_id)
-    return _call(service.voc_status, actor, data, voc_id, body.to)
+    return _call(service.voc_status, actor, data, voc_id, body.to, body.reason, _now())
 
 
 # ---------- 출입 시스템 연동 ----------

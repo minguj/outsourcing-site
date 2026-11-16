@@ -396,7 +396,27 @@ class PmsStage3ApiTests(PmsApiTests):
         self.assertEqual(self.call("POST", "/vocs/voc-1/status", "u-care-garam", json={"to": "in_progress"}).status_code, 404)
         self.assertEqual(self.call("POST", "/vocs/voc-1/status", "u-mgr-garam", json={"to": "done"}).status_code, 409)
         moved = self.call("POST", "/vocs/voc-1/status", "u-mgr-garam", json={"to": "in_progress"}).json()
-        self.assertEqual((moved["status_label"], moved["next"]), ("처리 중", ["done"]))
+        self.assertEqual(moved["status_label"], "처리 중")
+        self.assertEqual([(n["to"], n["reason"]) for n in moved["next"]], [("done", False), ("received", True)])
+        self.assertEqual(self.vocs("u-guardian").json()[0]["next"], [])
+
+    def test_voc_reopen_needs_reason_and_keeps_history(self):
+        path = "/vocs/voc-1/status"
+        self.call("POST", path, "u-mgr-garam", json={"to": "in_progress"})
+        done = self.call("POST", path, "u-mgr-garam", json={"to": "done"}).json()
+        self.assertEqual([(n["to"], n["label"]) for n in done["next"]], [("in_progress", "다시 열기")])
+        no_reason = self.call("POST", path, "u-mgr-garam", json={"to": "in_progress", "reason": "  "})
+        self.assertEqual(no_reason.status_code, 409)
+        self.assertIn("사유", no_reason.json()["detail"])
+        reopened = self.call("POST", path, "u-mgr-garam", json={"to": "in_progress", "reason": "같은 곳 재누수"}).json()
+        self.assertEqual((reopened["status"], reopened["reopened"]), ("in_progress", 1))
+        self.assertEqual([h["action"] for h in reopened["history"]], ["접수", "처리 시작", "완료", "다시 열기"])
+        last = reopened["history"][-1]
+        self.assertEqual((last["by"], last["reason"], last["from_label"], last["to_label"]), ("윤매니저", "같은 곳 재누수", "완료", "처리 중"))
+        self.assertEqual(last["at"], "2026-11-16T13:00:00+09:00")
+        back = self.call("POST", path, "u-mgr-garam", json={"to": "received", "reason": "담당 잘못 지정"}).json()
+        self.assertEqual((back["status"], back["reopened"]), ("received", 1))
+        self.assertEqual(self.call("POST", path, "u-mgr-garam", json={"to": "in_progress", "reason": "x" * 201}).status_code, 422)
 
     # ---------- 출입 연동 ----------
 

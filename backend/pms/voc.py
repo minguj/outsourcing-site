@@ -12,8 +12,15 @@ CATEGORIES = {"facility": "시설", "noise": "소음·생활", "billing": "요�
 URGENCY = {"high": "긴급", "normal": "보통", "low": "낮음"}
 ROUTE = {"facility": "site_manager", "noise": "site_manager", "billing": "accountant", "care": "care_staff",
          "other": "site_manager"}
-STATUS_FLOW = {"received": {"in_progress"}, "in_progress": {"done"}, "done": set()}
 STATUS_LABELS = {"received": "접수", "in_progress": "처리 중", "done": "완료"}
+# 상태 이동: (지금, 다음) → (버튼 이름, 사유 필수 여부). 완료를 지우지 않고 '다시 열기'로 이력을 남긴다.
+TRANSITIONS = {
+    ("received", "in_progress"): ("처리 시작", False),
+    ("in_progress", "done"): ("완료", False),
+    ("in_progress", "received"): ("접수로 되돌리기", True),
+    ("done", "in_progress"): ("다시 열기", True),
+}
+REASON_MAX = 200
 MAX_CHARS = 500
 
 PHONE_RE = re.compile(r"(?<!\d)0\d{1,2}[-.\s]?\d{3,4}[-.\s]?\d{4}(?!\d)")

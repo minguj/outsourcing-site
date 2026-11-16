@@ -154,9 +154,18 @@ def _vocs(residents: list[dict], units: list[dict], users: list[dict]) -> list[d
             "unit_number": unit_no[resident["unit_id"]], "text": text, "redacted": voc.redact(text, names),
             "category": category, "urgency": urgency, "summary": summary, "reason": "샘플 데이터",
             "source": "sample", "assignee_role": voc.ROUTE[category], "status": status,
-            "created_at": at, "created_by": None, "created_by_name": author,
+            "created_at": at, "created_by": None, "created_by_name": author, "reopened": 0,
+            "history": _sample_history(author, at, status),
         })
     return out
+
+
+def _sample_history(author: str, at: str, status: str) -> list[dict]:
+    history = [{"at": at, "by": author, "from": None, "to": "received", "action": "접수", "reason": None}]
+    if status != "received":
+        history.append({"at": at, "by": "샘플 데이터", "from": "received", "to": "in_progress", "action": "처리 시작",
+                        "reason": None})
+    return history
 
 
 def _integration(contracts: list[dict], residents: list[dict], units: list[dict]) -> tuple[list[dict], dict]:

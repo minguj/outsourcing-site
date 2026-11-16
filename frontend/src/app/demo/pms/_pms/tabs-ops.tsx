@@ -14,18 +14,31 @@ const VOC_SAMPLES = [
   "아버지가 저녁 약을 드셨는지 확인이 안 돼요. 담당 선생님 연락처 010-5521-8830 으로 연락 부탁드립니다.",
 ];
 
-const VOC_ACTIONS: Record<string, string> = { in_progress: "처리 시작", done: "완료" };
 const SOURCE_LABELS: Record<Voc["source"], string> = { ai: "AI 분류", rule: "규칙 분류", sample: "샘플" };
 
 export function VocTab({ api, site, can }: TabProps) {
   const load = useLoad<Voc[]>(() => api.vocs(site.id));
   const [msg, setMsg] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
-  const move = (v: Voc, to: string) =>
+  const move = (v: Voc, step: Voc["next"][number]) => {
+    let reason: string | undefined;
+    if (step.reason) {
+      const typed = window.prompt(`'${step.label}' 사유를 적어 주세요 (처리 이력에 남습니다)`, "");
+      if (typed === null) return;
+      if (!typed.trim()) {
+        setMsg(`'${step.label}'에는 사유가 필요합니다.`);
+        return;
+      }
+      reason = typed.trim();
+    }
     api
-      .vocStatus(v.id, to)
-      .then(() => load.reload())
+      .vocStatus(v.id, step.to, reason)
+      .then((r) => {
+        setMsg(`${r.summary}: ${step.label} → ${r.status_label}`);
+        load.reload();
+      })
       .catch((e) => setMsg(errorText(e)));
+  };
   return (
     <>
       <div className="pm-card-head">
@@ -67,7 +80,7 @@ export function VocTab({ api, site, can }: TabProps) {
           </thead>
           <tbody>
             {(load.data ?? []).map((v) => (
-              <VocRows key={v.id} v={v} open={open === v.id} toggle={() => setOpen(open === v.id ? null : v.id)} move={(to) => move(v, to)} />
+              <VocRows key={v.id} v={v} open={open === v.id} toggle={() => setOpen(open === v.id ? null : v.id)} move={(step) => move(v, step)} />
             ))}
           </tbody>
         </table>
@@ -76,7 +89,7 @@ export function VocTab({ api, site, can }: TabProps) {
   );
 }
 
-function VocRows({ v, open, toggle, move }: { v: Voc; open: boolean; toggle: () => void; move: (to: string) => void }) {
+function VocRows({ v, open, toggle, move }: { v: Voc; open: boolean; toggle: () => void; move: (step: Voc["next"][number]) => void }) {
   return (
     <>
       <tr className={v.status === "done" ? "pm-dim" : ""}>
@@ -88,6 +101,7 @@ function VocRows({ v, open, toggle, move }: { v: Voc; open: boolean; toggle: () 
           <button className="pm-link" onClick={toggle} aria-expanded={open}>
             {v.summary} {open ? "▴" : "▾"}
           </button>
+          {v.reopened > 0 && <span className="pm-tag pm-tag-warn"> 재오픈 {v.reopened}회</span>}
         </td>
         <td>{v.unit_number}</td>
         <td>{v.assignee_label}</td>
@@ -96,9 +110,9 @@ function VocRows({ v, open, toggle, move }: { v: Voc; open: boolean; toggle: () 
         </td>
         <td>
           <div className="pm-actions">
-            {v.next.map((to) => (
-              <button key={to} className="pm-btn pm-btn-sm" onClick={() => move(to)}>
-                {VOC_ACTIONS[to] ?? to}
+            {v.next.map((step) => (
+              <button key={step.to} className={`pm-btn pm-btn-sm ${step.reason ? "pm-btn-ghost" : ""}`} onClick={() => move(step)}>
+                {step.label}
               </button>
             ))}
           </div>
@@ -114,6 +128,20 @@ function VocRows({ v, open, toggle, move }: { v: Voc; open: boolean; toggle: () 
               {v.reason && <> · 근거: {v.reason}</>}
               {v.masked && <> · 연락처 원문 권한이 없어 개인정보를 가린 문장으로 보여 줍니다</>}
             </p>
+            <div className="pm-history">
+              {v.history.map((h, i) => (
+                <div key={i} className="pm-small">
+                  <span className="pm-muted">{h.at.replace("T", " ").slice(0, 16)}</span> {h.by} · <b>{h.action}</b>
+                  {h.from_label && (
+                    <span className="pm-muted">
+                      {" "}
+                      ({h.from_label} → {h.to_label})
+                    </span>
+                  )}
+                  {h.reason && <> · 사유: {h.reason}</>}
+                </div>
+              ))}
+            </div>
           </td>
         </tr>
       )}
