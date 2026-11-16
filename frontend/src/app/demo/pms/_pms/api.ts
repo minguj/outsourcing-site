@@ -107,6 +107,58 @@ export type AuditEntry = {
   fields: string[];
 };
 
+export type Voc = {
+  id: string;
+  site_id: string;
+  resident_id: string;
+  unit_number: string | null;
+  text: string;
+  masked: boolean;
+  category: string;
+  category_label: string;
+  urgency: "high" | "normal" | "low";
+  urgency_label: string;
+  summary: string;
+  reason: string;
+  source: "ai" | "rule" | "sample";
+  assignee_role: string;
+  assignee_label: string;
+  status: "received" | "in_progress" | "done";
+  status_label: string;
+  created_at: string;
+  created_by_name: string;
+  next: string[];
+};
+
+export type AccessEvent = {
+  id: string;
+  kind: string;
+  kind_label: string;
+  idempotency_key: string;
+  payload: { type: string; contract_id: string; resident_id: string; unit: string; effective_date: string };
+  scheduled_for: string;
+  status: "scheduled" | "pending" | "retrying" | "delivered" | "dead";
+  status_label: string;
+  attempts: { at: string; code: number; message: string }[];
+  next_attempt_at: string | null;
+};
+
+export type IntegrationView = {
+  events: AccessEvent[];
+  credentials: { resident_id: string; resident_name: string | null; card: string; status: string; unit: string; updated_at: string }[];
+  receiver_log: { at: string; key: string; code: number; message: string }[];
+  fail_next: number;
+};
+
+export type LedgerRow = { date: string; no: string; account: string; debit: number; credit: number; memo: string; ref: string };
+
+export type LedgerView = {
+  month: string;
+  rows: LedgerRow[];
+  totals: { debit: number; credit: number; balanced: boolean };
+  closed: { at: string; by: string } | null;
+};
+
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -154,6 +206,21 @@ export function client(token: string, userId: string) {
     pay: (id: string, amount: number, paidOn: string, asOf: string) =>
       post<Invoice>(`/invoices/${id}/payments`, { amount, paid_on: paidOn, as_of: asOf }),
     audit: () => get<AuditEntry[]>("/audit"),
+    vocs: (siteId: string) => get<Voc[]>(`/sites/${siteId}/vocs`),
+    addVoc: (residentId: string, text: string) => post<Voc>(`/residents/${residentId}/vocs`, { text }),
+    vocStatus: (id: string, to: string) => post<Voc>(`/vocs/${id}/status`, { to }),
+    integration: (siteId: string) => get<IntegrationView>(`/sites/${siteId}/integration`),
+    processIntegration: (siteId: string, asOf: string) =>
+      post<{ sent: { id: string; status: string }[] }>(`/sites/${siteId}/integration/process`, { as_of: asOf }),
+    resend: (eventId: string) => post<{ code: number; message: string }>(`/integration/events/${eventId}/resend`, {}),
+    failNext: (count: number) => post<{ fail_next: number }>("/integration/fail-next", { count }),
+    ledger: (siteId: string, month: string) => get<LedgerView>(`/sites/${siteId}/ledger?month=${month}`),
+    ledgerCsv: (siteId: string, month: string) =>
+      fetch(`${BASE}/sites/${siteId}/ledger.csv?month=${month}`, { headers }).then(async (res) => {
+        if (!res.ok) await json(res);
+        return res.blob();
+      }),
+    closeMonth: (siteId: string, month: string) => post<LedgerView>(`/sites/${siteId}/ledger/close`, { month }),
   };
 }
 
@@ -178,6 +245,13 @@ export const PERMISSION_LABELS: Record<string, string> = {
   "health.read": "건강·돌봄 정보 열람",
   "service.write": "서비스 이용 기록",
   "audit.read": "감사 기록 조회",
+  "voc.read": "민원 조회",
+  "voc.write": "민원 접수",
+  "voc.manage": "민원 처리",
+  "integration.read": "출입 연동 조회",
+  "integration.write": "출입 연동 처리",
+  "ledger.export": "회계 내보내기",
+  "ledger.close": "월 마감",
 };
 
 export const CONTRACT_ACTIONS: Record<string, string> = {

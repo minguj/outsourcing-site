@@ -3,6 +3,7 @@
 - 역할은 할 수 있는 일(권한)을, 배정은 볼 수 있는 사업장 범위를 정한다. 둘 다 통과해야 한다.
 - 범위 밖 데이터는 '없음'으로 응답한다. 존재 여부도 알려 주지 않는다.
 - 연락처는 pii.read, 건강·돌봄 정보는 health.read 가 있어야 원문을 본다. 원문을 보면 감사 기록을 남긴다.
+- 민원은 voc_scope 로 범위를 한 번 더 좁힌다: all(사업장 전체), assigned(내 역할에 배정된 민원), own(내 가족 민원).
 """
 from __future__ import annotations
 
@@ -13,25 +14,34 @@ ROLES = {
         "label": "본사 관리자",
         "all_sites": True,
         "perms": {"site.read", "unit.read", "contract.read", "contract.write",
-                  "billing.read", "resident.read", "pii.read", "audit.read"},
+                  "billing.read", "resident.read", "pii.read", "audit.read",
+                  "voc.read", "integration.read", "ledger.export", "ledger.close"},
+        "voc_scope": "all",
     },
     "site_manager": {
         "label": "사업장 매니저",
         "perms": {"site.read", "unit.read", "contract.read", "contract.write", "billing.read", "billing.write",
-                  "resident.read", "pii.read", "health.read", "service.write", "audit.read"},
+                  "resident.read", "pii.read", "health.read", "service.write", "audit.read",
+                  "voc.read", "voc.write", "voc.manage", "integration.read", "integration.write"},
+        "voc_scope": "all",
     },
     "care_staff": {
         "label": "현장 케어 직원",
-        "perms": {"site.read", "unit.read", "resident.read", "health.read", "service.write"},
+        "perms": {"site.read", "unit.read", "resident.read", "health.read", "service.write",
+                  "voc.read", "voc.write", "voc.manage"},
+        "voc_scope": "assigned",
     },
     "accountant": {
         "label": "회계 담당",
-        "perms": {"site.read", "unit.read", "contract.read", "billing.read", "billing.write", "resident.read", "pii.read"},
+        "perms": {"site.read", "unit.read", "contract.read", "billing.read", "billing.write", "resident.read", "pii.read",
+                  "voc.read", "voc.manage", "ledger.export", "ledger.close"},
+        "voc_scope": "assigned",
     },
     "guardian": {
         "label": "보호자",
         "own_residents_only": True,
-        "perms": {"site.read", "billing.read", "resident.read"},
+        "perms": {"site.read", "billing.read", "resident.read", "voc.read", "voc.write"},
+        "voc_scope": "own",
     },
 }
 
@@ -73,6 +83,19 @@ class Actor:
 
     def sees_site(self, site_id: str) -> bool:
         return self.all_sites or site_id in self.site_ids
+
+    @property
+    def voc_scope(self) -> str:
+        return ROLES[self.role].get("voc_scope", "all")
+
+    def sees_voc(self, voc: dict) -> bool:
+        if not self.sees_site(voc["site_id"]):
+            return False
+        if self.voc_scope == "own":
+            return voc["resident_id"] in self.resident_ids
+        if self.voc_scope == "assigned":
+            return voc["assignee_role"] == self.role
+        return True
 
     def sees_resident(self, resident: dict) -> bool:
         if not self.sees_site(resident["site_id"]):

@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { client, createSandbox, PERMISSION_LABELS, todayKst, type Client, type DemoUser, type Sandbox, type Site } from "./_pms/api";
 import { AuditTab, BillingTab, ContractsTab, OverviewTab, ResidentsTab, UnitsTab } from "./_pms/tabs";
+import { IntegrationTab, LedgerTab, VocTab } from "./_pms/tabs-ops";
 
-type Tab = "overview" | "units" | "residents" | "contracts" | "billing" | "audit";
+type Tab = "overview" | "units" | "residents" | "contracts" | "billing" | "ledger" | "voc" | "integration" | "audit";
 
 const TABS: { key: Tab; label: string; perm: string }[] = [
   { key: "overview", label: "운영 현황", perm: "site.read" },
@@ -12,6 +13,9 @@ const TABS: { key: Tab; label: string; perm: string }[] = [
   { key: "residents", label: "입주자", perm: "resident.read" },
   { key: "contracts", label: "계약", perm: "contract.read" },
   { key: "billing", label: "청구·수납", perm: "billing.read" },
+  { key: "ledger", label: "회계 마감", perm: "ledger.export" },
+  { key: "voc", label: "민원", perm: "voc.read" },
+  { key: "integration", label: "출입 연동", perm: "integration.read" },
   { key: "audit", label: "감사 기록", perm: "audit.read" },
 ];
 
@@ -201,6 +205,12 @@ function TabBody({ tab, ...p }: BodyProps) {
       return <ContractsTab key={key} {...p} />;
     case "billing":
       return <BillingTab key={key} {...p} />;
+    case "ledger":
+      return <LedgerTab key={key} {...p} />;
+    case "voc":
+      return <VocTab key={key} {...p} />;
+    case "integration":
+      return <IntegrationTab key={key} {...p} />;
     case "audit":
       return <AuditTab key={p.version} {...p} />;
   }

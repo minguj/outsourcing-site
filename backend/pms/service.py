@@ -1,10 +1,11 @@
 """PMS 업무 규칙. 데이터는 샌드박스 dict 하나에 있고, 모든 조회는 Actor 범위를 거친다."""
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, time
 
-from . import billing
+from . import billing, integration, ledger, voc
 from .access import Actor, Forbidden, NotFound, view_resident
+from .seed import people_names
 
 CONTRACT_FLOW = {
     "draft": {"signed", "cancelled"},
@@ -47,6 +48,15 @@ def _resident_scoped(actor: Actor, data: dict, resident_id: str) -> dict:
     if not actor.sees_resident(resident):
         raise NotFound(resident_id)
     return resident
+
+
+def _closed(data: dict, site_id: str, month: str) -> bool:
+    return any(c["site_id"] == site_id and c["month"] == month for c in data["closed"])
+
+
+def _require_open(data: dict, site_id: str, month: str) -> None:
+    if _closed(data, site_id, month):
+        raise Invalid(f"{month}은(는) 회계 마감된 달이라 바꿀 수 없습니다.")
 
 
 def _names(data: dict) -> tuple[dict, dict]:
@@ -128,6 +138,7 @@ def record_usage(actor: Actor, data: dict, resident_id: str, service: str, quant
         raise Invalid(f"이 사업장에 없는 서비스입니다: {service}")
     if resident["status"] != "resident":
         raise Invalid("입주 중인 입주자만 서비스 이용을 기록할 수 있습니다.")
+    _require_open(data, site["id"], on.isoformat()[:7])
     usage = {"id": f"u-{len(data['usages']) + 1}", "site_id": site["id"], "resident_id": resident_id,
              "service": service, "date": on.isoformat(), "quantity": quantity}
     data["usages"].append(usage)
@@ -145,7 +156,9 @@ def list_contracts(actor: Actor, data: dict, site_id: str) -> list[dict]:
             for c in data["contracts"] if c["site_id"] == site_id]
 
 
-def transition(actor: Actor, data: dict, contract_id: str, to: str, on: date) -> dict:
+def transition(actor: Actor, data: dict, contract_id: str, to: str, on: date,
+               today: date | None = None, now: datetime | None = None) -> dict:
+    """on: 해지(퇴거)일. today/now: 연동 이벤트를 지금 보낼지 정하는 기준 (없으면 on 기준)."""
     actor.require("contract.write")
     contract = _site_scoped(actor, _get(data, "contracts", contract_id))
     if to not in CONTRACT_FLOW[contract["status"]]:
@@ -169,6 +182,10 @@ def transition(actor: Actor, data: dict, contract_id: str, to: str, on: date) ->
         contract["end_date"] = on.isoformat()
         resident["status"] = "moved_out"
     contract["status"] = to
+    if to == "active":
+        _enqueue(data, "access.grant", contract, date.fromisoformat(contract["start_date"]), today or on, now)
+    if to == "terminated":
+        _enqueue(data, "access.revoke", contract, on, today or on, now)
     residents, units = _names(data)
     return {**contract, "status_label": CONTRACT_LABELS[to], "resident_name": residents.get(contract["resident_id"]),
             "unit_number": units.get(contract["unit_id"]), "next": sorted(CONTRACT_FLOW[to])}
@@ -199,6 +216,7 @@ def run_billing(actor: Actor, data: dict, site_id: str, month: str) -> dict:
     """사업장 한 곳의 월 청구를 만든다. 같은 계약·같은 달은 한 번만 만든다."""
     actor.require("billing.write")
     site = _site(actor, data, site_id)
+    _require_open(data, site_id, month)
     created, skipped = [], []
     for contract in data["contracts"]:
         if contract["site_id"] != site_id or contract["status"] not in ("active", "terminated"):
@@ -242,6 +260,7 @@ def add_payment(actor: Actor, data: dict, invoice_id: str, amount: int, paid_on:
     current = _invoice_view(data, invoice, as_of)
     if amount > current["outstanding"]:
         raise Invalid(f"남은 금액({current['outstanding']:,}원)보다 많이 받을 수 없습니다.")
+    _require_open(data, invoice["site_id"], paid_on.isoformat()[:7])
     data["payments"].append({"id": f"pay-{len(data['payments']) + 1}", "invoice_id": invoice_id,
                              "amount": amount, "paid_on": paid_on.isoformat(), "by": actor.user_id})
     return _invoice_view(data, invoice, as_of)
@@ -259,6 +278,176 @@ def list_audit(actor: Actor, data: dict) -> list[dict]:
         if resident and actor.sees_site(resident["site_id"]):
             out.append(entry)
     return out
+
+
+# ---------- 민원(VOC) ----------
+
+def prepare_voc(actor: Actor, data: dict, resident_id: str, text: str) -> tuple[dict, str]:
+    """권한·범위를 확인하고 AI에 보낼 가린 문장을 만든다. AI 호출은 잠금 밖에서 한다."""
+    actor.require("voc.write")
+    resident = _resident_scoped(actor, data, resident_id)
+    if resident["status"] != "resident":
+        raise Invalid("입주 중인 입주자의 민원만 접수할 수 있습니다.")
+    text = text.strip()
+    if not text:
+        raise Invalid("민원 내용을 입력해 주세요.")
+    if len(text) > voc.MAX_CHARS:
+        raise Invalid(f"민원은 {voc.MAX_CHARS}자까지 입력할 수 있습니다.")
+    return resident, voc.redact(text, people_names(data["residents"], data["users"]))
+
+
+def create_voc(actor: Actor, data: dict, resident: dict, text: str, redacted: str, result: dict, source: str,
+               now: datetime) -> dict:
+    data["seq"]["voc"] += 1
+    _, units = _names(data)
+    item = {
+        "id": f"voc-{data['seq']['voc']}", "site_id": resident["site_id"], "resident_id": resident["id"],
+        "unit_number": units.get(resident["unit_id"]), "text": text.strip(), "redacted": redacted,
+        **result, "source": source, "assignee_role": voc.ROUTE[result["category"]], "status": "received",
+        "created_at": now.isoformat(timespec="seconds"), "created_by": actor.user_id,
+        "created_by_name": f"{actor.name} ({ROLE_SHORT.get(actor.role, actor.role)})",
+    }
+    data["vocs"].append(item)
+    return _voc_view(actor, item)
+
+
+ROLE_SHORT = {"hq_admin": "본사", "site_manager": "매니저", "care_staff": "케어 직원", "accountant": "회계",
+              "guardian": "보호자"}
+URGENCY_ORDER = {"high": 0, "normal": 1, "low": 2}
+
+
+def _voc_view(actor: Actor, item: dict) -> dict:
+    """연락처 원문 권한이 있거나 내 가족 민원이면 원문, 아니면 가린 문장을 보여 준다."""
+    original = actor.can("pii.read") or actor.voc_scope == "own"
+    out = {k: v for k, v in item.items() if k not in ("text", "redacted")}
+    out["text"] = item["text"] if original else item["redacted"]
+    out["masked"] = not original and item["text"] != item["redacted"]
+    out["category_label"] = voc.CATEGORIES[item["category"]]
+    out["urgency_label"] = voc.URGENCY[item["urgency"]]
+    out["status_label"] = voc.STATUS_LABELS[item["status"]]
+    out["assignee_label"] = ROLE_SHORT.get(item["assignee_role"], item["assignee_role"])
+    out["next"] = sorted(voc.STATUS_FLOW[item["status"]]) if actor.can("voc.manage") else []
+    return out
+
+
+def list_vocs(actor: Actor, data: dict, site_id: str) -> list[dict]:
+    actor.require("voc.read")
+    _site(actor, data, site_id)
+    items = [v for v in data["vocs"] if v["site_id"] == site_id and actor.sees_voc(v)]
+    items.sort(key=lambda v: v["created_at"], reverse=True)
+    items.sort(key=lambda v: (v["status"] == "done", URGENCY_ORDER[v["urgency"]]))
+    return [_voc_view(actor, v) for v in items]
+
+
+def voc_status(actor: Actor, data: dict, voc_id: str, to: str) -> dict:
+    actor.require("voc.manage")
+    item = _get(data, "vocs", voc_id)
+    if not actor.sees_voc(item):
+        raise NotFound(voc_id)
+    if to not in voc.STATUS_FLOW[item["status"]]:
+        raise Invalid(f"'{voc.STATUS_LABELS[item['status']]}' 상태에서 '{voc.STATUS_LABELS.get(to, to)}'(으)로 바꿀 수 없습니다.")
+    item["status"] = to
+    return _voc_view(actor, item)
+
+
+# ---------- 출입 시스템 연동 ----------
+
+def _enqueue(data: dict, kind: str, contract: dict, due: date, today: date, now: datetime | None) -> dict:
+    data["seq"]["evt"] += 1
+    resident = _get(data, "residents", contract["resident_id"])
+    _, units = _names(data)
+    event = integration.new_event(data["seq"]["evt"], kind, contract, resident, units[contract["unit_id"]], due)
+    data["events"].append(event)
+    if integration.due(event, today):
+        integration.deliver(event, data["access_system"], now or datetime.combine(today, time(9)))
+    return event
+
+
+def _event_view(event: dict) -> dict:
+    return {**event, "kind_label": integration.KIND_LABELS[event["kind"]],
+            "status_label": integration.STATUS_LABELS[event["status"]]}
+
+
+def list_integration(actor: Actor, data: dict, site_id: str) -> dict:
+    actor.require("integration.read")
+    _site(actor, data, site_id)
+    residents, _ = _names(data)
+    site_residents = {r["id"] for r in data["residents"] if r["site_id"] == site_id}
+    state = data["access_system"]
+    events = [e for e in data["events"] if e["site_id"] == site_id]
+    keys = {e["idempotency_key"] for e in events}
+    cards = [{"resident_id": rid, "resident_name": residents.get(rid), **card}
+             for rid, card in state["credentials"].items() if rid in site_residents]
+    return {
+        "events": [_event_view(e) for e in reversed(events)],
+        "credentials": sorted(cards, key=lambda c: c.get("unit", "")),
+        "receiver_log": [entry for entry in reversed(state["log"]) if entry["key"] in keys],
+        "fail_next": state["fail_next"],
+    }
+
+
+def process_integration(actor: Actor, data: dict, site_id: str, as_of: date, now: datetime) -> dict:
+    """기준일까지 예약된 이벤트와 재시도 대기 이벤트를 보낸다 (데모라 재시도 대기 시간은 건너뛴다)."""
+    actor.require("integration.write")
+    _site(actor, data, site_id)
+    sent = []
+    for event in data["events"]:
+        if event["site_id"] == site_id and integration.due(event, as_of):
+            integration.deliver(event, data["access_system"], now)
+            sent.append({"id": event["id"], "status": event["status"]})
+    return {"sent": sent}
+
+
+def resend_event(actor: Actor, data: dict, event_id: str, now: datetime) -> dict:
+    """전달된 이벤트를 같은 Idempotency-Key 로 한 번 더 보낸다. 받는 쪽이 중복으로 무시하는지 보는 용도."""
+    actor.require("integration.write")
+    event = _site_scoped(actor, _get(data, "events", event_id))
+    if event["status"] != "delivered":
+        raise Invalid("전달 완료된 이벤트만 다시 보낼 수 있습니다.")
+    code, message = integration.send(event, data["access_system"], now)
+    return {"code": code, "message": message}
+
+
+def set_fail_next(actor: Actor, data: dict, count: int) -> dict:
+    actor.require("integration.write")
+    data["access_system"]["fail_next"] = count
+    return {"fail_next": count}
+
+
+# ---------- 회계 내보내기·마감 ----------
+
+def ledger_view(actor: Actor, data: dict, site_id: str, month: str) -> dict:
+    actor.require("ledger.export")
+    _site(actor, data, site_id)
+    residents, _ = _names(data)
+    invoices = [i for i in data["invoices"] if i["site_id"] == site_id]
+    ids = {i["id"] for i in invoices}
+    payments = [p for p in data["payments"] if p["invoice_id"] in ids]
+    rows = ledger.journal(month, invoices, payments, residents)
+    closed = next((c for c in data["closed"] if c["site_id"] == site_id and c["month"] == month), None)
+    return {"month": month, "rows": rows, "totals": ledger.totals(rows), "closed": closed}
+
+
+def ledger_csv(actor: Actor, data: dict, site_id: str, month: str) -> str:
+    view = ledger_view(actor, data, site_id, month)
+    if not view["totals"]["balanced"]:
+        raise Invalid("차변과 대변 합계가 맞지 않아 내보낼 수 없습니다.")
+    return ledger.to_csv(view["rows"])
+
+
+def close_month(actor: Actor, data: dict, site_id: str, month: str, now: datetime) -> dict:
+    """마감한 달은 청구 실행·수납·서비스 이용 기록을 막는다."""
+    actor.require("ledger.close")
+    _site(actor, data, site_id)
+    _require_open(data, site_id, month)
+    view = ledger_view(actor, data, site_id, month)
+    if not view["rows"]:
+        raise Invalid(f"{month}에 청구나 수납이 없어 마감할 내용이 없습니다.")
+    if not view["totals"]["balanced"]:
+        raise Invalid("차변과 대변 합계가 맞지 않아 마감할 수 없습니다.")
+    data["closed"].append({"site_id": site_id, "month": month, "at": now.isoformat(timespec="seconds"),
+                           "by": actor.name})
+    return ledger_view(actor, data, site_id, month)
 
 
 __all__ = ["Forbidden", "Invalid", "NotFound"]

@@ -157,6 +157,20 @@
 .pm-root .pm-status.c-signed, .pm-root .pm-status.i-partial { background: var(--warn-soft); color: var(--warn); }
 .pm-root .pm-status.i-overdue { background: var(--crit-soft); color: var(--crit); }
 .pm-root .pm-status.c-draft, .pm-root .pm-status.i-issued { background: var(--accent-soft); color: var(--accent-ink); }
+.pm-root .pm-status.u-high, .pm-root .pm-status.e-dead { background: var(--crit-soft); color: var(--crit); }
+.pm-root .pm-status.u-normal, .pm-root .pm-status.v-received, .pm-root .pm-status.e-scheduled { background: var(--accent-soft); color: var(--accent-ink); }
+.pm-root .pm-status.v-in_progress, .pm-root .pm-status.e-retrying, .pm-root .pm-status.e-pending { background: var(--warn-soft); color: var(--warn); }
+.pm-root .pm-status.v-done, .pm-root .pm-status.e-delivered, .pm-root .pm-status.k-active { background: var(--ok-soft); color: var(--ok); }
+.pm-root .pm-dim td { color: var(--ink-3); }
+.pm-root .pm-ok { color: var(--ok); }
+.pm-root .pm-bad { color: var(--crit); }
+.pm-root .pm-h3 { font-size: 14px; font-weight: 650; margin: 14px 0 6px; }
+.pm-root .pm-code { font-size: 12px; background: var(--muted-soft); border-radius: 6px; padding: 8px 10px; margin: 6px 0; overflow-x: auto; white-space: pre; }
+.pm-root .pm-voc-form { display: grid; gap: 8px; padding: 12px; margin-bottom: 12px; border: 1px solid var(--line-2); border-radius: 10px; }
+.pm-root .pm-voc-form textarea { width: 100%; font: inherit; font-size: 14px; border: 1px solid var(--line-2); border-radius: 8px; padding: 8px 10px; resize: vertical; box-sizing: border-box; }
+.pm-root .pm-attempt { display: grid; grid-template-columns: 190px 44px 1fr; gap: 8px; padding: 2px 0; }
+.pm-root .pm-voc-text { margin: 0 0 6px; line-height: 1.6; }
+.pm-root .pm-btn:disabled { opacity: .5; cursor: default; }
 
 @media (max-width: 760px) {
   .pm-main { padding: 18px 14px 60px; }

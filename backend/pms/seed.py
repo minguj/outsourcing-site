@@ -1,6 +1,10 @@
 """PMS 데모 샘플 데이터. 운영사·소유주·사업장·사람은 모두 가상이다."""
 from __future__ import annotations
 
+from datetime import date
+
+from . import integration, voc
+
 
 def _units(site_id: str, building: str, floors: int, per_floor: int, base_type: str) -> list[dict]:
     units = []
@@ -104,8 +108,79 @@ def build() -> dict:
         {"id": "u-mgr-nuri", "name": "장매니저", "role": "site_manager", "site_ids": ["site-nuri"]},
         {"id": "u-guardian", "name": "박지훈", "role": "guardian", "site_ids": ["site-garam"], "resident_ids": ["r-101"]},
     ]
+    vocs = _vocs(residents, units, users)
+    events, access = _integration(contracts, residents, units)
     return {
         "operator": {"name": "한결 리빙(가상 운영사)"},
         "sites": sites, "units": units, "residents": residents, "contracts": contracts,
         "usages": usages, "users": users, "invoices": [], "payments": [], "audit": [],
+        "vocs": vocs, "events": events, "access_system": access, "closed": [],
+        "seq": {"voc": len(vocs), "evt": len(events)}, "voc_ai_calls": 0,
     }
+
+
+def people_names(residents: list[dict], users: list[dict]) -> list[str]:
+    """민원 문장에서 가릴 이름: 입주자·보호자·직원."""
+    names = [r["name"] for r in residents] + [r["guardian"]["name"] for r in residents]
+    return names + [u["name"] for u in users]
+
+
+SAMPLE_VOCS = [
+    # (resident, 쓴 사람, 시각, 문장, 분류, 긴급도, 요약, 상태)
+    ("r-102", "보호자 이수민", "2026-11-16T08:40:00+09:00",
+     "아버지 방 화장실 천장에서 물이 조금씩 떨어지고 있어요. 아래층에도 샐까 걱정됩니다.",
+     "facility", "high", "A102 화장실 천장 누수", "received"),
+    ("r-101", "보호자 박지훈", "2026-11-15T13:10:00+09:00",
+     "오늘 점심 반찬에 견과류가 들어가 있었어요. 어머니가 견과류 알레르기가 있는데 식단 확인 부탁드립니다.",
+     "care", "high", "알레르기 식재료(견과류) 제공", "in_progress"),
+    ("r-201", "입주자 본인", "2026-11-16T10:05:00+09:00",
+     "11월 청구서에 식사 횟수가 실제보다 많게 나온 것 같아요. 확인 부탁드립니다.",
+     "billing", "normal", "11월 식사 청구 횟수 확인 요청", "received"),
+    ("r-n101", "입주자 본인", "2026-11-14T22:30:00+09:00",
+     "밤마다 윗집에서 쿵쿵거리는 소리가 나서 잠을 못 자요.",
+     "noise", "normal", "야간 층간 소음", "received"),
+]
+
+
+def _vocs(residents: list[dict], units: list[dict], users: list[dict]) -> list[dict]:
+    by_id = {r["id"]: r for r in residents}
+    unit_no = {u["id"]: u["building"] + u["number"] for u in units}
+    names = people_names(residents, users)
+    out = []
+    for no, (rid, author, at, text, category, urgency, summary, status) in enumerate(SAMPLE_VOCS, start=1):
+        resident = by_id[rid]
+        out.append({
+            "id": f"voc-{no}", "site_id": resident["site_id"], "resident_id": rid,
+            "unit_number": unit_no[resident["unit_id"]], "text": text, "redacted": voc.redact(text, names),
+            "category": category, "urgency": urgency, "summary": summary, "reason": "샘플 데이터",
+            "source": "sample", "assignee_role": voc.ROUTE[category], "status": status,
+            "created_at": at, "created_by": None, "created_by_name": author,
+        })
+    return out
+
+
+def _integration(contracts: list[dict], residents: list[dict], units: list[dict]) -> tuple[list[dict], dict]:
+    """입주한 계약은 출입 권한 발급이 이미 전달된 상태, 해지 계약은 퇴거일 회수가 예약된 상태로 시작한다."""
+    by_id = {r["id"]: r for r in residents}
+    unit_no = {u["id"]: u["building"] + u["number"] for u in units}
+    access = {"secret": "", "fail_next": 0, "seen_keys": [], "credentials": {}, "log": []}
+    events = []
+    for contract in contracts:
+        if contract["status"] not in ("active", "terminated"):
+            continue
+        resident, number = by_id[contract["resident_id"]], unit_no[contract["unit_id"]]
+        start = date.fromisoformat(contract["start_date"])
+        event = integration.new_event(len(events) + 1, "access.grant", contract, resident, number, start)
+        at = f"{start.isoformat()}T09:00:00+09:00"
+        event["status"] = "delivered"
+        event["attempts"].append({"at": at, "code": 200, "message": "처리했습니다"})
+        events.append(event)
+        access["seen_keys"].append(event["idempotency_key"])
+        access["credentials"][resident["id"]] = {"card": f"CARD-{number}", "status": "active", "unit": number,
+                                                 "updated_at": at}
+    for contract in contracts:
+        if contract["status"] == "terminated":
+            resident, number = by_id[contract["resident_id"]], unit_no[contract["unit_id"]]
+            events.append(integration.new_event(len(events) + 1, "access.revoke", contract, resident, number,
+                                                date.fromisoformat(contract["end_date"])))
+    return events, access

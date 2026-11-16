@@ -29,7 +29,7 @@ export type TabProps = {
 
 type Load<T> = { data: T | null; error: string | null; reload: () => void };
 
-function useLoad<T>(fetcher: () => Promise<T>): Load<T> {
+export function useLoad<T>(fetcher: () => Promise<T>): Load<T> {
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
@@ -51,11 +51,11 @@ function useLoad<T>(fetcher: () => Promise<T>): Load<T> {
   return { data, error, reload: useCallback(() => setTick((t) => t + 1), []) };
 }
 
-function Notice({ error }: { error: string | null }) {
+export function Notice({ error }: { error: string | null }) {
   return error ? <p className="pm-error">{error}</p> : null;
 }
 
-function errorText(e: unknown) {
+export function errorText(e: unknown) {
   if (e instanceof ApiError) return `${e.message} (${e.status})`;
   return e instanceof Error ? e.message : "요청을 처리하지 못했습니다.";
 }

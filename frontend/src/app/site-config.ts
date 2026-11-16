@@ -21,7 +21,7 @@ export const SITE = {
   privacy: {
     items: "이름, 회사명, 이메일, 전화번호(선택), 상담·문의 내용, 첨부 파일(선택)",
     // 수탁 업체 상세는 개인정보처리방침 페이지에 적는다:
-    // Anthropic PBC(미국, AI 상담 답변 생성), Google LLC(미국, 메일 발송), Amazon Web Services(호주 시드니 리전, 서버 보관)
+    // Anthropic PBC(미국, AI 상담 답변 생성·운영 플랫폼 데모 민원 분류), Google LLC(미국, 메일 발송), Amazon Web Services(호주 시드니 리전, 서버 보관)
     transfer: "데모 상담 응대와 도입 문의 안내를 위해 일부 처리를 외부 업체(국외 포함)에 맡깁니다. 업체와 국가 등 자세한 내용은 개인정보처리방침에서 확인하실 수 있습니다.",
     purpose: "AI 상담 접수 시스템 데모 상담·도입 문의 응대와 연락",
     retention: "상담 종료 후 1년 보관 후 파기 (삭제를 요청하시면 즉시 파기)",
@@ -64,7 +64,7 @@ export const OPERATOR = {
   email: "help@fitagent.co.kr",
   site: "fitagent.co.kr",
 };
-export const POLICY_EFFECTIVE = { privacy: "2026년 11월 14일", terms: "2026년 11월 2일" };
+export const POLICY_EFFECTIVE = { privacy: "2026년 11월 16일", terms: "2026년 11월 2일" };
 
 // 계약서(안)의 을(수급인). 공개 데모 문서라 개인 이름은 넣지 않고 서비스명만 표시하고, 성명은 빈칸으로 둔다.
 export const CONTRACTOR = {
