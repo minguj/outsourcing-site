@@ -8,6 +8,8 @@ RUN pip install --no-cache-dir -r requirements.txt \
 COPY --chown=app:app backend/*.py ./backend/
 # 초기 기획(ZEB) 데모: 하위 패키지와 규칙 YAML·샘플 데이터
 COPY --chown=app:app backend/zeb/ ./backend/zeb/
+# 운영 플랫폼(PMS) 데모: 하위 패키지
+COPY --chown=app:app backend/pms/ ./backend/pms/
 COPY --chown=app:app frontend/public/samples/purchase-orders/ ./samples/purchase-orders/
 USER app
 EXPOSE 8000
