@@ -1,0 +1,264 @@
+"""PMS 업무 규칙. 데이터는 샌드박스 dict 하나에 있고, 모든 조회는 Actor 범위를 거친다."""
+from __future__ import annotations
+
+from datetime import date, datetime
+
+from . import billing
+from .access import Actor, Forbidden, NotFound, view_resident
+
+CONTRACT_FLOW = {
+    "draft": {"signed", "cancelled"},
+    "signed": {"active", "cancelled"},
+    "active": {"terminated"},
+    "terminated": set(),
+    "cancelled": set(),
+}
+CONTRACT_LABELS = {"draft": "작성 중", "signed": "체결", "active": "입주", "terminated": "해지", "cancelled": "취소"}
+RESIDENT_LABELS = {"applicant": "입주 상담", "resident": "입주 중", "moved_out": "퇴거"}
+UNIT_LABELS = {"vacant": "공실", "reserved": "입주 예정", "occupied": "입주", "maintenance": "정비"}
+
+
+class Invalid(Exception):
+    """업무 규칙 위반 (409)."""
+
+
+def _get(data: dict, kind: str, item_id: str) -> dict:
+    for item in data[kind]:
+        if item["id"] == item_id:
+            return item
+    raise NotFound(item_id)
+
+
+def _site_scoped(actor: Actor, item: dict) -> dict:
+    if not actor.sees_site(item["site_id"]):
+        raise NotFound(item["id"])
+    return item
+
+
+def _site(actor: Actor, data: dict, site_id: str) -> dict:
+    site = _get(data, "sites", site_id)
+    if not actor.sees_site(site["id"]):
+        raise NotFound(site_id)
+    return site
+
+
+def _resident_scoped(actor: Actor, data: dict, resident_id: str) -> dict:
+    resident = _get(data, "residents", resident_id)
+    if not actor.sees_resident(resident):
+        raise NotFound(resident_id)
+    return resident
+
+
+def _names(data: dict) -> tuple[dict, dict]:
+    residents = {r["id"]: r["name"] for r in data["residents"]}
+    units = {u["id"]: u["building"] + u["number"] for u in data["units"]}
+    return residents, units
+
+
+def _audit(data: dict, actor: Actor, action: str, target: dict, fields: list[str], at: datetime) -> None:
+    data["audit"].append({
+        "at": at.isoformat(timespec="seconds"), "user_id": actor.user_id, "user_name": actor.name,
+        "role": actor.role, "action": action, "target": target["id"], "target_name": target["name"], "fields": fields,
+    })
+
+
+# ---------- 사업장·호실 ----------
+
+def list_sites(actor: Actor, data: dict) -> list[dict]:
+    actor.require("site.read")
+    return [s for s in data["sites"] if actor.sees_site(s["id"])]
+
+
+def unit_status(data: dict, unit: dict, today: date) -> str:
+    if unit["maintenance"]:
+        return "maintenance"
+    for c in data["contracts"]:
+        if c["unit_id"] != unit["id"]:
+            continue
+        end = date.fromisoformat(c["end_date"]) if c["end_date"] else None
+        if c["status"] in ("active", "terminated") and date.fromisoformat(c["start_date"]) <= today and (end is None or today <= end):
+            return "occupied"
+        if c["status"] == "signed" or (c["status"] == "active" and date.fromisoformat(c["start_date"]) > today):
+            return "reserved"
+    return "vacant"
+
+
+def list_units(actor: Actor, data: dict, site_id: str, today: date) -> list[dict]:
+    actor.require("unit.read")
+    _site(actor, data, site_id)
+    out = []
+    for unit in data["units"]:
+        if unit["site_id"] == site_id:
+            status = unit_status(data, unit, today)
+            out.append({**unit, "status": status, "status_label": UNIT_LABELS[status]})
+    return out
+
+
+# ---------- 입주자 ----------
+
+def get_resident(actor: Actor, data: dict, resident_id: str, now: datetime) -> dict:
+    actor.require("resident.read")
+    resident = _resident_scoped(actor, data, resident_id)
+    view, revealed = view_resident(actor, resident)
+    if revealed:
+        _audit(data, actor, "resident.view", resident, revealed, now)
+    return view
+
+
+def list_residents(actor: Actor, data: dict, site_id: str) -> list[dict]:
+    """이름·호실·상태만 담은 목록. 연락처·건강정보는 상세 조회에서 권한에 따라 보여 준다."""
+    actor.require("resident.read")
+    _site(actor, data, site_id)
+    units = {u["id"]: u for u in data["units"]}
+    out = []
+    for r in data["residents"]:
+        if r["site_id"] == site_id and actor.sees_resident(r):
+            unit = units.get(r["unit_id"])
+            out.append({"id": r["id"], "name": r["name"], "unit_id": r["unit_id"],
+                        "unit_number": unit["building"] + unit["number"] if unit else None,
+                        "status": r["status"], "status_label": RESIDENT_LABELS[r["status"]]})
+    return out
+
+
+def record_usage(actor: Actor, data: dict, resident_id: str, service: str, quantity: int, on: date) -> dict:
+    actor.require("service.write")
+    resident = _resident_scoped(actor, data, resident_id)
+    site = _get(data, "sites", resident["site_id"])
+    if service not in site["prices"]:
+        raise Invalid(f"이 사업장에 없는 서비스입니다: {service}")
+    if resident["status"] != "resident":
+        raise Invalid("입주 중인 입주자만 서비스 이용을 기록할 수 있습니다.")
+    usage = {"id": f"u-{len(data['usages']) + 1}", "site_id": site["id"], "resident_id": resident_id,
+             "service": service, "date": on.isoformat(), "quantity": quantity}
+    data["usages"].append(usage)
+    return usage
+
+
+# ---------- 계약 ----------
+
+def list_contracts(actor: Actor, data: dict, site_id: str) -> list[dict]:
+    actor.require("contract.read")
+    _site(actor, data, site_id)
+    residents, units = _names(data)
+    return [{**c, "status_label": CONTRACT_LABELS[c["status"]], "resident_name": residents.get(c["resident_id"]),
+             "unit_number": units.get(c["unit_id"]), "next": sorted(CONTRACT_FLOW[c["status"]])}
+            for c in data["contracts"] if c["site_id"] == site_id]
+
+
+def transition(actor: Actor, data: dict, contract_id: str, to: str, on: date) -> dict:
+    actor.require("contract.write")
+    contract = _site_scoped(actor, _get(data, "contracts", contract_id))
+    if to not in CONTRACT_FLOW[contract["status"]]:
+        raise Invalid(f"'{CONTRACT_LABELS[contract['status']]}' 상태에서 '{CONTRACT_LABELS.get(to, to)}'(으)로 바꿀 수 없습니다.")
+    unit = _get(data, "units", contract["unit_id"])
+    resident = _get(data, "residents", contract["resident_id"])
+    if to in ("signed", "active"):
+        if unit["maintenance"]:
+            raise Invalid("정비 중인 호실입니다.")
+        for other in data["contracts"]:
+            if other["id"] != contract["id"] and other["unit_id"] == unit["id"] and other["status"] in ("signed", "active"):
+                if other["status"] == "active" and other["end_date"] and date.fromisoformat(other["end_date"]) < date.fromisoformat(contract["start_date"]):
+                    continue
+                raise Invalid("같은 호실에 진행 중인 다른 계약이 있습니다.")
+    if to == "active":
+        resident["status"] = "resident"
+    if to == "terminated":
+        start = date.fromisoformat(contract["start_date"])
+        if on < start:
+            raise Invalid("퇴거일은 입주일보다 빠를 수 없습니다.")
+        contract["end_date"] = on.isoformat()
+        resident["status"] = "moved_out"
+    contract["status"] = to
+    residents, units = _names(data)
+    return {**contract, "status_label": CONTRACT_LABELS[to], "resident_name": residents.get(contract["resident_id"]),
+            "unit_number": units.get(contract["unit_id"]), "next": sorted(CONTRACT_FLOW[to])}
+
+
+# ---------- 청구·수납 ----------
+
+def _invoice_view(data: dict, invoice: dict, as_of: date) -> dict:
+    site = _get(data, "sites", invoice["site_id"])
+    payments = [p for p in data["payments"] if p["invoice_id"] == invoice["id"]]
+    due = date.fromisoformat(invoice["due_date"])
+    left = billing.outstanding(invoice["total"], payments)
+    residents, units = _names(data)
+    contract = next(c for c in data["contracts"] if c["id"] == invoice["contract_id"])
+    return {
+        **invoice,
+        "resident_name": residents.get(invoice["resident_id"]),
+        "unit_number": units.get(contract["unit_id"]),
+        "paid": invoice["total"] - left,
+        "outstanding": left,
+        "late_fee": billing.late_fee(left, due, as_of, site["billing"]["late_rate_pct"]),
+        "status": billing.invoice_status(invoice["total"], payments, due, as_of),
+        "payments": payments,
+    }
+
+
+def run_billing(actor: Actor, data: dict, site_id: str, month: str) -> dict:
+    """사업장 한 곳의 월 청구를 만든다. 같은 계약·같은 달은 한 번만 만든다."""
+    actor.require("billing.write")
+    site = _site(actor, data, site_id)
+    created, skipped = [], []
+    for contract in data["contracts"]:
+        if contract["site_id"] != site_id or contract["status"] not in ("active", "terminated"):
+            continue
+        if any(i["contract_id"] == contract["id"] and i["month"] == month for i in data["invoices"]):
+            skipped.append(contract["id"])
+            continue
+        first, last = billing.month_range(month)
+        usages = [u for u in data["usages"]
+                  if u["resident_id"] == contract["resident_id"] and first <= date.fromisoformat(u["date"]) <= last]
+        draft = billing.build_invoice(contract, month, usages, site["prices"])
+        if draft is None:
+            continue
+        invoice = {
+            "id": f"inv-{contract['id']}-{month}", "site_id": site_id, "contract_id": contract["id"],
+            "resident_id": contract["resident_id"], "month": month,
+            "due_date": billing.due_date(month, site["billing"]["due_day"]).isoformat(),
+            "lines": [line.__dict__ for line in draft.lines], "total": draft.total,
+        }
+        data["invoices"].append(invoice)
+        created.append(invoice["id"])
+    return {"created": created, "skipped": skipped}
+
+
+def list_invoices(actor: Actor, data: dict, site_id: str, month: str | None, as_of: date) -> list[dict]:
+    actor.require("billing.read")
+    _site(actor, data, site_id)
+    out = []
+    for invoice in data["invoices"]:
+        if invoice["site_id"] != site_id or (month and invoice["month"] != month):
+            continue
+        if actor.own_residents_only and invoice["resident_id"] not in actor.resident_ids:
+            continue
+        out.append(_invoice_view(data, invoice, as_of))
+    return out
+
+
+def add_payment(actor: Actor, data: dict, invoice_id: str, amount: int, paid_on: date, as_of: date) -> dict:
+    actor.require("billing.write")
+    invoice = _site_scoped(actor, _get(data, "invoices", invoice_id))
+    current = _invoice_view(data, invoice, as_of)
+    if amount > current["outstanding"]:
+        raise Invalid(f"남은 금액({current['outstanding']:,}원)보다 많이 받을 수 없습니다.")
+    data["payments"].append({"id": f"pay-{len(data['payments']) + 1}", "invoice_id": invoice_id,
+                             "amount": amount, "paid_on": paid_on.isoformat(), "by": actor.user_id})
+    return _invoice_view(data, invoice, as_of)
+
+
+# ---------- 감사 기록 ----------
+
+def list_audit(actor: Actor, data: dict) -> list[dict]:
+    actor.require("audit.read")
+    if actor.all_sites:
+        return list(data["audit"])
+    out = []
+    for entry in data["audit"]:
+        resident = next((r for r in data["residents"] if r["id"] == entry["target"]), None)
+        if resident and actor.sees_site(resident["site_id"]):
+            out.append(entry)
+    return out
+
+
+__all__ = ["Forbidden", "Invalid", "NotFound"]

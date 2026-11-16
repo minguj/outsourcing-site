@@ -1,0 +1,167 @@
+/* 운영 플랫폼(PMS) 데모 — pm- 접두어와 .pm-root 범위로 메인 사이트 스타일과 분리 */
+.pm-root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --ink: #1b2230;
+  --ink-2: #4a5468;
+  --ink-3: #7d8699;
+  --line: #e3e6ec;
+  --line-2: #cfd4de;
+  --accent: #2f5bd3;
+  --accent-ink: #1e3f9a;
+  --accent-soft: #e8eefc;
+  --ok: #1d7a4f;
+  --ok-soft: #e3f4ea;
+  --warn: #9a5b0b;
+  --warn-soft: #fbf0dc;
+  --crit: #a32d2d;
+  --crit-soft: #fcebeb;
+  --muted-soft: #eef0f4;
+  --radius: 10px;
+}
+
+.pm-root, .pm-root * { box-sizing: border-box; }
+.pm-root {
+  min-height: 100vh;
+  width: 100%;
+  word-break: keep-all;
+  font-family: var(--font-plex-kr), "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+.pm-root h1, .pm-root h2, .pm-root h3 { margin: 0; font-weight: 650; letter-spacing: -0.01em; }
+.pm-root h1 { font-size: 26px; }
+.pm-root h2 { font-size: 18px; }
+.pm-root h3 { font-size: 16px; margin-bottom: 8px; }
+.pm-root button, .pm-root input, .pm-root select { font: inherit; color: inherit; }
+.pm-main { max-width: 1180px; margin: 0 auto; padding: 28px 24px 80px; }
+
+.pm-root .pm-topbar {
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 24px; background: var(--surface); border-bottom: 1px solid var(--line);
+}
+.pm-root .pm-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--ink); text-decoration: none; }
+.pm-root .pm-brand-mark {
+  width: 26px; height: 26px; border-radius: 7px; background: var(--accent); color: #fff;
+  display: grid; place-items: center; font-size: 14px;
+}
+.pm-root .pm-topbar-note { color: var(--ink-3); font-size: 13px; }
+
+.pm-root .pm-hero { margin-bottom: 18px; }
+.pm-root .pm-hero p { margin: 8px 0 0; color: var(--ink-2); max-width: 820px; }
+
+.pm-root .pm-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+.pm-root .pm-card + .pm-card { margin-top: 16px; }
+.pm-root .pm-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.pm-root .pm-center { text-align: center; padding: 48px 20px; }
+.pm-root .pm-muted { color: var(--ink-3); }
+.pm-root .pm-small { font-size: 13px; }
+.pm-root .pm-foot { margin-top: 18px; }
+
+.pm-root .pm-btn {
+  border: 1px solid var(--accent); background: var(--accent); color: #fff;
+  border-radius: 8px; padding: 7px 14px; cursor: pointer; font-weight: 600; font-size: 14px;
+}
+.pm-root .pm-btn:hover { background: var(--accent-ink); }
+.pm-root .pm-btn-ghost { background: var(--surface); color: var(--accent); }
+.pm-root .pm-btn-ghost:hover { background: var(--accent-soft); }
+.pm-root .pm-btn-sm { padding: 3px 10px; font-size: 13px; }
+.pm-root .pm-link { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; }
+
+.pm-root .pm-roles { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+.pm-root .pm-role {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
+  border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 10px 12px; cursor: pointer;
+}
+.pm-root .pm-role:hover { border-color: var(--line-2); }
+.pm-root .pm-role.on { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+.pm-root .pm-role-label { font-weight: 650; }
+.pm-root .pm-role-name { font-size: 13px; color: var(--ink-2); }
+.pm-root .pm-role-sites { font-size: 12px; color: var(--ink-3); }
+.pm-root .pm-perms { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.pm-root .pm-chip { font-size: 12px; border-radius: 999px; padding: 2px 10px; border: 1px solid var(--line); }
+.pm-root .pm-chip.yes { background: var(--ok-soft); border-color: transparent; color: var(--ok); }
+.pm-root .pm-chip.no { background: var(--muted-soft); border-color: transparent; color: var(--ink-3); }
+
+.pm-root .pm-toolbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 18px 0 10px; }
+.pm-root .pm-toolbar-inline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pm-root .pm-field { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+.pm-root .pm-field select, .pm-root .pm-field input,
+.pm-root .pm-inline-form select, .pm-root .pm-inline-form input {
+  border: 1px solid var(--line-2); border-radius: 7px; padding: 5px 8px; background: var(--surface); font-size: 14px;
+}
+
+.pm-root .pm-tabs { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px; }
+.pm-root .pm-tab {
+  border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 14px; cursor: pointer; font-size: 14px;
+}
+.pm-root .pm-tab.on { border-color: var(--ink); background: var(--ink); color: #fff; }
+.pm-root .pm-tab.locked { color: var(--ink-3); }
+.pm-root .pm-tab.on.locked { color: #fff; }
+
+.pm-root .pm-locked { background: var(--muted-soft); border-radius: 8px; padding: 18px; }
+.pm-root .pm-error { background: var(--crit-soft); color: var(--crit); border-radius: 8px; padding: 8px 12px; }
+.pm-root .pm-msg { background: var(--accent-soft); color: var(--accent-ink); border-radius: 8px; padding: 8px 12px; }
+
+.pm-root .pm-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; margin-bottom: 12px; }
+.pm-root .pm-site { border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+.pm-root .pm-site-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.pm-root .pm-tag { font-size: 12px; background: var(--accent-soft); color: var(--accent-ink); border-radius: 999px; padding: 1px 10px; }
+.pm-root .pm-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.pm-root .pm-stat { display: flex; flex-direction: column; background: var(--bg); border-radius: 8px; padding: 10px; }
+.pm-root .pm-stat-label { font-size: 12px; color: var(--ink-3); }
+.pm-root .pm-stat-value { font-size: 18px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.pm-root .pm-stat-sub { font-size: 12px; color: var(--ink-3); }
+
+.pm-root .pm-legend { display: flex; gap: 12px; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); }
+.pm-root .pm-dot::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.pm-root .pm-dot.occupied::before, .pm-root .pm-unit.occupied { background: var(--accent-soft); }
+.pm-root .pm-dot.reserved::before, .pm-root .pm-unit.reserved { background: var(--warn-soft); }
+.pm-root .pm-dot.vacant::before { background: var(--surface); border: 1px solid var(--line-2); }
+.pm-root .pm-dot.maintenance::before, .pm-root .pm-unit.maintenance { background: var(--muted-soft); }
+.pm-root .pm-floor { display: flex; gap: 12px; align-items: stretch; margin-bottom: 10px; }
+.pm-root .pm-floor-no { width: 40px; flex: none; font-size: 13px; color: var(--ink-3); padding-top: 8px; }
+.pm-root .pm-floor-units { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; flex: 1; }
+.pm-root .pm-unit { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; color: var(--ink-2); }
+.pm-root .pm-unit b { color: var(--ink); font-size: 14px; }
+
+.pm-root .pm-split { display: grid; grid-template-columns: 240px 1fr; gap: 18px; }
+.pm-root .pm-list { list-style: none; margin: 0; padding: 0; border-right: 1px solid var(--line); }
+.pm-root .pm-list button {
+  display: flex; flex-direction: column; align-items: flex-start; width: 100%; text-align: left;
+  background: none; border: 0; border-radius: 8px; padding: 8px 10px; cursor: pointer;
+}
+.pm-root .pm-list button:hover { background: var(--bg); }
+.pm-root .pm-list button.on { background: var(--accent-soft); }
+.pm-root .pm-dl { display: grid; grid-template-columns: 90px 1fr; gap: 6px 12px; margin: 0 0 10px; }
+.pm-root .pm-dl dt { color: var(--ink-3); font-size: 13px; }
+.pm-root .pm-dl dd { margin: 0; }
+.pm-root .pm-inline-form { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--line-2); }
+.pm-root .pm-inline-form input[type="number"] { width: 70px; }
+
+.pm-root .pm-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.pm-root .pm-table th { text-align: left; font-weight: 600; color: var(--ink-3); font-size: 12.5px; border-bottom: 1px solid var(--line-2); padding: 8px 8px; }
+.pm-root .pm-table td { border-bottom: 1px solid var(--line); padding: 8px 8px; vertical-align: middle; }
+.pm-root .pm-table .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pm-root .pm-table tfoot td { font-weight: 650; border-bottom: 0; }
+.pm-root .pm-actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+.pm-root .pm-subrow td { background: var(--bg); }
+.pm-root .pm-line { display: grid; grid-template-columns: 1fr 160px 120px; gap: 8px; font-size: 13px; padding: 2px 0; }
+.pm-root .pm-line > :last-child { text-align: right; }
+
+.pm-root .pm-status { font-size: 12px; border-radius: 999px; padding: 1px 9px; white-space: nowrap; background: var(--muted-soft); color: var(--ink-2); }
+.pm-root .pm-status.c-active, .pm-root .pm-status.i-paid { background: var(--ok-soft); color: var(--ok); }
+.pm-root .pm-status.c-signed, .pm-root .pm-status.i-partial { background: var(--warn-soft); color: var(--warn); }
+.pm-root .pm-status.i-overdue { background: var(--crit-soft); color: var(--crit); }
+.pm-root .pm-status.c-draft, .pm-root .pm-status.i-issued { background: var(--accent-soft); color: var(--accent-ink); }
+
+@media (max-width: 760px) {
+  .pm-main { padding: 18px 14px 60px; }
+  .pm-root .pm-split { grid-template-columns: 1fr; }
+  .pm-root .pm-list { border-right: 0; border-bottom: 1px solid var(--line); }
+  .pm-root .pm-stats { grid-template-columns: 1fr; }
+  .pm-root .pm-table { display: block; overflow-x: auto; }
+}
