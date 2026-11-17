@@ -10,6 +10,8 @@ COPY --chown=app:app backend/*.py ./backend/
 COPY --chown=app:app backend/zeb/ ./backend/zeb/
 # 운영 플랫폼(PMS) 데모: 하위 패키지
 COPY --chown=app:app backend/pms/ ./backend/pms/
+# 구독·고정지출 찾기 데모
+COPY --chown=app:app backend/spend/ ./backend/spend/
 COPY --chown=app:app frontend/public/samples/purchase-orders/ ./samples/purchase-orders/
 USER app
 EXPOSE 8000

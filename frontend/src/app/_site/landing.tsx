@@ -110,6 +110,17 @@ export default function Landing({ lang = "ko" }: { lang?: Lang }) {
           </article>
           <article className="st-example st-example-wide">
             <div>
+              <ul className="st-tags">{t.examples.tags.spend.map(tag => <li key={tag}>{tag}</li>)}</ul>
+              <h3>{t.examples.spend[0]}</h3>
+              <p>{t.examples.spend[1]}</p>
+              <Link className="st-text-link" href="/demo/spend" onClick={() => track("demo_open", { demo: "spend" })}>{t.examples.spend[2]}</Link>
+            </div>
+            <Link href="/demo/spend" className="st-example-thumbs" aria-label={t.examples.spend[2]} onClick={() => track("demo_open", { demo: "spend" })}>
+              {(["summary", "detail", "upcoming"] as const).map((id, i) => <Image key={id} src={`/samples/spend/thumbnails/${id}.png`} alt={t.examples.spendAlt[i]} width={960} height={700} unoptimized />)}
+            </Link>
+          </article>
+          <article className="st-example st-example-wide">
+            <div>
               <ul className="st-tags">{t.examples.tags.pms.map(tag => <li key={tag}>{tag}</li>)}</ul>
               <h3>{t.examples.pms[0]}</h3>
               <p>{t.examples.pms[1]}</p>

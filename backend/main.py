@@ -4,12 +4,14 @@ if __package__:
     from .demo_api import router
     from .nurse_demo import router as nurse_router
     from .pms.router import router as pms_router
+    from .spend.router import router as spend_router
     from .site_api import router as site_router
     from .zeb.router import router as zeb_router
 else:
     from demo_api import router
     from nurse_demo import router as nurse_router
     from pms.router import router as pms_router
+    from spend.router import router as spend_router
     from site_api import router as site_router
     from zeb.router import router as zeb_router
 
@@ -19,6 +21,7 @@ app.include_router(site_router)
 app.include_router(zeb_router)
 app.include_router(nurse_router)
 app.include_router(pms_router)
+app.include_router(spend_router)
 
 
 @app.middleware("http")
