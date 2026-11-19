@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { INDUSTRIES, MEMBER_BASE, STORES, WEEKLY, type Company, type CompanyStatus } from "../_tower/data";
-import { localDate, nowMinutes, canCancel, utilization } from "../_tower/rooms";
+import { nowMinutes, canCancel, utilization } from "../_tower/rooms";
 import { ROOMS } from "../_tower/data";
 import { fmtTime, matches, useTower } from "../_tower/store";
 import { RoomsAdmin } from "./rooms-admin";
@@ -15,7 +15,9 @@ export default function AdminView() {
   const { state, actions } = useTower();
   const [menu, setMenu] = useState<Menu>("dashboard");
   const pending = state.companies.filter(c => c.status === "pending").length;
-  const roomPending = state.bookings.filter(b => b.status === "pending" && canCancel(b, localDate(), nowMinutes())).length;
+  // 오늘 날짜는 브라우저에서 채운 roomsSeededOn을 쓴다. 서버 렌더링(프리렌더) 중에는 빈 값이라 new Date()를 부르지 않는다.
+  const today = state.roomsSeededOn;
+  const roomPending = today ? state.bookings.filter(b => b.status === "pending" && canCancel(b, today, nowMinutes())).length : 0;
 
   return <div className="tw-admin">
     <aside className="tw-side">
@@ -48,10 +50,10 @@ function Dashboard({ goCompanies, goRooms }: { goCompanies: () => void; goRooms:
   const issued = state.coupons.reduce((a, k) => a + k.issued, 0);
   const used = state.coupons.reduce((a, k) => a + k.used, 0);
   const byStore = STORES.map(s => ({ label: s.name, value: state.coupons.filter(k => k.storeId === s.id).reduce((a, k) => a + k.used, 0) })).sort((a, b) => b.value - a.value);
-  // 샘플 예약은 브라우저에서 채워지므로, 서버 렌더링 때는 0건으로 보였다가 바로 바뀐다.
-  const today = localDate();
+  // 샘플 예약과 오늘 날짜(roomsSeededOn)는 브라우저에서 채워진다. 서버 렌더링 때는 0건으로 보였다가 바로 바뀐다.
+  const today = state.roomsSeededOn;
   const todayRooms = state.bookings.filter(b => b.date === today && (b.status === "confirmed" || b.status === "pending")).length;
-  const roomWaiting = state.bookings.filter(b => b.status === "pending" && canCancel(b, today, nowMinutes())).length;
+  const roomWaiting = today ? state.bookings.filter(b => b.status === "pending" && canCancel(b, today, nowMinutes())).length : 0;
   const byIndustry = INDUSTRIES.map(i => ({ label: i, value: state.companies.filter(c => c.status === "approved" && c.industry === i).length }));
 
   return <>
@@ -61,7 +63,7 @@ function Dashboard({ goCompanies, goRooms }: { goCompanies: () => void; goRooms:
       <Kpi label="주간 활성 사용자" value={WEEKLY.active.at(-1)!.toLocaleString()} sub={`지난주보다 +${WEEKLY.active.at(-1)! - WEEKLY.active.at(-2)!}`} />
       <Kpi label="입주기업 (승인)" value={`${approved}곳`} sub={`업종 ${INDUSTRIES.length}개`} />
       <Kpi label="승인 대기" value={`${pending}건`} sub="처리하러 가기 →" onClick={goCompanies} warn={pending > 0} />
-      <Kpi label="오늘 회의실 예약" value={`${todayRooms}건`} sub={`가동률 ${utilization(today, ROOMS, state.bookings)}%${roomWaiting ? ` · 승인 대기 ${roomWaiting}` : ""} →`} onClick={goRooms} warn={roomWaiting > 0} />
+      <Kpi label="오늘 회의실 예약" value={`${todayRooms}건`} sub={`가동률 ${today ? utilization(today, ROOMS, state.bookings) : 0}%${roomWaiting ? ` · 승인 대기 ${roomWaiting}` : ""} →`} onClick={goRooms} warn={roomWaiting > 0} />
       <Kpi label="쿠폰 사용률" value={`${Math.round((used / Math.max(issued, 1)) * 100)}%`} sub={`발급 ${issued.toLocaleString()} · 사용 ${used.toLocaleString()}`} />
     </div>
     <div className="tw-grid2">
