@@ -112,3 +112,23 @@ export const WEEKLY = {
   active: [310, 352, 371, 402, 418, 455, 470, 466, 512, 530, 561, 590],
 };
 export const MEMBER_BASE = 1284;
+
+/* ---------- 회의실 (가상) ---------- */
+export type Room = {
+  id: string; name: string; floor: string; capacity: number; equipment: string[];
+  /** 한 번에 예약할 수 있는 최대 시간(분) */
+  maxMinutes: number;
+  /** true면 관리자 승인 후 확정 */
+  needsApproval: boolean;
+  /** 무료 시간을 넘긴 뒤 시간당 요금(원) */
+  pricePerHour: number; color: string;
+};
+export const ROOMS: Room[] = [
+  { id: "r1", name: "소회의실", floor: "A동 3층", capacity: 4, equipment: ["TV 모니터"], maxMinutes: 120, needsApproval: false, pricePerHour: 10000, color: "#0f766e" },
+  { id: "r2", name: "중회의실", floor: "A동 3층", capacity: 8, equipment: ["TV 모니터", "화이트보드"], maxMinutes: 120, needsApproval: false, pricePerHour: 15000, color: "#1f4fa8" },
+  { id: "r3", name: "대회의실", floor: "A동 5층", capacity: 16, equipment: ["빔프로젝터", "마이크", "화이트보드"], maxMinutes: 120, needsApproval: false, pricePerHour: 25000, color: "#7c3aed" },
+  { id: "r4", name: "화상회의실", floor: "B동 2층", capacity: 6, equipment: ["카메라", "스피커폰", "TV 모니터"], maxMinutes: 120, needsApproval: false, pricePerHour: 15000, color: "#c2410c" },
+  { id: "r5", name: "세미나실", floor: "B동 1층", capacity: 40, equipment: ["빔프로젝터", "음향", "강연대"], maxMinutes: 240, needsApproval: true, pricePerHour: 50000, color: "#be123c" },
+];
+/** 샘플 사용자가 속한 입주기업. 앱에서 예약하면 이 회사 이름으로 들어간다. */
+export const MY_COMPANY_ID = "c01";

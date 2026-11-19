@@ -2,9 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { INDUSTRIES, MEMBER_BASE, STORES, WEEKLY, type Company, type CompanyStatus } from "../_tower/data";
+import { localDate, nowMinutes, canCancel, utilization } from "../_tower/rooms";
+import { ROOMS } from "../_tower/data";
 import { fmtTime, matches, useTower } from "../_tower/store";
+import { RoomsAdmin } from "./rooms-admin";
 
-type Menu = "dashboard" | "companies" | "coupons";
+type Menu = "dashboard" | "companies" | "coupons" | "rooms";
 const STATUS_LABEL: Record<CompanyStatus, string> = { pending: "승인 대기", approved: "승인", rejected: "반려" };
 const storeName = (id: string) => STORES.find(s => s.id === id)?.name ?? "";
 
@@ -12,14 +15,15 @@ export default function AdminView() {
   const { state, actions } = useTower();
   const [menu, setMenu] = useState<Menu>("dashboard");
   const pending = state.companies.filter(c => c.status === "pending").length;
+  const roomPending = state.bookings.filter(b => b.status === "pending" && canCancel(b, localDate(), nowMinutes())).length;
 
   return <div className="tw-admin">
     <aside className="tw-side">
       <div className="tw-side-brand">스마트타워 <span>관리자</span></div>
       <nav aria-label="관리 메뉴">
-        {([["dashboard", "대시보드"], ["companies", "입주기업"], ["coupons", "상가 쿠폰"]] as [Menu, string][]).map(([id, label]) =>
+        {([["dashboard", "대시보드"], ["companies", "입주기업"], ["coupons", "상가 쿠폰"], ["rooms", "회의실"]] as [Menu, string][]).map(([id, label]) =>
           <button key={id} className={menu === id ? "on" : ""} onClick={() => setMenu(id)} aria-current={menu === id ? "page" : undefined}>
-            {label}{id === "companies" && pending > 0 && <span className="tw-badge">{pending}</span>}</button>)}
+            {label}{id === "companies" && pending > 0 && <span className="tw-badge">{pending}</span>}{id === "rooms" && roomPending > 0 && <span className="tw-badge">{roomPending}</span>}</button>)}
       </nav>
       <div className="tw-side-foot">
         <a href="/demo/tower/app" target="_blank" rel="noreferrer">앱 화면 새 탭으로 열기 ↗</a>
@@ -28,21 +32,26 @@ export default function AdminView() {
     </aside>
     <main className="tw-main">
       <div className="tw-sample-note">샘플 화면입니다. 가상 데이터이며, 이 브라우저 안에서만 저장됩니다.</div>
-      {menu === "dashboard" && <Dashboard goCompanies={() => setMenu("companies")} />}
+      {menu === "dashboard" && <Dashboard goCompanies={() => setMenu("companies")} goRooms={() => setMenu("rooms")} />}
       {menu === "companies" && <Companies />}
       {menu === "coupons" && <Coupons />}
+      {menu === "rooms" && <RoomsAdmin />}
     </main>
   </div>;
 }
 
 /* ---------- 대시보드 ---------- */
-function Dashboard({ goCompanies }: { goCompanies: () => void }) {
+function Dashboard({ goCompanies, goRooms }: { goCompanies: () => void; goRooms: () => void }) {
   const { state } = useTower();
   const approved = state.companies.filter(c => c.status === "approved").length;
   const pending = state.companies.filter(c => c.status === "pending").length;
   const issued = state.coupons.reduce((a, k) => a + k.issued, 0);
   const used = state.coupons.reduce((a, k) => a + k.used, 0);
   const byStore = STORES.map(s => ({ label: s.name, value: state.coupons.filter(k => k.storeId === s.id).reduce((a, k) => a + k.used, 0) })).sort((a, b) => b.value - a.value);
+  // 샘플 예약은 브라우저에서 채워지므로, 서버 렌더링 때는 0건으로 보였다가 바로 바뀐다.
+  const today = localDate();
+  const todayRooms = state.bookings.filter(b => b.date === today && (b.status === "confirmed" || b.status === "pending")).length;
+  const roomWaiting = state.bookings.filter(b => b.status === "pending" && canCancel(b, today, nowMinutes())).length;
   const byIndustry = INDUSTRIES.map(i => ({ label: i, value: state.companies.filter(c => c.status === "approved" && c.industry === i).length }));
 
   return <>
@@ -52,6 +61,7 @@ function Dashboard({ goCompanies }: { goCompanies: () => void }) {
       <Kpi label="주간 활성 사용자" value={WEEKLY.active.at(-1)!.toLocaleString()} sub={`지난주보다 +${WEEKLY.active.at(-1)! - WEEKLY.active.at(-2)!}`} />
       <Kpi label="입주기업 (승인)" value={`${approved}곳`} sub={`업종 ${INDUSTRIES.length}개`} />
       <Kpi label="승인 대기" value={`${pending}건`} sub="처리하러 가기 →" onClick={goCompanies} warn={pending > 0} />
+      <Kpi label="오늘 회의실 예약" value={`${todayRooms}건`} sub={`가동률 ${utilization(today, ROOMS, state.bookings)}%${roomWaiting ? ` · 승인 대기 ${roomWaiting}` : ""} →`} onClick={goRooms} warn={roomWaiting > 0} />
       <Kpi label="쿠폰 사용률" value={`${Math.round((used / Math.max(issued, 1)) * 100)}%`} sub={`발급 ${issued.toLocaleString()} · 사용 ${used.toLocaleString()}`} />
     </div>
     <div className="tw-grid2">

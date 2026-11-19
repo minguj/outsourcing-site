@@ -1,11 +1,13 @@
 "use client";
 
 import { useMemo, useState, type ReactNode } from "react";
-import { INDUSTRIES, STORES, STORE_CATEGORIES, type Company, type Store } from "../_tower/data";
+import { INDUSTRIES, ROOMS, STORES, STORE_CATEGORIES, type Company, type Store } from "../_tower/data";
+import { localDate } from "../_tower/rooms";
 import { fmtTime, matches, useTower } from "../_tower/store";
+import { RoomDetail, RoomsTab, type RoomSeg } from "./rooms-view";
 
-type Tab = "companies" | "stores" | "mine";
-type View = { kind: "list" } | { kind: "company"; id: string } | { kind: "store"; id: string };
+type Tab = "companies" | "stores" | "rooms" | "mine";
+type View = { kind: "list" } | { kind: "company"; id: string } | { kind: "store"; id: string } | { kind: "room"; id: string };
 
 function Logo({ name, color, size = 44 }: { name: string; color: string; size?: number }) {
   return <span className="tw-logo" style={{ background: color, width: size, height: size, fontSize: size * 0.42 }} aria-hidden="true">{name.slice(0, 1)}</span>;
@@ -40,9 +42,12 @@ export default function AppView() {
   const [storeQ, setStoreQ] = useState("");
   const [toast, setToast] = useState("");
   const [redeeming, setRedeeming] = useState<string | null>(null);
+  const [roomSeg, setRoomSeg] = useState<RoomSeg>("book");
+  // 회의실 날짜는 처음 회의실 탭을 열 때 브라우저 날짜로 정한다(서버 렌더링 값과 어긋나지 않게).
+  const [roomDate, setRoomDate] = useState("");
 
   const say = (text: string) => { setToast(text); window.setTimeout(() => setToast(""), 2200); };
-  const go = (t: Tab) => { setTab(t); setView({ kind: "list" }); };
+  const go = (t: Tab) => { setTab(t); setView({ kind: "list" }); if (t === "rooms" && !roomDate) setRoomDate(localDate()); };
 
   const companies = useMemo(() => state.companies
     .filter(c => c.status === "approved" && c.visible)
@@ -53,7 +58,8 @@ export default function AppView() {
   const stores = STORES.filter(s => (category === "전체" || s.category === category) && [s.name, s.category, s.intro, ...s.menu].join(" ").includes(storeQ.trim()));
   const company = view.kind === "company" ? state.companies.find(c => c.id === view.id) : undefined;
   const store = view.kind === "store" ? STORES.find(s => s.id === view.id) : undefined;
-  const title = company ? "기업 상세" : store ? "가맹점 상세" : tab === "companies" ? "입주기업 비즈니스 허브" : tab === "stores" ? "상가 혜택" : "내 쿠폰";
+  const room = view.kind === "room" ? ROOMS.find(r => r.id === view.id) : undefined;
+  const title = company ? "기업 상세" : store ? "가맹점 상세" : room ? "회의실 예약" : tab === "companies" ? "입주기업 비즈니스 허브" : tab === "stores" ? "상가 혜택" : tab === "rooms" ? "회의실 예약" : "내 쿠폰";
 
   return <div className="tw-app">
     <header className={"tw-bar" + (view.kind === "list" ? " tone-" + tab : " detail")}>
@@ -67,6 +73,7 @@ export default function AppView() {
     <main className="tw-body">
       {company && <CompanyDetail co={company} fav={state.favorites.includes(company.id)} onFav={() => actions.toggleFavorite(company.id)} say={say} />}
       {store && <StoreDetail store={store} say={say} />}
+      {room && <RoomDetail room={room} date={roomDate} setDate={setRoomDate} say={say} onBooked={() => { setView({ kind: "list" }); setRoomSeg("mine"); }} />}
 
       {view.kind === "list" && tab === "companies" && <>
         <div className="tw-search"><input value={q} onChange={e => setQ(e.target.value)} placeholder="기업명, 업종, 기술 검색 (초성도 가능)" aria-label="입주기업 검색" /></div>
@@ -113,6 +120,8 @@ export default function AppView() {
         </ul>
       </>}
 
+      {view.kind === "list" && tab === "rooms" && roomDate && <RoomsTab seg={roomSeg} setSeg={setRoomSeg} date={roomDate} setDate={setRoomDate} onOpen={id => setView({ kind: "room", id })} say={say} />}
+
       {view.kind === "list" && tab === "mine" && <>
         {state.mine.length === 0 && <div className="tw-empty-box"><p>받은 쿠폰이 없습니다.</p><button className="tw-btn" onClick={() => go("stores")}>상가 혜택 보러 가기</button></div>}
         <ul className="tw-list">
@@ -132,7 +141,7 @@ export default function AppView() {
     </main>
 
     <nav className="tw-tabs" aria-label="메뉴">
-      {([["companies", "입주기업", "M4 20V6l8-3 8 3v14M9 20v-4h6v4M8 9h.01M12 9h.01M16 9h.01M8 13h.01M12 13h.01M16 13h.01"], ["stores", "상가 혜택", "M4 9l1-4h14l1 4M4 9v11h16V9M4 9h16M9 20v-6h6v6"], ["mine", "내 쿠폰", "M3 8h18v3a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4V8Zm6 0v10"]] as [Tab, string, string][]).map(([id, label, d]) =>
+      {([["companies", "입주기업", "M4 20V6l8-3 8 3v14M9 20v-4h6v4M8 9h.01M12 9h.01M16 9h.01M8 13h.01M12 13h.01M16 13h.01"], ["stores", "상가 혜택", "M4 9l1-4h14l1 4M4 9v11h16V9M4 9h16M9 20v-6h6v6"], ["rooms", "회의실", "M4 5h16v11H4zM8 20h8M12 16v4M7 9h4M7 12h7"], ["mine", "내 쿠폰", "M3 8h18v3a2 2 0 0 0 0 4v3H3v-3a2 2 0 0 0 0-4V8Zm6 0v10"]] as [Tab, string, string][]).map(([id, label, d]) =>
         <button key={id} className={tab === id ? "on" : ""} onClick={() => go(id)} aria-current={tab === id ? "page" : undefined}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
           {label}{id === "mine" && state.mine.some(m => m.status === "issued") && <i className="tw-dot" />}

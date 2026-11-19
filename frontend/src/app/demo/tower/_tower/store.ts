@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
-import { COMPANIES, COUPONS, STORES, type Activity, type Company, type Coupon, type MyCoupon, type Usage } from "./data";
+import { COMPANIES, COUPONS, MY_COMPANY_ID, ROOMS, type Activity, type Company, type Coupon, type MyCoupon, type Usage } from "./data";
+import { fmtDay, fmtMin, localDate, nowMinutes, seedBlocks, seedBookings, splitFree, validate, canCancel, occupies, type Block, type Booking, type BookingRequest } from "./rooms";
 
 // 샘플 상태는 이 브라우저의 localStorage에만 저장한다. 앱 탭과 관리자 탭이 같은 상태를 보고,
 // 한쪽에서 바꾸면 storage 이벤트로 다른 탭에도 바로 반영된다.
@@ -10,6 +11,8 @@ const KEY = "tower-demo-v1";
 export type TowerState = {
   companies: Company[]; coupons: Coupon[]; mine: MyCoupon[]; usages: Usage[];
   favorites: string[]; activity: Activity[];
+  /** 회의실 예약·사용 막기. roomsSeededOn: 샘플 예약을 만든 날짜 */
+  bookings: Booking[]; blocks: Block[]; roomsSeededOn: string;
 };
 
 const now = () => new Date().toISOString();
@@ -18,6 +21,8 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 function initial(): TowerState {
   return {
     companies: COMPANIES, coupons: COUPONS, mine: [], favorites: [],
+    // 회의실 샘플 예약은 날짜에 따라 달라서 서버 렌더링 값에는 넣지 않고, 브라우저에서 읽을 때 채운다(withRooms).
+    bookings: [], blocks: [], roomsSeededOn: "",
     usages: [
       { id: "u1", couponId: "k1", storeId: "s1", member: "김*현", at: "2026-11-03T08:41:00" },
       { id: "u2", couponId: "k2", storeId: "s2", member: "이*진", at: "2026-11-03T12:12:00" },
@@ -36,12 +41,26 @@ function initial(): TowerState {
 let cache: TowerState | null = null;
 const listeners = new Set<() => void>();
 
+/** 회의실 기능 이전에 저장된 상태에도 빈 항목을 채우고, 날짜가 바뀌었으면 샘플 예약만 오늘 기준으로 다시 만든다.
+ *  사용자가 직접 한 예약과 관리자가 막아 둔 시간은 그대로 둔다. */
+function withRooms(s: TowerState): TowerState {
+  const today = localDate();
+  if (s.roomsSeededOn === today && Array.isArray(s.bookings) && Array.isArray(s.blocks)) return s;
+  const base = { ...initial(), ...s };
+  return { ...base, roomsSeededOn: today,
+    bookings: [...(base.bookings ?? []).filter(b => !b.seed), ...seedBookings(today, new Date().toISOString())],
+    blocks: [...(base.blocks ?? []).filter(k => !k.id.startsWith("seed-")), ...seedBlocks(today)] };
+}
 function read(): TowerState {
   if (cache) return cache;
+  let loaded: TowerState;
   try {
     const raw = window.localStorage.getItem(KEY);
-    cache = raw ? (JSON.parse(raw) as TowerState) : initial();
-  } catch { cache = initial(); }
+    loaded = raw ? (JSON.parse(raw) as TowerState) : initial();
+  } catch { loaded = initial(); }
+  const next = withRooms(loaded);
+  cache = next;
+  if (next !== loaded) { try { window.localStorage.setItem(KEY, JSON.stringify(next)); } catch { /* 메모리로만 동작 */ } }
   return cache;
 }
 function write(next: TowerState) {
@@ -63,7 +82,7 @@ export function useTower() {
   const log = (s: TowerState, text: string): Activity[] => [{ id: uid(), at: now(), text }, ...s.activity].slice(0, 30);
 
   const actions = {
-    reset: () => write(initial()),
+    reset: () => write(withRooms(initial())),
     toggleFavorite: (id: string) => update(s => ({ ...s, favorites: s.favorites.includes(id) ? s.favorites.filter(f => f !== id) : [...s.favorites, id] })),
     /** 쿠폰 받기: 한 사람이 같은 쿠폰을 한 번만 받는다. 수량이 남아 있어야 한다. */
     claim: (couponId: string): string | null => {
@@ -106,6 +125,55 @@ export function useTower() {
     addCoupon: (k: Omit<Coupon, "id" | "issued" | "used" | "active">) => update(s => ({ ...s,
       coupons: [{ ...k, id: uid(), issued: 0, used: 0, active: true }, ...s.coupons], activity: log(s, `쿠폰 '${k.title}'을 발행했습니다.`) })),
     setCouponActive: (id: string, active: boolean) => update(s => ({ ...s, coupons: s.coupons.map(x => x.id === id ? { ...x, active } : x) })),
+
+    /* ---------- 회의실 ---------- */
+    /** 예약: 세미나실처럼 승인이 필요한 방은 승인 대기, 나머지는 바로 확정. 월 무료 시간을 넘긴 만큼은 유료로 기록한다. */
+    book: (req: BookingRequest): { error: string } | { booking: Booking } => {
+      const s = read(); const room = ROOMS.find(r => r.id === req.roomId);
+      const err = validate(req, room, s.bookings, s.blocks, localDate(), nowMinutes());
+      if (err || !room) return { error: err ?? "회의실을 찾을 수 없습니다." };
+      const { paid } = splitFree(MY_COMPANY_ID, req.date, req.end - req.start, s.bookings);
+      const booking: Booking = { ...req, title: req.title.trim(), id: uid(), companyId: MY_COMPANY_ID, status: room.needsApproval ? "pending" : "confirmed", paidMinutes: paid, createdAt: now() };
+      const who = s.companies.find(c => c.id === MY_COMPANY_ID)?.name;
+      write({ ...s, bookings: [...s.bookings, booking],
+        activity: log(s, `${who}이(가) ${room.name}을 ${fmtDay(req.date)} ${fmtMin(req.start)}에 ${room.needsApproval ? "예약 신청" : "예약"}했습니다.`) });
+      return { booking };
+    },
+    /** 취소: 시작 전 예약만. 관리자가 취소하면 사유를 남긴다. */
+    cancelBooking: (id: string, reason?: string): string | null => {
+      const s = read(); const b = s.bookings.find(x => x.id === id);
+      if (!b) return "예약을 찾을 수 없습니다.";
+      if (!canCancel(b, localDate(), nowMinutes())) return "이미 시작했거나 끝난 예약은 취소할 수 없습니다.";
+      const room = ROOMS.find(r => r.id === b.roomId)?.name;
+      write({ ...s, bookings: s.bookings.map(x => x.id === id ? { ...x, status: "cancelled", reason } : x),
+        activity: log(s, `${room} ${fmtDay(b.date)} ${fmtMin(b.start)} 예약이 ${reason ? "관리자에 의해 " : ""}취소되었습니다.`) });
+      return null;
+    },
+    approveBooking: (id: string): string | null => {
+      const s = read(); const b = s.bookings.find(x => x.id === id);
+      if (!b || b.status !== "pending") return "승인 대기 중인 예약이 아닙니다.";
+      if (!canCancel(b, localDate(), nowMinutes())) return "시작 시간이 지난 신청은 승인할 수 없습니다.";
+      if (s.blocks.some(k => k.roomId === b.roomId && k.date === b.date && k.start < b.end && b.start < k.end)) return "사용을 막아 둔 시간과 겹칩니다.";
+      const room = ROOMS.find(r => r.id === b.roomId)?.name;
+      write({ ...s, bookings: s.bookings.map(x => x.id === id ? { ...x, status: "confirmed" } : x), activity: log(s, `${room} ${fmtDay(b.date)} 예약 신청을 승인했습니다.`) });
+      return null;
+    },
+    rejectBooking: (id: string, reason: string) => update(s => {
+      const b = s.bookings.find(x => x.id === id); const room = ROOMS.find(r => r.id === b?.roomId)?.name;
+      return { ...s, bookings: s.bookings.map(x => x.id === id ? { ...x, status: "rejected", reason } : x), activity: log(s, `${room} 예약 신청을 반려했습니다.`) };
+    }),
+    /** 사용 막기: 이미 잡힌 예약과 겹치면 먼저 그 예약을 처리하도록 막는다. */
+    addBlock: (k: Omit<Block, "id">): string | null => {
+      const s = read();
+      if (k.end <= k.start) return "종료 시간이 시작 시간보다 늦어야 합니다.";
+      if (!k.reason.trim()) return "사유를 입력해 주세요.";
+      const hit = s.bookings.filter(b => b.roomId === k.roomId && b.date === k.date && occupies(b) && b.start < k.end && k.start < b.end);
+      if (hit.length) return `이 시간에 예약 ${hit.length}건이 있습니다. 예약을 먼저 취소하거나 반려해 주세요.`;
+      const room = ROOMS.find(r => r.id === k.roomId)?.name;
+      write({ ...s, blocks: [...s.blocks, { ...k, reason: k.reason.trim(), id: uid() }], activity: log(s, `${room} ${fmtDay(k.date)} ${fmtMin(k.start)}~${fmtMin(k.end)} 사용을 막았습니다.`) });
+      return null;
+    },
+    removeBlock: (id: string) => update(s => ({ ...s, blocks: s.blocks.filter(k => k.id !== id) })),
   };
   return { state, actions, newId: uid };
 }

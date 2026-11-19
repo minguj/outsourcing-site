@@ -98,7 +98,7 @@
 .tw-ticket.used { opacity: .6; } .tw-ticket.used .tw-ticket-left { filter: grayscale(1); }
 .tw-used { margin-top: 6px; font-size: 12.5px; font-weight: 700; color: var(--tw-ok); }
 
-.tw-tabs { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; display: grid; grid-template-columns: repeat(3, 1fr); background: #fff; border-top: 1px solid var(--tw-line); padding: 6px 0 calc(6px + env(safe-area-inset-bottom)); z-index: 6; }
+.tw-tabs { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; display: grid; grid-template-columns: repeat(4, 1fr); background: #fff; border-top: 1px solid var(--tw-line); padding: 6px 0 calc(6px + env(safe-area-inset-bottom)); z-index: 6; }
 .tw-tabs button { border: 0; background: none; display: grid; justify-items: center; gap: 2px; font-size: 11.5px; color: #9aa3b2; padding: 4px 0; position: relative; }
 .tw-tabs button.on { color: var(--tw-primary); font-weight: 700; }
 .tw-dot { position: absolute; top: 3px; left: calc(50% + 8px); width: 7px; height: 7px; border-radius: 50%; background: #e5484d; }
@@ -133,7 +133,8 @@
 .tw-sample-note { font-size: 12.5px; color: #9a3412; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 8px 12px; margin-bottom: 18px; }
 .tw-h1 { font-size: 22px; color: var(--tw-ink); margin-bottom: 16px !important; }
 .tw-h1-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; } .tw-h1-row .tw-h1 { margin-bottom: 16px; }
-.tw-kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.tw-kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.tw-kpis.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .tw-kpi { background: #fff; border: 1px solid var(--tw-line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 4px; text-align: left; }
 .tw-kpi span { font-size: 12.5px; color: var(--tw-muted); } .tw-kpi strong { font-size: 24px; color: var(--tw-ink); letter-spacing: -.02em; } .tw-kpi small { font-size: 12px; color: var(--tw-muted); }
 .tw-kpi.warn { border-color: #fdba74; background: #fffaf5; } .tw-kpi.warn strong { color: var(--tw-warn); } .tw-kpi.warn small { color: var(--tw-warn); font-weight: 600; }
@@ -249,3 +250,102 @@ button.tw-kpi:hover { border-color: var(--tw-primary); }
 .tw-menu li { display: flex; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid #f1f3f7; font-size: 14.5px; }
 .tw-menu b { font-weight: 600; color: var(--tw-ink); white-space: nowrap; }
 .tw-chips button.on.tone-companies { background: #1f4fa8; border-color: #1f4fa8; }
+
+/* ---------- 회의실 예약 (앱) ---------- */
+.tw-bar.tone-rooms { background: #0f766e; border-color: #0f766e; }
+.tw-chips button.on.tone-rooms { background: #0f766e; border-color: #0f766e; color: #fff; }
+.tw-chips button.weekend:not(.on) { color: #be123c; }
+.tw-btn.teal { background: #0f766e; border-color: #0f766e; }
+.tw-btn.teal:disabled { background: #c7cfdd; border-color: #c7cfdd; }
+.tw-quota { background: #fff; border: 1px solid #d5ece8; border-radius: 14px; padding: 14px; display: grid; gap: 8px; }
+.tw-quota > div:first-child { display: grid; gap: 2px; }
+.tw-quota strong { font-size: 18px; color: #0f5f58; } .tw-quota strong small { font-size: 13px; color: var(--tw-muted); font-weight: 500; }
+.tw-quota-bar { height: 8px; background: #e6f2f0; border-radius: 99px; overflow: hidden; } .tw-quota-bar i { display: block; height: 100%; background: #0f766e; border-radius: 99px; }
+.tw-seg-app { display: grid; grid-template-columns: 1fr 1fr; background: #e9edf3; border-radius: 12px; padding: 3px; margin: 12px 0 2px; }
+.tw-seg-app button { border: 0; background: none; height: 38px; border-radius: 10px; font-size: 14px; color: #4b5563; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.tw-seg-app button.on { background: #fff; color: var(--tw-ink); font-weight: 700; box-shadow: 0 1px 2px rgba(0, 0, 0, .08); }
+.tw-seg-app b { font-size: 11.5px; background: #0f766e; color: #fff; border-radius: 99px; padding: 1px 7px; }
+.tw-room-card { background: #fff; border: 1px solid #eef0f4; border-radius: 14px; padding: 14px; display: grid; gap: 8px; cursor: pointer; transition: border-color .15s; }
+.tw-room-card:hover { border-color: #a7d8d1; }
+.tw-room-head { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 12px; align-items: center; }
+.tw-room-head > div { display: grid; gap: 2px; } .tw-room-head strong { font-size: 16px; color: var(--tw-ink); }
+.tw-room-icon { width: 44px; height: 44px; border-radius: 12px; color: #fff; display: grid; place-items: center; }
+.tw-room-badges { display: grid; justify-items: end; gap: 4px; }
+.tw-cap { font-size: 12.5px; font-weight: 700; color: var(--tw-ink); background: #f1f3f7; border-radius: 6px; padding: 3px 8px; white-space: nowrap; }
+.tw-room-card .tw-tags { margin-top: 0; }
+.tw-approval { font-size: 11.5px; font-weight: 700; color: #be123c; background: #fff1f3; border: 1px solid #fecdd6; border-radius: 6px; padding: 3px 7px; }
+.tw-mini { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; margin-top: 2px; }
+.tw-mini i { height: 12px; border-radius: 2px; background: #d1fae5; }
+.tw-mini i.booked { background: #94a3b8; } .tw-mini i.pending { background: #fdba74; } .tw-mini i.blocked { background: repeating-linear-gradient(45deg, #e5e7eb 0 3px, #cbd2dd 3px 6px); } .tw-mini i.past { background: #eef0f4; }
+.tw-mini-scale { display: flex; justify-content: space-between; font-size: 10.5px; color: #9aa3b2; margin-top: -4px; }
+.tw-row-between.tight { margin: 0; gap: 8px; }
+.tw-booking { display: grid; grid-template-columns: 6px minmax(0, 1fr); background: #fff; border: 1px solid #eef0f4; border-radius: 14px; overflow: hidden; }
+.tw-booking.dim { opacity: .62; }
+.tw-booking-main { padding: 12px 14px; display: grid; gap: 4px; justify-items: start; }
+.tw-booking-main > .tw-row-between { width: 100%; }
+.tw-booking-main strong { font-size: 15.5px; color: var(--tw-ink); }
+.tw-booking-main .tw-btn { margin-top: 4px; }
+.tw-booking-time { font-size: 15px; font-weight: 700; color: #0f5f58; font-variant-numeric: tabular-nums; } .tw-booking-time small { font-weight: 500; color: var(--tw-muted); font-size: 12.5px; }
+.tw-bstatus { font-size: 12px; font-weight: 700; border-radius: 6px; padding: 3px 8px; white-space: nowrap; }
+.tw-bstatus.ok { background: #ecfdf3; color: var(--tw-ok); } .tw-bstatus.wait { background: #fff7ed; color: var(--tw-warn); } .tw-bstatus.bad { background: #fef2f2; color: var(--tw-bad); } .tw-bstatus.off { background: #f1f3f7; color: var(--tw-muted); }
+.tw-note { font-size: 12.5px; color: #9a3412; background: #fff7ed; border-radius: 8px; padding: 6px 10px; line-height: 1.5; text-align: left; }
+.tw-note.bad { color: #991b1b; background: #fef2f2; }
+.tw-inline-confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 4px; font-size: 13px; color: #374151; }
+.tw-inline-confirm .tw-btn { margin-top: 0; }
+.tw-room-hero { color: #fff; padding: 26px 18px 22px; display: grid; gap: 4px; justify-items: start; }
+.tw-room-hero h1 { font-size: 24px; } .tw-room-hero > span { font-size: 13.5px; opacity: .9; }
+.tw-room-hero-cap { font-size: 12px; font-weight: 700; background: rgba(255, 255, 255, .2); border-radius: 99px; padding: 3px 10px; }
+.tw-rules { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 13.5px; color: #374151; }
+.tw-rules li::before { content: "· "; color: #0f766e; font-weight: 800; } .tw-rules li.warn { color: #be123c; font-weight: 600; }
+.tw-detail .tw-days { margin: 0 -16px; padding-top: 0; }
+.tw-legend { display: flex; gap: 10px; font-size: 11.5px; color: var(--tw-muted); }
+.tw-legend span { display: inline-flex; align-items: center; gap: 4px; }
+.tw-legend i, .tw-tl-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.tw-legend i.free { background: #fff; border: 1px solid #99d5cc; } .tw-legend i.booked { background: #cbd2dd; } .tw-legend i.blocked { background: repeating-linear-gradient(45deg, #e5e7eb 0 2px, #cbd2dd 2px 4px); }
+.tw-slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.tw-slots button { height: 40px; border-radius: 10px; border: 1px solid #99d5cc; background: #fff; color: #0f5f58; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tw-slots button:disabled { border-color: transparent; color: #9aa3b2; font-weight: 500; text-decoration: line-through; }
+.tw-slots button.booked, .tw-slots button.pending { background: #e5e7eb; } .tw-slots button.past { background: #f4f6fa; }
+.tw-slots button.blocked { background: repeating-linear-gradient(45deg, #f1f3f7 0 4px, #e5e7eb 4px 8px); }
+.tw-slots button.sel { background: #ccede8; border-color: #0f766e; } .tw-slots button.start { background: #0f766e; color: #fff; }
+.tw-durations { margin: 0 -16px; padding-top: 0; }
+.tw-book-bar { position: sticky; bottom: calc(62px + env(safe-area-inset-bottom)); display: flex; justify-content: space-between; align-items: center; gap: 12px; background: #fff; border-top: 1px solid var(--tw-line); padding: 12px 16px; z-index: 4; box-shadow: 0 -6px 16px rgba(20, 33, 61, .06); }
+.tw-book-bar > div { display: grid; gap: 2px; } .tw-book-bar strong { font-size: 15px; color: var(--tw-ink); font-variant-numeric: tabular-nums; }
+.tw-sheet.left { text-align: left; }
+.tw-field { display: grid; gap: 6px; font-size: 13px; color: #4b5563; }
+.tw-field input { height: 44px; border: 1px solid #d5dbe5; border-radius: 10px; padding: 0 12px; font: inherit; font-size: 16px; }
+.tw-stepper { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; border: 1px solid #d5dbe5; border-radius: 10px; overflow: hidden; }
+.tw-stepper button { height: 42px; border: 0; background: var(--tw-bg); font-size: 20px; color: var(--tw-ink); }
+.tw-stepper b { text-align: center; font-size: 16px; color: var(--tw-ink); }
+.tw-cost { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 4px 0; padding: 10px 12px; background: var(--tw-bg); border-radius: 10px; font-size: 13.5px; }
+.tw-cost dt { color: var(--tw-muted); } .tw-cost dd { margin: 0; text-align: right; font-weight: 600; color: var(--tw-ink); }
+
+/* ---------- 회의실 (관리자) ---------- */
+.tw-datenav { display: flex; align-items: center; gap: 6px; }
+.tw-datenav .tw-btn.small { min-width: 36px; padding: 0 10px; }
+.tw-input.date { min-width: 0; width: 160px; }
+.tw-form-inline .wide-line { flex-basis: 100%; }
+.tw-timeline-wrap { overflow-x: auto; }
+.tw-timeline { min-width: 860px; display: grid; gap: 6px; }
+.tw-tl-row { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 10px; align-items: stretch; }
+.tw-tl-row.head { height: 18px; }
+.tw-tl-room { display: grid; grid-template-columns: 8px minmax(0, 1fr); column-gap: 8px; align-content: center; font-size: 12px; color: var(--tw-muted); }
+.tw-tl-room i { grid-row: span 2; width: 8px; border-radius: 4px; } .tw-tl-room strong { font-size: 14px; color: var(--tw-ink); }
+.tw-tl-track { position: relative; display: grid; grid-template-columns: repeat(24, 1fr); min-height: 52px; }
+.tw-tl-row.head .tw-tl-track { display: block; min-height: 0; }
+.tw-tl-hour { position: absolute; top: 0; transform: translateX(-50%); font-size: 11px; color: var(--tw-muted); font-variant-numeric: tabular-nums; }
+.tw-tl-cell { border-left: 1px dashed #eef0f4; background: #fbfcfe; } .tw-tl-cell.hour { border-left: 1px solid #e5e7eb; } .tw-tl-cell.past { background: #f1f3f7; }
+.tw-tl-track .tw-tl-cell:last-of-type { border-right: 1px solid #e5e7eb; }
+.tw-tl-item { position: absolute; top: 4px; bottom: 4px; border: 0; border-left: 4px solid; border-radius: 6px; padding: 4px 8px; text-align: left; display: grid; align-content: center; gap: 1px; overflow: hidden; font-size: 12px; min-width: 0; }
+.tw-tl-item b { font-size: 12.5px; color: var(--tw-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tw-tl-item span { color: #4b5563; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-variant-numeric: tabular-nums; }
+.tw-tl-item.confirmed { background: #e8eefc; } .tw-tl-item.pending { background: #fff7ed; border-left-style: dashed; }
+.tw-tl-item.fresh { box-shadow: inset 0 0 0 2px #22c55e; }
+.tw-tl-item.block { background: repeating-linear-gradient(45deg, #f1f3f7 0 6px, #e5e7eb 6px 12px); border-left-color: #94a3b8; }
+.tw-tl-item:hover { filter: brightness(.97); }
+.tw-tl-now { position: absolute; top: -4px; bottom: -4px; width: 2px; background: #e5484d; border-radius: 2px; pointer-events: none; }
+.tw-tl-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 12px; font-size: 12px; color: var(--tw-muted); }
+.tw-tl-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.tw-tl-legend i.confirmed { background: #e8eefc; border-left: 3px solid #1f4fa8; } .tw-tl-legend i.pending { background: #fff7ed; border: 1px dashed #c2410c; }
+.tw-tl-legend i.block { background: repeating-linear-gradient(45deg, #f1f3f7 0 2px, #cbd2dd 2px 4px); } .tw-tl-legend i.fresh { box-shadow: inset 0 0 0 2px #22c55e; }
+@media (max-width: 1100px) { .tw-kpis.four { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
