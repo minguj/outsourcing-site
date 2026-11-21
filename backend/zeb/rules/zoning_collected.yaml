@@ -166,13 +166,13 @@ ordinances:
     ref: "제50조(용도지역안에서의 건폐율), 제53조(용도지역·지구안에서의 건폐율의 완화), 제54조(용도지역안에서의 용적률)"
     url: "https://www.law.go.kr/자치법규/세종특별자치시도시계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-21"
     collected: true
     complete: true
     watch:
       law_name: "세종특별자치시 도시계획 조례"
       agency: ["36", "세종특별자치시", "세종특별자치시"]
-      promulgated_on: "2026-02-27"
+      promulgated_on: "2026-11-13"
     zones:
       제1종전용주거지역: { bcr: 50, far: 100, verified: false }
       제2종전용주거지역: { bcr: 50, far: 150, verified: false }
@@ -348,13 +348,13 @@ ordinances:
     ref: "제41조(용도지역에서의 건폐율), 제42조(용도지역에서의 용적률)"
     url: "https://www.law.go.kr/자치법규/광명시도시계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-21"
     collected: true
     complete: true
     watch:
       law_name: "광명시 도시계획 조례"
       agency: ["41", "경기도", "광명시"]
-      promulgated_on: "2026-08-05"
+      promulgated_on: "2026-11-16"
     zones:
       제1종전용주거지역: { bcr: 50, far: 80, verified: false }
       제2종전용주거지역: { bcr: 50, far: 120, verified: false }
@@ -379,13 +379,13 @@ ordinances:
     ref: "제56조(용도지역안에서의 건폐율), 제57조(그 밖의 용도지역ㆍ지구ㆍ구역 등의 건폐율), 제61조(용도지역안에서의 용적률), 제62조(기타 용도지역ㆍ지구ㆍ구역 등의 용적률)"
     url: "https://www.law.go.kr/자치법규/평택시도시계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-21"
     collected: true
     complete: true
     watch:
       law_name: "평택시 도시계획 조례"
       agency: ["41", "경기도", "평택시"]
-      promulgated_on: "2026-10-08"
+      promulgated_on: "2026-11-16"
     zones:
       제1종전용주거지역: { bcr: 50, far: 100, verified: false }
       제2종전용주거지역: { bcr: 50, far: 150, verified: false }
@@ -503,13 +503,13 @@ ordinances:
     ref: "제54조(용도지역안에서의 건폐율), 제58조(용도지역안에서의 용적률)"
     url: "https://www.law.go.kr/자치법규/과천시도시계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-21"
     collected: true
     complete: true
     watch:
       law_name: "과천시 도시계획 조례"
       agency: ["41", "경기도", "과천시"]
-      promulgated_on: "2025-10-10"
+      promulgated_on: "2026-11-19"
     zones:
       제1종전용주거지역: { bcr: 50, far: 100, verified: false }
       제2종전용주거지역: { bcr: 50, far: 150, verified: false }
@@ -1179,13 +1179,13 @@ ordinances:
     ref: "제54조(용도지역 안에서의 건폐율), 제59조(용도지역 안에서의 용적률)"
     url: "https://www.law.go.kr/자치법규/충주시도시계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-21"
     collected: true
     complete: true
     watch:
       law_name: "충주시 도시계획 조례"
       agency: ["43", "충청북도", "충주시"]
-      promulgated_on: "2026-04-30"
+      promulgated_on: "2026-11-13"
     zones:
       제1종전용주거지역: { bcr: 40, far: 100, verified: false }
       제2종전용주거지역: { bcr: 50, far: 150, verified: false }
@@ -1582,13 +1582,13 @@ ordinances:
     ref: "제51조(용도지역 안에서의 건폐율), 제56조(용도지역 안에서의 용적률)"
     url: "https://www.law.go.kr/자치법규/아산시도시계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-21"
     collected: true
     complete: true
     watch:
       law_name: "아산시 도시계획 조례"
       agency: ["44", "충청남도", "아산시"]
-      promulgated_on: "2026-08-18"
+      promulgated_on: "2026-11-16"
     zones:
       제1종전용주거지역: { bcr: 50, far: 80, verified: false }
       제2종전용주거지역: { bcr: 50, far: 150, verified: false }
@@ -1892,13 +1892,13 @@ ordinances:
     ref: "제45조(용도지역에서의 건폐율), 제52조(용도지역에서의 용적률)"
     url: "https://www.law.go.kr/자치법규/예산군군계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-21"
     collected: true
     complete: true
     watch:
       law_name: "예산군 군계획 조례"
       agency: ["44", "충청남도", "예산군"]
-      promulgated_on: "2025-11-21"
+      promulgated_on: "2026-11-12"
     zones:
       제1종전용주거지역: { bcr: 50, far: 100, verified: false }
       제2종전용주거지역: { bcr: 50, far: 150, verified: false }
@@ -1923,13 +1923,13 @@ ordinances:
     ref: "제49조(용도지역 안에서의 건폐율), 제52조(용도지역 안에서의 용적률)"
     url: "https://www.law.go.kr/자치법규/태안군도시계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-21"
     collected: true
     complete: true
     watch:
       law_name: "태안군 도시계획 조례"
       agency: ["44", "충청남도", "태안군"]
-      promulgated_on: "2026-03-31"
+      promulgated_on: "2026-11-18"
     zones:
       제1종전용주거지역: { bcr: 50, far: 100, verified: false }
       제2종전용주거지역: { bcr: 50, far: 150, verified: false }
@@ -3225,13 +3225,13 @@ ordinances:
     ref: "제30조(용도지역안에서의 건폐율), 제33조(용도지역안에서의 용적률)"
     url: "https://www.law.go.kr/자치법규/봉화군군계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-21"
     collected: true
     complete: true
     watch:
       law_name: "봉화군 군계획 조례"
       agency: ["47", "경상북도", "봉화군"]
-      promulgated_on: "2025-12-15"
+      promulgated_on: "2026-11-19"
     zones:
       제1종전용주거지역: { bcr: 50, far: 100, verified: false }
       제2종전용주거지역: { bcr: 50, far: 150, verified: false }
@@ -3372,13 +3372,13 @@ ordinances:
     ref: "제45조(용도지역안에서의 건폐율), 제49조(용도지역안에서의 용적률)"
     url: "https://www.law.go.kr/자치법규/사천시도시계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-21"
     collected: true
     complete: true
     watch:
       law_name: "사천시 도시계획 조례"
       agency: ["48", "경상남도", "사천시"]
-      promulgated_on: "2026-07-02"
+      promulgated_on: "2026-11-19"
     zones:
       제1종전용주거지역: { bcr: 50, far: 100, verified: false }
       제2종전용주거지역: { bcr: 50, far: 150, verified: false }
@@ -3403,13 +3403,13 @@ ordinances:
     ref: "제57조(용도지역에서의 건폐율), 제57의2조(그 밖의 용도지역에서 건폐율의 완화), 제62조(용도지역에서의 용적률), 제63조(그 밖의 용도지역ㆍ용도지구ㆍ구역 등의 용적률)"
     url: "https://www.law.go.kr/자치법규/김해시도시계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-21"
     collected: true
     complete: true
     watch:
       law_name: "김해시 도시계획 조례"
       agency: ["48", "경상남도", "김해시"]
-      promulgated_on: "2026-04-01"
+      promulgated_on: "2026-11-18"
     zones:
       제1종전용주거지역: { bcr: 50, far: 100, verified: false }
       제2종전용주거지역: { bcr: 50, far: 120, verified: false }
@@ -3651,13 +3651,13 @@ ordinances:
     ref: "제40조(용도지역 안에서의 건폐율), 제45조(용도지역 안에서의 용적률)"
     url: "https://www.law.go.kr/자치법규/남해군도시계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-21"
     collected: true
     complete: true
     watch:
       law_name: "남해군 도시계획 조례"
       agency: ["48", "경상남도", "남해군"]
-      promulgated_on: "2026-04-07"
+      promulgated_on: "2026-11-17"
     zones:
       제1종전용주거지역: { bcr: 50, far: 100, verified: false }
       제2종전용주거지역: { bcr: 50, far: 150, verified: false }
@@ -4736,13 +4736,13 @@ ordinances:
     ref: "제44조(용도지역 안에서의 건폐율), 제45조(용도지역 안에서의 용적률)"
     url: "https://www.law.go.kr/자치법규/임실군계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-21"
     collected: true
     complete: true
     watch:
       law_name: "임실군 계획 조례"
       agency: ["52", "전북특별자치도", "임실군"]
-      promulgated_on: "2026-02-25"
+      promulgated_on: "2026-11-19"
     zones:
       제1종일반주거지역: { bcr: 60, far: 200, verified: false }
       제2종일반주거지역: { bcr: 60, far: 250, verified: false }
@@ -4760,13 +4760,13 @@ ordinances:
     ref: "제55조(용도지역안에서의 건폐율), 제59조(용도지역안에서의 용적률)"
     url: "https://www.law.go.kr/자치법규/순창군계획조례"
     effective_from: null
-    checked_on: "2026-11-10"
+    checked_on: "2026-11-21"
     collected: true
     complete: true
     watch:
       law_name: "순창군 계획 조례"
       agency: ["52", "전북특별자치도", "순창군"]
-      promulgated_on: "2026-08-18"
+      promulgated_on: "2026-11-13"
     zones:
       제1종전용주거지역: { bcr: 50, far: 100, verified: false }
       제2종전용주거지역: { bcr: 50, far: 150, verified: false }
